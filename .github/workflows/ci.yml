@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - ArchitectureTests
+          - Identity.UnitTests
+          - Integration.Tests
+          - E2E.Tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      # E2E boots the full Aspire AppHost (DCP + containers + dev certs), which has
+      # not been verified stable on hosted runners yet - kept non-blocking until proven.
+      - name: Trust dev certs (E2E)
+        if: matrix.project == 'E2E.Tests'
+        run: dotnet dev-certs https --trust
+
+      - name: Test ${{ matrix.project }}
+        continue-on-error: ${{ matrix.project == 'E2E.Tests' }}
+        run: dotnet test tests/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release

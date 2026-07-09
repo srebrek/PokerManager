@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Api.Bootstrapper\Api.Bootstrapper.csproj" />
+<ProjectReference Include="..\..\Web.Frontend\Web.Frontend.csproj" />
+  </ItemGroup>
+
+</Project>

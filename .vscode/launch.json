@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "aspire",
+      "request": "launch",
+      "name": "Aspire: AppHost",
+      "program": "${workspaceFolder}/src/aspire/Aspire.AppHost/Aspire.AppHost.csproj"
+    },
+    {
+      "type": "blazorwasm",
+      "request": "attach",
+      "name": "Attach: Blazor WASM (via API)",
+      "url": "https://localhost:7200",
+      "timeout": 60000,
+      "browser": "chrome"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack Debug",
+      "configurations": ["Aspire: AppHost", "Attach: Blazor WASM (via API)"],
+      "stopAll": true
+    }
+  ]
+}
