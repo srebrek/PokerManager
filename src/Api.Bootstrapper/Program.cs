@@ -60,7 +60,7 @@ builder.Host.UseWolverine(opts =>
         opts.Policies.UseDurableLocalQueues();
         opts.Policies.AutoApplyTransactions();
         opts.UseEntityFrameworkCoreTransactions();
-        opts.PublishDomainEventsFromEntityFrameworkCore<Entity>(x => x.Events);
+        opts.PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents, IDomainEvent>(x => x.Events);
     }
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;

@@ -7,7 +7,7 @@ namespace ArchitectureTests;
 public abstract class BaseArchitectureTest
 {
     protected static readonly ReflectionAssembly IdentityAssembly = typeof(Identity.IdentityModule).Assembly;
-    protected static readonly ReflectionAssembly SharedAssembly = typeof(Shared.Domain.Entity).Assembly;
+    protected static readonly ReflectionAssembly SharedAssembly = typeof(Shared.Domain.IStronglyTypedId<>).Assembly;
     protected static readonly ReflectionAssembly ContractsAssembly =
         typeof(Contracts.Authentication.RegisterRequest).Assembly;
 

@@ -1,10 +1,7 @@
 namespace Shared.Domain;
 
-public abstract class Entity
+public abstract class Entity<TId>(TId id)
+    where TId : IStronglyTypedId<TId>
 {
-    private readonly List<object> _events = [];
-
-    public IReadOnlyList<object> Events => _events.AsReadOnly();
-
-    protected void Raise(IDomainEvent domainEvent) => _events.Add(domainEvent);
+    public TId Id { get; } = id;
 }
