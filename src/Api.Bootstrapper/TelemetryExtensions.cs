@@ -5,10 +5,6 @@ using OpenTelemetry.Trace;
 
 namespace Api.Bootstrapper;
 
-/// <summary>
-/// API-specific OpenTelemetry instrumentation (database + messaging). Kept out of
-/// ServiceDefaults so that services without Postgres/Wolverine don't carry it.
-/// </summary>
 internal static class TelemetryExtensions
 {
     public static WebApplicationBuilder AddDatabaseAndMessagingTelemetry(this WebApplicationBuilder builder)
@@ -26,11 +22,6 @@ internal static class TelemetryExtensions
         return builder;
     }
 
-    /// <summary>
-    /// Drops noisy infrastructure spans: Wolverine background management operations
-    /// (node assignments, polling) and infrastructure SQL (queue polling, DataProtection
-    /// key reads, connection liveness checks).
-    /// </summary>
     private sealed class InfrastructureSqlFilterProcessor : BaseProcessor<Activity>
     {
         private static readonly string[] s_wolverineInternalOps =

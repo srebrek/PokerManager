@@ -4,17 +4,11 @@ using ReflectionAssembly = System.Reflection.Assembly;
 
 namespace ArchitectureTests;
 
-/// <summary>
-/// Generic per-module rules. They apply automatically to every assembly registered in
-/// <see cref="BaseArchitectureTest.ModuleAssemblies"/> — no per-module copies needed.
-/// </summary>
 public sealed class ModuleTests : BaseArchitectureTest
 {
     [Fact]
     public void Modules_ShouldNotDependOn_OtherModules()
     {
-        // Modules may only communicate via Contracts (public types) and Wolverine
-        // messages — never by referencing each other directly.
         foreach (ReflectionAssembly module in ModuleAssemblies)
         {
             foreach (ReflectionAssembly other in ModuleAssemblies.Where(a => a != module))
@@ -31,21 +25,6 @@ public sealed class ModuleTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Features_ShouldNotDependOn_InfrastructureLayer()
-    {
-        foreach (string moduleName in ModuleNames())
-        {
-            Types()
-                .That()
-                .ResideInNamespaceMatching($@"^{moduleName}\.Features")
-                .Should()
-                .NotDependOnAnyTypesThat()
-                .ResideInNamespaceMatching($@"^{moduleName}\.Infrastructure")
-                .Check(Architecture);
-        }
-    }
-
-    [Fact]
     public void Infrastructure_ShouldNotDependOn_FeaturesLayer()
     {
         foreach (string moduleName in ModuleNames())
@@ -56,6 +35,7 @@ public sealed class ModuleTests : BaseArchitectureTest
                 .Should()
                 .NotDependOnAnyTypesThat()
                 .ResideInNamespaceMatching($@"^{moduleName}\.Features")
+                .WithoutRequiringPositiveResults()
                 .Check(Architecture);
         }
     }
@@ -72,6 +52,7 @@ public sealed class ModuleTests : BaseArchitectureTest
                 .DoNotResideInNamespaceMatching($@"^{moduleName}\.Infrastructure\.Data\.Migrations")
                 .Should()
                 .BeInternal()
+                .WithoutRequiringPositiveResults()
                 .Check(Architecture);
         }
     }

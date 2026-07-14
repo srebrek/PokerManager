@@ -59,7 +59,8 @@ public static class IdentityModule
             .UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.MigrationsHistoryTable(
                     HistoryRepository.DefaultTableName, IdentityDbContext.Schema))
-            .UseSnakeCaseNamingConvention());
+            .UseSnakeCaseNamingConvention()
+            .AddDomainEventsClearing());
 
         return services;
     }
@@ -85,8 +86,6 @@ public static class IdentityModule
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
-
-                // Brute-force protection; enforced by lockoutOnFailure in UserAccountService.
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             })

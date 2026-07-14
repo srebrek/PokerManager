@@ -5,9 +5,6 @@ using Shouldly;
 
 namespace E2E.Tests;
 
-/// <summary>
-/// Full-stack smoke test: real AppHost, real Postgres container, real HTTP.
-/// </summary>
 public sealed class AuthenticationSmokeTests(AspireFixture fixture, ITestOutputHelper output)
     : AspireIntegrationTestBase(fixture, output)
 {

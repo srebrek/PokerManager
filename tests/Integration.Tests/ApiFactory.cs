@@ -80,8 +80,6 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
     {
         if (disposing)
         {
-            // Stop the host (and Wolverine) before dropping the DB so Wolverine can
-            // release message ownership while the database still exists.
             await base.DisposeAsync();
 
             await using NpgsqlConnection connection = new(dbFixture.Container.GetConnectionString());

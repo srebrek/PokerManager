@@ -36,7 +36,7 @@ public sealed class LocationTests : BaseArchitectureTest
             .HaveNameEndingWith("Query")
             .Should()
             .ResideInNamespaceMatching(@"^[^.]+\.Features\.") // Matches <AssemblyName>.Features.*
-            .WithoutRequiringPositiveResults() // TODO: Remove when there is at least one query
+            .WithoutRequiringPositiveResults()
             .Check(Architecture);
     }
 }

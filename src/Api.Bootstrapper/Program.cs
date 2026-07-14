@@ -1,8 +1,11 @@
 using Api.Bootstrapper;
 using Aspire.ServiceDefaults;
+using Gameplay;
 using Identity;
 using JasperFx;
 using JasperFx.CodeGeneration;
+using JasperFx.Core;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Shared.Domain;
 using Shared.Infrastructure;
@@ -11,6 +14,7 @@ using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
+using Wolverine.ErrorHandling;
 using Wolverine.Postgresql;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -18,17 +22,23 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 bool isRunningCodegen = args.Contains("codegen");
 string? databaseConnectionString = builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName);
 
-if (!isRunningCodegen && databaseConnectionString is null)
+if (!isRunningCodegen)
 {
-    throw new InvalidOperationException(
-        $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
+    if (databaseConnectionString is null)
+    {
+        throw new InvalidOperationException(
+            $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
+    }
+
+    builder.Services
+        .AddHealthChecks()
+        .AddNpgSql(databaseConnectionString!);
 }
 
 builder.AddServiceDefaults();
 builder.AddDatabaseAndMessagingTelemetry();
 
-// Wire YARP's direct forwarder with Aspire service discovery so that
-// "http://webfrontend" resolves at runtime in development mode.
+// YARP so hotreload and dotnet watch work in dev
 builder.Services.AddHttpForwarderWithServiceDiscovery();
 
 builder.Services.AddSingleton(TimeProvider.System);
@@ -38,13 +48,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddIdentityModule(builder.Configuration);
-
-if (!isRunningCodegen)
-{
-    builder.Services
-        .AddHealthChecks()
-        .AddNpgSql(databaseConnectionString!);
-}
+builder.Services.AddGameplayModule(builder.Configuration);
 
 builder.Host.UseWolverine(opts =>
 {
@@ -65,8 +69,10 @@ builder.Host.UseWolverine(opts =>
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
     opts.Policies.Add<ValidationMiddlewarePolicy>();
-
+    opts.OnException<DbUpdateConcurrencyException>()
+        .RetryWithCooldown(50.Milliseconds(), 100.Milliseconds(), 250.Milliseconds());
     opts.Discovery.IncludeAssembly(typeof(IdentityModule).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(GameplayModule).Assembly);
 });
 
 WebApplication app = builder.Build();
@@ -77,16 +83,11 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 
     await app.Services.ApplyIdentityMigrationsAsync();
+    await app.Services.ApplyGameplayMigrationsAsync();
 }
 
-// Serve the frontend only in real run modes — not under "Testing" (integration tests
-// exercise the API in isolation and never hit non-/api routes).
-bool serveFrontend = app.Environment.IsDevelopment() || app.Environment.IsProduction();
-
-if (serveFrontend && !app.Environment.IsDevelopment())
+if (app.Environment.IsProduction())
 {
-    // Production: serve the published WASM static assets (including precompressed
-    // .br/.gz) directly, before API middleware so static files short-circuit fast.
     app.UseBlazorFrameworkFiles();
     app.UseStaticFiles();
 }
@@ -95,30 +96,18 @@ app.UseAntiCsrf();
 app.UseRequestContext();
 app.UseExceptionHandler();
 app.UseIdentityModule();
-
 app.MapDefaultEndpoints();
-
-// All API endpoints are grouped under /api so the single-origin host can
-// distinguish them from frontend routes. The WASM client already uses
-// BaseAddress = origin + "api/" so no frontend code changes are needed.
 app.MapEndpoints(app.MapGroup("api"));
 
-if (serveFrontend)
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     if (app.Environment.IsDevelopment())
     {
-        // Dev: forward everything else to the standalone WASM dev server.
-        // This keeps hot reload and WASM debugging working while the API and
-        // WASM share a single browser origin (required for HttpOnly cookie auth).
-        // ASPNETCORE_PREVENTHOSTINGSTARTUP=true on this process (set in AppHost.cs)
-        // prevents dotnet watch from injecting its browser-refresh script here —
-        // the WASM dev server handles its own refresh, and we must not overwrite it.
+        // YARP so hotreload and dotnet watch work in dev
         app.MapForwarder("/{**catch-all}", "http://webfrontend");
     }
     else
     {
-        // Production: the dev server doesn't exist; fall back to index.html for
-        // all unmatched routes so Blazor's client-side router handles them.
         app.MapFallbackToFile("index.html");
     }
 }

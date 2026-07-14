@@ -10,8 +10,7 @@ internal sealed class RegisterCommandValidator : AbstractValidator<RegisterComma
             .NotEmpty()
             .EmailAddress();
 
-        // Password policy itself (length, character classes) is enforced by ASP.NET Identity
-        // options in IdentityModule — the single source of truth. Don't duplicate it here.
+        // Password policy is enforced by ASP.NET Identity
         RuleFor(c => c.Password)
             .NotEmpty();
     }

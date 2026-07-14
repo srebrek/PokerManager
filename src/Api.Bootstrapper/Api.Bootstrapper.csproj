@@ -3,8 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\aspire\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.csproj" />
-    <!-- Pulls the published WASM static assets into this project's publish output,
-         so production needs no separate frontend process (see Program.cs). -->
+    <ProjectReference Include="..\Modules\Gameplay\Gameplay.csproj" />
     <ProjectReference Include="..\Web.Frontend\Web.Frontend.csproj" />
   </ItemGroup>
 

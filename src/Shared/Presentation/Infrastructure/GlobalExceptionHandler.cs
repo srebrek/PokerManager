@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -18,6 +19,29 @@ public sealed partial class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
+        if (exception is DbUpdateConcurrencyException concurrencyException)
+        {
+            LogConcurrencyConflict(logger, concurrencyException);
+
+            ProblemDetails conflictProblem = new()
+            {
+                Status = StatusCodes.Status409Conflict,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+                Title = "Conflict",
+                Detail = "The resource was modified by another request. Reload and try again."
+            };
+
+            httpContext.Response.StatusCode = conflictProblem.Status.Value;
+
+            return await problemDetailsService.TryWriteAsync(
+                new ProblemDetailsContext
+                {
+                    HttpContext = httpContext,
+                    ProblemDetails = conflictProblem,
+                    Exception = exception
+                });
+        }
+
         LogUnhandledException(logger, exception, exception.Message);
 
         ProblemDetails problemDetails = new()
@@ -54,4 +78,10 @@ public sealed partial class GlobalExceptionHandler(
         Message = "Unhandled exception occurred: {message}",
         EventId = 1001)]
     private static partial void LogUnhandledException(ILogger logger, Exception exception, string message);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Optimistic concurrency conflict",
+        EventId = 1002)]
+    private static partial void LogConcurrencyConflict(ILogger logger, Exception exception);
 }

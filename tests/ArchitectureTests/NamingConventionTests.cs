@@ -55,7 +55,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
             .DoNotImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
             .Should()
             .HaveNameEndingWith("DomainEvent")
-            .WithoutRequiringPositiveResults() // TODO: Remove when there is at least one domain event
+            .WithoutRequiringPositiveResults()
             .Check(Architecture);
     }
 

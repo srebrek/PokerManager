@@ -29,8 +29,8 @@ public sealed class DomainEventsClearingInterceptor : SaveChangesInterceptor
         }
 
         foreach (IHasDomainEvents entity in context.ChangeTracker.Entries()
-                     .Select(entry => entry.Entity)
-                     .OfType<IHasDomainEvents>())
+            .Select(entry => entry.Entity)
+            .OfType<IHasDomainEvents>())
         {
             entity.ClearDomainEvents();
         }

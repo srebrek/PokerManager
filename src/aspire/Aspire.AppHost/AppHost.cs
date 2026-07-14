@@ -16,13 +16,10 @@ IResourceBuilder<ProjectResource> apiService = builder
     .WaitFor(database)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
-    // Required for frontend hot reload: without it, dotnet watch injects its
-    // browser-refresh hosting startup into the API too, and the API would
-    // overwrite the WASM dev server's refresh script with a wrong WebSocket URL.
-    .WithEnvironment("ASPNETCORE_PREVENTHOSTINGSTARTUP", "true");
+    .WithEnvironment("ASPNETCORE_PREVENTHOSTINGSTARTUP", "true"); // Required for frontend hot reload
 
 // The standalone WASM dev server exists only during development (hot reload, debug).
-// In publish mode the API serves the published WASM static assets itself (see Program.cs).
+// In publish mode the API serves the published WASM static assets itself.
 if (builder.ExecutionContext.IsRunMode)
 {
     IResourceBuilder<ProjectResource> webFrontend = builder

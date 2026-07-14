@@ -22,8 +22,8 @@ what money transfers should be made. Additionally offers statistics for those wh
 coresponding button and confirms with the confirm button
 - Host can undo actions if any human errors occur
 - Host view is like each player but also can switch to the other Players view
-- Host can enter cards flop, turn and river
-- each player can enter their cards after each Hand
+- Host can (but do not have to) enter cards community cards
+- each player can (but does not have to) enter their cards after each Hand
 - Playes can start a Game (becomes a host)
 - Player can join the game through a code
 
@@ -43,6 +43,5 @@ coresponding button and confirms with the confirm button
 - Sliced Architecture
 - Integration Tests
 - Mudblazor
-- SignalR for game state (SSE (majority of incoming events and only one outgoing confirm that can be done through rest)
-or websockets)
+- SignalR for game state (mainly outgoing, request to server still through REST)
 - Game state is saved as a log to be able to make statistics

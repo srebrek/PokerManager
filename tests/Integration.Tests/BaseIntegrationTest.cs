@@ -13,7 +13,6 @@ public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<Ap
 
     protected static HttpClient WithAntiCsrfHeader(HttpClient client)
     {
-        // All API endpoints are mounted under /api (see Api.Bootstrapper/Program.cs).
         client.BaseAddress = new Uri(client.BaseAddress!, "api/");
         client.DefaultRequestHeaders.Add(HttpDefenseHeaders.AntiCsrf, HttpDefenseHeaders.AntiCsrfValue);
         return client;
