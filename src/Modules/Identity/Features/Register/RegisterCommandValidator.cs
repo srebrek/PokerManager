@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Identity.Features.Register;
 
-internal sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
+public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
     public RegisterCommandValidator()
     {

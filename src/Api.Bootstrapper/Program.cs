@@ -2,6 +2,7 @@ using Api.Bootstrapper;
 using Aspire.ServiceDefaults;
 using Gameplay;
 using Identity;
+using Identity.Abstractions;
 using JasperFx;
 using JasperFx.CodeGeneration;
 using JasperFx.Core;
@@ -68,6 +69,7 @@ builder.Host.UseWolverine(opts =>
     }
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
+    opts.CodeGeneration.AlwaysUseServiceLocationFor<IUserAccountService>();
     opts.Policies.Add<ValidationMiddlewarePolicy>();
     opts.OnException<DbUpdateConcurrencyException>()
         .RetryWithCooldown(50.Milliseconds(), 100.Milliseconds(), 250.Milliseconds());

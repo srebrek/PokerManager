@@ -134,13 +134,65 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Validators_ShouldBeInternal()
+    public void Validators_ShouldBePublic() // Wolverine requirement
     {
         Classes()
             .That()
             .AreAssignableTo(typeof(AbstractValidator<>))
             .Should()
-            .BeInternal()
+            .BePublic()
             .Check(Architecture);
+    }
+
+    [Fact]
+    public void EventHandlers_ShouldBePublic() // Wolverine requirement
+    {
+        Classes()
+            .That()
+            .HaveNameEndingWith("EventHandler")
+            .Should()
+            .BePublic()
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void IntegrationEvents_ShouldBePublic() // Wolverine requirement
+    {
+        Classes()
+            .That()
+            .ImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .Should()
+            .BePublic()
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void DomainEvents_ShouldBePublic() // Wolverine requirement
+    {
+        Classes()
+            .That()
+            .ImplementInterface(typeof(Shared.Domain.IDomainEvent))
+            .And()
+            .DoNotImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .Should()
+            .BePublic()
+            .WithoutRequiringPositiveResults()
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void DbContexts_ShouldBePublic() // Wolverine requirement
+    {
+        Type[] dbContextTypes = [.. ModuleAssemblies
+            .SelectMany(a => a.GetTypes())
+            .Where(t => t is { IsClass: true, IsAbstract: false }
+                && t.IsSubclassOf(typeof(Microsoft.EntityFrameworkCore.DbContext)))];
+
+        dbContextTypes.ShouldNotBeEmpty();
+        foreach (Type type in dbContextTypes)
+        {
+            type.IsPublic.ShouldBeTrue(
+                $"'{type.FullName}' is injected into handlers — Wolverine codegen needs it public.");
+        }
     }
 }

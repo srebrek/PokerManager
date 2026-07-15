@@ -2,7 +2,7 @@ using Shared.Domain;
 
 namespace Gameplay.Domain.Entities;
 
-public static class GameErrors
+internal static class GameErrors
 {
     public static readonly Error BigBlindLessThanSmallBlind =
         Error.Problem("Gameplay.Game.BigBlindLessThanSmallBlind", "Big blind can not be less than small blind.");

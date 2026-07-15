@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 // exists. When one does, move UserRegisteredIntegrationEvent to Contracts and consume there.
 namespace Identity.Features.UserRegistered;
 
-internal sealed partial class UserRegisteredIntegrationEventHandler(
+public sealed partial class UserRegisteredIntegrationEventHandler(
     ILogger<UserRegisteredIntegrationEventHandler> logger)
 {
     public Task Handle(UserRegisteredIntegrationEvent integrationEvent, CancellationToken ct)

@@ -4,7 +4,7 @@ using Shared.Domain;
 
 namespace Identity.Infrastructure;
 
-internal sealed class UserAccountService(
+public sealed class UserAccountService(
     UserManager<User> userManager,
     SignInManager<User> signInManager) : IUserAccountService
 {

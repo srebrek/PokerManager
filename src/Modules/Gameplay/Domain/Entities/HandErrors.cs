@@ -2,7 +2,7 @@ using Shared.Domain;
 
 namespace Gameplay.Domain.Entities;
 
-public static class HandErrors
+internal static class HandErrors
 {
     public static readonly Error InsufficientParticipantCount =
         Error.Problem("Gameplay.Hand.InsufficientParticipantCount", "Participants count can not be less than 2.");

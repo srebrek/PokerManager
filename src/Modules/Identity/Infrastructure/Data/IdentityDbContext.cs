@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Data;
 
-internal sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
+public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
     : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options), IDataProtectionKeyContext
 {
     public const string Schema = "identity";

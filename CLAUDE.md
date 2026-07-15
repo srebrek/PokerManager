@@ -64,12 +64,37 @@ architecture test as a design signal, not an obstacle to suppress.
 - Commands/Queries: sealed public records named `<Feature>Command`/`Query`, in their `Features.<Feature>`
   namespace; handlers `<Feature>CommandHandler`/`QueryHandler`, public. Public is a hard Wolverine
   requirement (discovery excludes non-public types in every codegen mode) — same for event types.
-- Validators: `AbstractValidator<T>`, named `<Feature>CommandValidator`, internal.
+- Validators: `AbstractValidator<T>`, named `<Feature>CommandValidator`, public (Wolverine codegen
+  constructs them inline; internal would force service location — throws in Wolverine 6).
 - Endpoints: implement `IEndpoint`, named `<Feature>Endpoint`, internal, colocated with their command.
-- `DbContext` subclasses live in `<Module>.Infrastructure.Data`, named `*DbContext`.
+- `DbContext` subclasses live in `<Module>.Infrastructure.Data`, named `*DbContext`, public (injected
+  into handlers). Keep `DbSet` properties internal so the domain model doesn't leak outside the module.
 - Domain events: implement `IDomainEvent`, end in `DomainEvent`. Integration events: `IIntegrationEvent`,
   end in `IntegrationEvent`.
-- Module `Infrastructure` types are internal (migrations excepted).
+
+### Visibility policy (arch-enforced)
+
+Rule of thumb: **public only what Wolverine's generated code must reference; everything else internal.**
+Wolverine compiles handler-chain adapters into a separate generated assembly — internal types are
+invisible to it (discovery skips non-public handlers silently; internal scoped/transient dependencies
+force a service-locator fallback).
+
+Must be **public**:
+
+- Message types: commands, queries, domain/integration events.
+- Message handlers: `*CommandHandler`, `*QueryHandler`, `*EventHandler`.
+- Validators (constructed inline by the validation middleware).
+- `DbContext` subclasses (scoped handler dependency) — but their `DbSet` properties stay internal.
+- Service implementations behind `Abstractions` interfaces (e.g. `UserAccountService`) — also eases
+  testing. Prefer Singleton lifetime where the service is stateless; Scoped is fine but must be public.
+- Types pulled into a public signature by the above (e.g. Identity `User`: base type arg of
+  `IdentityDbContext`, ctor arg of `UserAccountService`) — each one is an explicit entry in
+  `ModuleTests.PublicInfrastructureExceptions`.
+
+Everything else **internal**: endpoints, the whole `Domain` model (entities, value objects, errors —
+modules never see each other's domain), EF configurations, design-time factories, remaining
+`Infrastructure` (migrations excepted). Enforced by `ModuleTests` + `ModifierTests`; CI additionally
+runs `dotnet run --project src/Api.Bootstrapper -- codegen test` to prove all generated code compiles.
 
 ### Messaging / persistence
 
