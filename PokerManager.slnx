@@ -29,5 +29,6 @@
     <Project Path="tests/E2E.Tests/E2E.Tests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="tests/Integration.Tests/Integration.Tests.csproj" />
+    <Project Path="tests/Web.Frontend.Component.Tests/Web.Frontend.Component.Tests.csproj" />
   </Folder>
 </Solution>
