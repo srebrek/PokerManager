@@ -134,13 +134,13 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Validators_ShouldBePublic() // Wolverine requirement
+    public void Validators_ShouldBeInternal()
     {
         Classes()
             .That()
             .AreAssignableTo(typeof(AbstractValidator<>))
             .Should()
-            .BePublic()
+            .BeInternal()
             .Check(Architecture);
     }
 

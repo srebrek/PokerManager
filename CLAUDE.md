@@ -64,8 +64,9 @@ architecture test as a design signal, not an obstacle to suppress.
 - Commands/Queries: sealed public records named `<Feature>Command`/`Query`, in their `Features.<Feature>`
   namespace; handlers `<Feature>CommandHandler`/`QueryHandler`, public. Public is a hard Wolverine
   requirement (discovery excludes non-public types in every codegen mode) — same for event types.
-- Validators: `AbstractValidator<T>`, named `<Feature>CommandValidator`, public (Wolverine codegen
-  constructs them inline; internal would force service location — throws in Wolverine 6).
+- Validators: `AbstractValidator<T>`, named `<Feature>CommandValidator`, internal — resolved via DI
+  (`IEnumerable<IValidator<T>>` injected into the endpoint, registered with `includeInternalTypes: true`),
+  not by Wolverine codegen.
 - Endpoints: implement `IEndpoint`, named `<Feature>Endpoint`, internal, colocated with their command.
 - `DbContext` subclasses live in `<Module>.Infrastructure.Data`, named `*DbContext`, public (injected
   into handlers). Keep `DbSet` properties internal so the domain model doesn't leak outside the module.
@@ -83,7 +84,6 @@ Must be **public**:
 
 - Message types: commands, queries, domain/integration events.
 - Message handlers: `*CommandHandler`, `*QueryHandler`, `*EventHandler`.
-- Validators (constructed inline by the validation middleware).
 - `DbContext` subclasses (scoped handler dependency) — but their `DbSet` properties stay internal.
 - Service implementations behind `Abstractions` interfaces (e.g. `UserAccountService`) — also eases
   testing. Prefer Singleton lifetime where the service is stateless; Scoped is fine but must be public.
@@ -91,8 +91,8 @@ Must be **public**:
   `IdentityDbContext`, ctor arg of `UserAccountService`) — each one is an explicit entry in
   `ModuleTests.PublicInfrastructureExceptions`.
 
-Everything else **internal**: endpoints, the whole `Domain` model (entities, value objects, errors —
-modules never see each other's domain), EF configurations, design-time factories, remaining
+Everything else **internal**: endpoints, validators, the whole `Domain` model (entities, value objects,
+errors — modules never see each other's domain), EF configurations, design-time factories, remaining
 `Infrastructure` (migrations excepted). Enforced by `ModuleTests` + `ModifierTests`. To prove all
 generated code compiles, run `dotnet run --project src/Api.Bootstrapper --no-launch-profile -- codegen test`
 with `ASPNETCORE_ENVIRONMENT=Production` and a dummy `ConnectionStrings__PokerManager-db` (CI does
@@ -102,7 +102,10 @@ not run this yet — see `docs/architecture-review.md` #18).
 
 - Wolverine is the mediator: endpoints call `bus.InvokeAsync<Result>(command, ct)`; handlers return
   `Result`/`Result<T>`, mapped to HTTP via `result.Match(...)`/`CustomResults.Problem`.
-- FluentValidation runs automatically via `ValidationMiddlewarePolicy` — handlers never validate manually.
+- FluentValidation runs via `bus.InvokeValidatedAsync(command, validators, ct)`
+  (`Shared.Infrastructure.Messaging.MessageBusExtensions`) — endpoints inject
+  `IEnumerable<IValidator<TCommand>>` and call this instead of `bus.InvokeAsync` directly; handlers never
+  validate manually.
 - Domain events raised on aggregates (`AggregateRoot.Raise`, exposed via `IHasDomainEvents.Events`) are
   auto-published on EF `SaveChanges`; integration events are published explicitly via
   `IMessageContext`/`IMessageBus`. Wolverine persists messages durably in Postgres and wraps handlers in
@@ -114,6 +117,17 @@ not run this yet — see `docs/architecture-review.md` #18).
 
 `Directory.Build.props`: nullable, warnings-as-errors, SonarAnalyzer, style enforced at build. Package
 versions are centrally managed in `Directory.Packages.props` — never inline `Version=` attributes.
+
+Transitive package vulnerabilities (`NU1903`, error via warnings-as-errors) go in the dedicated
+"Vulnerability overrides" `ItemGroup` at the bottom of `Directory.Packages.props`, each with an explicit
+`PackageReference` (no version) in its own bottom `ItemGroup` in every project that actually resolves the
+vulnerable transitive package — never in a `src` project with a `FrameworkReference`, that gets pruned
+and hits `NU1510` instead (see git history on `Directory.Packages.props`/`Directory.Build.props` for the
+full pruning-vs-audit story). `dotnet package update --vulnerable --project <path>` (`.NET 10` SDK,
+one project at a time, needs `TreatWarningsAsErrors` off to restore) automates adding both entries — use
+it to add new overrides. No automated tool removes stale ones: periodically delete an override entry and
+its `PackageReference`, rebuild the affected project(s); if it still builds clean, the transitive minimum
+has caught up and the override can stay gone.
 
 ## Meta
 

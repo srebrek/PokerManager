@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Shared.Domain;
 using Shared.Infrastructure;
-using Shared.Infrastructure.Messaging;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 using Wolverine;
@@ -59,7 +58,6 @@ builder.Host.UseWolverine(opts =>
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
     opts.CodeGeneration.AlwaysUseServiceLocationFor<IUserAccountService>();
-    opts.Policies.Add<ValidationMiddlewarePolicy>();
     opts.OnException<DbUpdateConcurrencyException>()
         .RetryWithCooldown(50.Milliseconds(), 100.Milliseconds(), 250.Milliseconds());
     opts.Discovery.IncludeAssembly(typeof(IdentityModule).Assembly);

@@ -15,8 +15,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="bunit" />
-		<!-- Direct reference only to override bunit's vulnerable transitive AngleSharp -->
-		<PackageReference Include="AngleSharp" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
@@ -31,6 +29,11 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\src\Web.Frontend\Web.Frontend.csproj" />
+	</ItemGroup>
+
+	<!-- Vulnerability overrides (NU1903) - see matching PackageVersion comment in Directory.Packages.props -->
+	<ItemGroup>
+		<PackageReference Include="AngleSharp" />
 	</ItemGroup>
 
 </Project>

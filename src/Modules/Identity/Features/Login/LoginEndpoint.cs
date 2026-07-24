@@ -1,8 +1,10 @@
 using Contracts.Authentication;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Domain;
+using Shared.Infrastructure.Messaging;
 using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
@@ -19,11 +21,11 @@ internal sealed class LoginEndpoint : IEndpoint
             async (
                 LoginRequest request,
                 IMessageBus bus,
+                IEnumerable<IValidator<LoginCommand>> validators,
                 CancellationToken ct) =>
             {
                 LoginCommand command = new(request.Email, request.Password, request.RememberMe);
-                Result result = await bus.InvokeAsync<Result>(command, ct);
-
+                Result result = await bus.InvokeValidatedAsync(command, validators, ct);
                 return result.Match(Results.NoContent, CustomResults.Problem);
             })
             .WithTags("Identity")

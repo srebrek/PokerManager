@@ -26,5 +26,9 @@ internal static class ValidationHelper
     }
 
     public static ValidationError CreateValidationError(ValidationFailure[] failures) =>
-        new([.. failures.Select(f => Error.Problem(f.ErrorCode, f.ErrorMessage))]);
+        new(failures
+            .GroupBy(failure => failure.PropertyName)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(failure => failure.ErrorMessage).ToArray()));
 }
