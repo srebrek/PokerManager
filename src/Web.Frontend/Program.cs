@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Web.Frontend;
+using Web.Frontend.Common.Http;
 using Web.Frontend.Features.Authentication;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -18,14 +19,15 @@ builder.Services.AddCascadingAuthenticationState();
 // BaseAddress = current browser origin + "api/" so that relative URIs like
 // "identity/me" resolve to "/api/identity/me" without changing any call sites.
 builder.Services.AddTransient<CookieHandler>();
-builder.Services.AddHttpClient("Backend", client =>
-        client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}api/"))
+builder.Services.AddHttpClient(
+        "Backend",
+        client => client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}api/"))
     .AddHttpMessageHandler<CookieHandler>();
-builder.Services.AddScoped(sp =>
-    sp.GetRequiredService<IHttpClientFactory>().CreateClient("Backend"));
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("Backend"));
 
 builder.Services.AddScoped<CookieAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(
     sp => sp.GetRequiredService<CookieAuthenticationStateProvider>());
+builder.Services.AddScoped<IGameplayApi, GameplayApi>();
 
 await builder.Build().RunAsync();

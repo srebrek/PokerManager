@@ -91,21 +91,27 @@ Must be **public**:
   `IdentityDbContext`, ctor arg of `UserAccountService`) — each one is an explicit entry in
   `ModuleTests.PublicInfrastructureExceptions`.
 
-Everything else **internal**: endpoints, validators, the whole `Domain` model (entities, value objects,
-errors — modules never see each other's domain), EF configurations, design-time factories, remaining
-`Infrastructure` (migrations excepted). Enforced by `ModuleTests` + `ModifierTests`. To prove all
-generated code compiles, run `dotnet run --project src/Api.Bootstrapper --no-launch-profile -- codegen test`
+Everything else **internal**: endpoints, validators (`*CommandValidator` — resolved by DI as
+`IEnumerable<IValidator<TCommand>>`, not constructed by Wolverine codegen, see below), the whole
+`Domain` model (entities, value objects, errors — modules never see each other's domain), EF
+configurations, design-time factories, remaining `Infrastructure` (migrations excepted). Enforced by
+`ModuleTests` + `ModifierTests`. To prove all generated code compiles, run
+`dotnet run --project src/Api.Bootstrapper --no-launch-profile -- codegen test`
 with `ASPNETCORE_ENVIRONMENT=Production` and a dummy `ConnectionStrings__PokerManager-db` (CI does
 not run this yet — see `docs/architecture-review.md` #18).
 
 ### Messaging / persistence
 
-- Wolverine is the mediator: endpoints call `bus.InvokeAsync<Result>(command, ct)`; handlers return
-  `Result`/`Result<T>`, mapped to HTTP via `result.Match(...)`/`CustomResults.Problem`.
-- FluentValidation runs via `bus.InvokeValidatedAsync(command, validators, ct)`
-  (`Shared.Infrastructure.Messaging.MessageBusExtensions`) — endpoints inject
-  `IEnumerable<IValidator<TCommand>>` and call this instead of `bus.InvokeAsync` directly; handlers never
-  validate manually.
+- Wolverine is the mediator: endpoints call `bus.InvokeValidatedAsync(command, validators, ct)`
+  (`Shared.Infrastructure.Messaging.MessageBusExtensions`, an extension on `IMessageBus`), never bare
+  `bus.InvokeAsync` — handlers return `Result`/`Result<T>`, mapped to HTTP via
+  `result.Match(...)`/`CustomResults.Problem`.
+- FluentValidation runs at the HTTP boundary, inside `InvokeValidatedAsync` itself, before the command
+  reaches the bus/DB/transaction — never inside a Wolverine handler chain, handlers never validate
+  manually. Every `IEndpoint` **must** call `InvokeValidatedAsync` — this is convention, not
+  build-enforced (an ArchUnitNET rule was tried and dropped: the actual call lives in a
+  compiler-generated lambda-closure class, not the endpoint class itself). Backed by per-endpoint
+  integration tests hitting the real HTTP boundary with invalid input.
 - Domain events raised on aggregates (`AggregateRoot.Raise`, exposed via `IHasDomainEvents.Events`) are
   auto-published on EF `SaveChanges`; integration events are published explicitly via
   `IMessageContext`/`IMessageBus`. Wolverine persists messages durably in Postgres and wraps handlers in

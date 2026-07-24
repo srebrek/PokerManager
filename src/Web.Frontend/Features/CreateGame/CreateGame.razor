@@ -1,0 +1,49 @@
+﻿@page "/games/create"
+@using Contracts.Gameplay
+
+@inject IGameplayApi GameplayApi
+@inject NavigationManager Nav
+
+<EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator/>
+
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h4">New Game</MudText>
+
+        <MudTextField @bind-Value="_model.HostName" For="@(() => _model.HostName)" Label="Host Name"/>
+        <MudButton
+            ButtonType="ButtonType.Submit"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Disabled="_submitting">
+            Create
+        </MudButton>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_error</MudAlert>
+        }
+    </MudStack>
+</EditForm>
+
+@code {
+    private readonly CreateGameModel _model = new();
+    private bool _submitting;
+    private string? _error;
+
+    private async Task OnValidSubmit()
+    {
+        _submitting = true;
+        _error = null;
+
+        GameplayResult<CreateGameResponse> result = await GameplayApi.CreateGameAsync(_model.ToRequest());
+
+        if (result.IsSuccess)
+        {
+            Nav.NavigateTo($"/games/{result.Value!.GameId}");
+            return;
+        }
+
+        _error = result.Error;
+        _submitting = false;
+    }
+}

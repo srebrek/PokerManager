@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.Tests;
 
+// TODO: add csrf tests
 public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
     protected ApiFactory Factory => factory;

@@ -12,6 +12,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
         "login-test@example.com",
         "VeryStrongPassword123!");
 
+    // TODO: add more complex cookie validation
     [Fact]
     public async Task Login_WithRememberMe_ShouldSetPersistentAuthCookie()
     {

@@ -1,3 +1,5 @@
+using Gameplay;
+using Gameplay.Infrastructure.Data;
 using Identity;
 using Identity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -41,9 +43,14 @@ public class GlobalDbFixture : IAsyncLifetime
             .UseNpgsql(migrationConnectionString)
             .UseSnakeCaseNamingConvention());
 
+        services.AddDbContext<GameplayDbContext>(options => options
+            .UseNpgsql(migrationConnectionString)
+            .UseSnakeCaseNamingConvention());
+
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         await serviceProvider.ApplyIdentityMigrationsAsync();
+        await serviceProvider.ApplyGameplayMigrationsAsync();
     }
 
     public string GetConnectionString(string dbName)

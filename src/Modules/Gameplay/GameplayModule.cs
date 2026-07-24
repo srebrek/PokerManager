@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Application;
 using Shared.Infrastructure;
 using Shared.Presentation.Extensions;
 using Wolverine.EntityFrameworkCore;
@@ -21,6 +22,7 @@ public static class GameplayModule
 
         services
             .AddDatabase(connectionString)
+            .AddApplication(typeof(GameplayModule).Assembly)
             .AddEndpoints(typeof(GameplayModule).Assembly);
 
         return services;

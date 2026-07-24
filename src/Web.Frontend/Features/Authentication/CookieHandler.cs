@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Web.Frontend.Features.Authentication;
 
+// TODO: Consider removing cookies as they should be provided by default
 internal sealed class CookieHandler : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
