@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using Contracts.Authentication;
+using Contracts.Api.Authentication;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

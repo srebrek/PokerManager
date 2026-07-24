@@ -1,4 +1,4 @@
-using Contracts.Http;
+using Contracts.Api.Http;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Web.Frontend.Features.Authentication;

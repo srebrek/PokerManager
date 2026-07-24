@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using Contracts.Authentication;
+using Contracts.Api.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Web.Frontend.Features.Authentication;

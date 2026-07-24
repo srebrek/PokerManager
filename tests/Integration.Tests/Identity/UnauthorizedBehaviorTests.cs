@@ -1,5 +1,5 @@
 using System.Net;
-using Contracts.Http;
+using Contracts.Api.Http;
 using Identity.Infrastructure;
 using Shouldly;
 

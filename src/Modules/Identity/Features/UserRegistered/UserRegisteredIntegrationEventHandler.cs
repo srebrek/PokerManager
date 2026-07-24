@@ -1,8 +1,7 @@
-using Identity.Events;
+using Contracts.IntegrationEvents.Identity;
 using Microsoft.Extensions.Logging;
 
-// Placeholder consumer: logs the event until a real consuming module (e.g. Notifications)
-// exists. When one does, move UserRegisteredIntegrationEvent to Contracts and consume there.
+// Placeholder consumer: logs the event until a real consuming module (e.g. Notifications) exists.
 namespace Identity.Features.UserRegistered;
 
 public sealed partial class UserRegisteredIntegrationEventHandler(

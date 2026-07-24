@@ -160,7 +160,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     {
         Classes()
             .That()
-            .ImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .ImplementInterface(typeof(Contracts.IntegrationEvents.IIntegrationEvent))
             .Should()
             .BePublic()
             .Check(Architecture);
@@ -173,7 +173,7 @@ public sealed class ModifierTests : BaseArchitectureTest
             .That()
             .ImplementInterface(typeof(Shared.Domain.IDomainEvent))
             .And()
-            .DoNotImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .DoNotImplementInterface(typeof(Contracts.IntegrationEvents.IIntegrationEvent))
             .Should()
             .BePublic()
             .WithoutRequiringPositiveResults()

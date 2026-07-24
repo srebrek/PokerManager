@@ -10,7 +10,7 @@ public abstract class BaseArchitectureTest
     protected static readonly ReflectionAssembly GameplayAssembly = typeof(Gameplay.GameplayModule).Assembly;
     protected static readonly ReflectionAssembly SharedAssembly = typeof(Shared.Domain.IStronglyTypedId<>).Assembly;
     protected static readonly ReflectionAssembly ContractsAssembly =
-        typeof(Contracts.Authentication.RegisterRequest).Assembly;
+        typeof(Contracts.Api.Authentication.RegisterRequest).Assembly;
 
     // IMPORTANT: register every new module assembly here (and reference its project from
     // this test project), otherwise it is invisible to ALL architecture rules.

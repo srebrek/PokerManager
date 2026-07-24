@@ -1,4 +1,4 @@
-namespace Contracts.Http;
+namespace Contracts.Api.Http;
 
 public static class HttpDefenseHeaders
 {

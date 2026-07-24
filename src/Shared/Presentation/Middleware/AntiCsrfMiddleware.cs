@@ -1,4 +1,4 @@
-using Contracts.Http;
+using Contracts.Api.Http;
 using Microsoft.AspNetCore.Http;
 
 namespace Shared.Presentation.Middleware;

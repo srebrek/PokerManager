@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
-using Contracts.Authentication;
-using Contracts.Http;
+using Contracts.Api.Authentication;
+using Contracts.Api.Http;
 using Shouldly;
 
 namespace E2E.Tests;

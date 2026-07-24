@@ -92,7 +92,7 @@ public sealed class ModuleTests : BaseArchitectureTest
                     && t.Namespace is not null
                     && t.Namespace.StartsWith($"{moduleName}.Domain", StringComparison.Ordinal)
                     && !typeof(Shared.Domain.IDomainEvent).IsAssignableFrom(t)
-                    && !typeof(Shared.Domain.IIntegrationEvent).IsAssignableFrom(t));
+                    && !typeof(Contracts.IntegrationEvents.IIntegrationEvent).IsAssignableFrom(t));
 
             foreach (Type type in domainTypes)
             {

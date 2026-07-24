@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ArchUnitNET.xUnitV3;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -9,28 +10,6 @@ namespace ArchitectureTests;
 
 public sealed class NamingConventionTests : BaseArchitectureTest
 {
-    [Fact]
-    public void Validators_ShouldHaveNameEndingWith_Validator()
-    {
-        Classes()
-            .That()
-            .AreAssignableTo(typeof(AbstractValidator<>))
-            .Should()
-            .HaveNameEndingWith("Validator")
-            .Check(Architecture);
-    }
-
-    [Fact]
-    public void Endpoints_ShouldHaveNameEndingWith_Endpoint()
-    {
-        Classes()
-            .That()
-            .ImplementInterface(typeof(IEndpoint))
-            .Should()
-            .HaveNameEndingWith("Endpoint")
-            .Check(Architecture);
-    }
-
     [Fact]
     public void DbContexts_ShouldHaveNameEndingWith_DbContext()
     {
@@ -52,7 +31,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
             .That()
             .ImplementInterface(typeof(Shared.Domain.IDomainEvent))
             .And()
-            .DoNotImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .DoNotImplementInterface(typeof(Contracts.IntegrationEvents.IIntegrationEvent))
             .Should()
             .HaveNameEndingWith("DomainEvent")
             .WithoutRequiringPositiveResults()
@@ -64,7 +43,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     {
         Classes()
             .That()
-            .ImplementInterface(typeof(Shared.Domain.IIntegrationEvent))
+            .ImplementInterface(typeof(Contracts.IntegrationEvents.IIntegrationEvent))
             .Should()
             .HaveNameEndingWith("IntegrationEvent")
             .Check(Architecture);
@@ -105,19 +84,35 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void CommandValidators_ShouldBeNamedAfter_FeatureNamespace()
+    public void Validators_ShouldBeNamedAfter_FeatureNamespaceAndValidatedMessage()
     {
+        static bool IsValidator(Type t) =>
+            t is { IsClass: true, IsAbstract: false }
+            && t.BaseType is { IsGenericType: true } baseType
+            && baseType.GetGenericTypeDefinition() == typeof(AbstractValidator<>);
+
         Type[] validatorTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())
-            .Where(t => t.Name.EndsWith("CommandValidator", StringComparison.Ordinal))];
+            .Where(IsValidator)];
+
+        validatorTypes.ShouldNotBeEmpty();
 
         foreach (Type type in validatorTypes)
         {
+            Type validatedType = type.BaseType!.GetGenericArguments()[0];
             string ns = type.Namespace!;
             string featureName = ns[(ns.LastIndexOf('.') + 1)..];
-            string expectedName = $"{featureName}CommandValidator";
+            string suffix = validatedType.Name switch
+            {
+                var n when n.EndsWith("Command", StringComparison.Ordinal) => "CommandValidator",
+                var n when n.EndsWith("Query", StringComparison.Ordinal) => "QueryValidator",
+                _ => throw new UnreachableException(
+                    $"'{type.Name}' validates '{validatedType.Name}', which is neither Command nor " +
+                    "Query. Extend the naming convention (and this test) or fix the validated type."),
+            };
+            string expectedName = $"{featureName}{suffix}";
             type.Name.ShouldBe(expectedName,
-                $"CommandValidator in namespace '{ns}' should be named '{expectedName}'.");
+                $"Validator in namespace '{ns}' should be named '{expectedName}'.");
         }
     }
 

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Contracts.Authentication;
+using Contracts.Api.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

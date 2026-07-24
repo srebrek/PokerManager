@@ -1,4 +1,4 @@
-using Contracts.Authentication;
+using Contracts.Api.Authentication;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
