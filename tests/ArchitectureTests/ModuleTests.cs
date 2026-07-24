@@ -8,6 +8,12 @@ namespace ArchitectureTests;
 
 public sealed class ModuleTests : BaseArchitectureTest
 {
+    // Code-coverage instrumentation (e.g. "run tests with coverage" in VS Code) injects a
+    // Microsoft.CodeCoverage.Instrumentation.Static.Tracker.* type into every instrumented
+    // assembly. ArchUnitNET then sees that type name in both module assemblies and flags a
+    // false cross-module dependency. Excluded here since it's a test-run artifact, not code.
+    private const string CoverageInstrumentationNamespace = @"^Microsoft\.CodeCoverage\..*";
+
     [Fact]
     public void Modules_ShouldNotDependOn_OtherModules()
     {
@@ -18,9 +24,13 @@ public sealed class ModuleTests : BaseArchitectureTest
                 Types()
                     .That()
                     .ResideInAssembly(module)
+                    .And()
+                    .DoNotHaveFullNameMatching(CoverageInstrumentationNamespace)
                     .Should()
                     .NotDependOnAnyTypesThat()
                     .ResideInAssembly(other)
+                    .AndShould()
+                    .NotHaveFullNameMatching(CoverageInstrumentationNamespace)
                     .Check(Architecture);
             }
         }
