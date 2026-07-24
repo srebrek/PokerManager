@@ -5,7 +5,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 ## What this is
 
 PokerManager: .NET 10 modular monolith for tracking friendly poker games (pot/stack sizes, settlement,
-stats). Aspire orchestration + Minimal API (Wolverine) backend + Blazor WASM PWA (MudBlazor) frontend +
+stats). Aspire orchestration + Minimal API (Wolverine) backend + Blazor WASM (MudBlazor) frontend +
 PostgreSQL + cookie auth. Functional requirements live in `docs/requirements.md`.
 
 ## Commands
@@ -57,7 +57,7 @@ architecture test as a design signal, not an obstacle to suppress.
   middleware, global exception handler, anti-CSRF/request-context middleware.
 - `src/Contracts` — request/response DTOs shared between frontend and backend.
 - `src/aspire/*` — Aspire AppHost + ServiceDefaults (OTel, health checks, service discovery).
-- `src/Web.Frontend` — Blazor WASM PWA, cookie auth via `CookieAuthenticationStateProvider`.
+- `src/Web.Frontend` — Blazor WASM, cookie auth via `CookieAuthenticationStateProvider`.
 
 ### Conventions (arch-enforced)
 
@@ -93,8 +93,10 @@ Must be **public**:
 
 Everything else **internal**: endpoints, the whole `Domain` model (entities, value objects, errors —
 modules never see each other's domain), EF configurations, design-time factories, remaining
-`Infrastructure` (migrations excepted). Enforced by `ModuleTests` + `ModifierTests`; CI additionally
-runs `dotnet run --project src/Api.Bootstrapper -- codegen test` to prove all generated code compiles.
+`Infrastructure` (migrations excepted). Enforced by `ModuleTests` + `ModifierTests`. To prove all
+generated code compiles, run `dotnet run --project src/Api.Bootstrapper --no-launch-profile -- codegen test`
+with `ASPNETCORE_ENVIRONMENT=Production` and a dummy `ConnectionStrings__PokerManager-db` (CI does
+not run this yet — see `docs/architecture-review.md` #18).
 
 ### Messaging / persistence
 

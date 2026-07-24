@@ -1,4 +1,5 @@
 using Identity.Infrastructure.Data;
+using JasperFx.CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,12 @@ namespace Integration.Tests;
 
 public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    static ApiFactory()
+    {
+        // Wolverine reason
+        JasperFxEnvironment.AutoStartHost = true;
+    }
+
     private readonly string _dbName = $"test_db_{Guid.NewGuid():N}";
     private string _connectionString = string.Empty;
     private Respawner _respawner = null!;

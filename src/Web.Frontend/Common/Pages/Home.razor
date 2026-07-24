@@ -9,6 +9,9 @@
         <MudText>You are logged in as <strong>@context.User.Identity?.Name</strong>.</MudText>
     </Authorized>
     <NotAuthorized>
-        <MudText>Please <MudLink Href="/login">log in</MudLink> or <MudLink Href="/register">register</MudLink>.</MudText>
+        <MudText>
+            Please
+            <MudLink Href="/login">log in</MudLink> or <MudLink Href="/register">register</MudLink>.
+        </MudText>
     </NotAuthorized>
 </AuthorizeView>

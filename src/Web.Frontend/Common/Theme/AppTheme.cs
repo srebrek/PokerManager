@@ -1,6 +1,6 @@
 using MudBlazor;
 
-namespace Web.Frontend.Theme;
+namespace Web.Frontend.Common.Theme;
 
 /// <summary>
 /// Central place for the application's MudBlazor theme. Adjust palettes here.

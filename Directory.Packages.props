@@ -61,6 +61,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
     <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="bunit" Version="2.7.2" />
+    <!-- Transitive dependency of bunit; bumped over vulnerable 1.4.0 (GHSA-pgww-w46g-26qg) -->
+    <PackageVersion Include="AngleSharp" Version="1.5.2" />
     <!-- Tools & Analysis -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.24.0.138807" />

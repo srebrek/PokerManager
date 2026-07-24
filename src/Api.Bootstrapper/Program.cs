@@ -20,21 +20,13 @@ using Wolverine.Postgresql;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-bool isRunningCodegen = args.Contains("codegen");
-string? databaseConnectionString = builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName);
+string databaseConnectionString = builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName)
+    ?? throw new InvalidOperationException(
+        $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
 
-if (!isRunningCodegen)
-{
-    if (databaseConnectionString is null)
-    {
-        throw new InvalidOperationException(
-            $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
-    }
-
-    builder.Services
-        .AddHealthChecks()
-        .AddNpgSql(databaseConnectionString!);
-}
+builder.Services
+    .AddHealthChecks()
+    .AddNpgSql(databaseConnectionString);
 
 builder.AddServiceDefaults();
 builder.AddDatabaseAndMessagingTelemetry();
@@ -58,15 +50,12 @@ builder.Host.UseWolverine(opts =>
         opts.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
     }
 
-    if (!isRunningCodegen)
-    {
-        opts.PersistMessagesWithPostgresql(databaseConnectionString!);
-        opts.Durability.MessageStorageSchemaName = "wolverine";
-        opts.Policies.UseDurableLocalQueues();
-        opts.Policies.AutoApplyTransactions();
-        opts.UseEntityFrameworkCoreTransactions();
-        opts.PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents, IDomainEvent>(x => x.Events);
-    }
+    opts.PersistMessagesWithPostgresql(databaseConnectionString);
+    opts.Durability.MessageStorageSchemaName = "wolverine";
+    opts.Policies.UseDurableLocalQueues();
+    opts.Policies.AutoApplyTransactions();
+    opts.UseEntityFrameworkCoreTransactions();
+    opts.PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents, IDomainEvent>(x => x.Events);
 
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
     opts.CodeGeneration.AlwaysUseServiceLocationFor<IUserAccountService>();
@@ -114,10 +103,5 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     }
 }
 
-if (isRunningCodegen)
-{
-    return await app.RunJasperFxCommands(args);
-}
-
-await app.RunAsync();
-return 0;
+// For codegen
+return await app.RunJasperFxCommands(args);
