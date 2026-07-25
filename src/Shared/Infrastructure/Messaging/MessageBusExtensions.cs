@@ -24,7 +24,9 @@ public static class MessageBusExtensions
                 return Result.Failure(ValidationHelper.CreateValidationError(failures));
             }
 
+#pragma warning disable RS0030 // Do not use banned APIs - the single legal InvokeAsync call site
             return await bus.InvokeAsync<Result>(command, ct);
+#pragma warning restore RS0030
         }
 
         public async Task<Result<TResponse>> InvokeValidatedAsync<TCommand, TResponse>(
@@ -39,7 +41,9 @@ public static class MessageBusExtensions
                 return Result.Failure<TResponse>(ValidationHelper.CreateValidationError(failures));
             }
 
+#pragma warning disable RS0030 // Do not use banned APIs - the single legal InvokeAsync call site
             return await bus.InvokeAsync<Result<TResponse>>(command, ct);
+#pragma warning restore RS0030
         }
     }
 }

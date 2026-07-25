@@ -1,4 +1,4 @@
-using Contracts.Gameplay;
+using Contracts.Api.Gameplay;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
@@ -10,6 +10,7 @@ public sealed class CreateGameCommandHandler(GameplayDbContext context)
 {
     public async Task<Result<CreateGameResponse>> Handle(CreateGameCommand command)
     {
+        // TODO: remove later
         // temporary hardcoded values
         ChipsStack hostChips = ChipsStack.Create(1000).Value;
         ChipsStack smallBlind = ChipsStack.Create(5).Value;
@@ -24,6 +25,6 @@ public sealed class CreateGameCommandHandler(GameplayDbContext context)
         Game game = createGameResult.Value;
 
         context.Games.Add(game);
-        return new CreateGameResponse(game.Id.Value, game.JoinCode.Value);
+        return new CreateGameResponse(game.Id.Value, game.HostParticipantId.Value);
     }
 }

@@ -1,0 +1,64 @@
+@using System.ComponentModel.DataAnnotations
+@using Contracts.Api.Gameplay
+@inject IGameplayApi GameplayApi
+
+<EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <MudStack Spacing="3">
+
+        <MudText Typo="Typo.h4">Join Game</MudText>
+
+        <MudTextField @bind-Value="_model.ParticipantName" For="@(() => _model.ParticipantName)" Label="Your Name" />
+
+        <MudTextField @bind-Value="_model.JoinCode" For="@(() => _model.JoinCode)" Label="Join Code" />
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="_submitting">
+            Join
+        </MudButton>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_error</MudAlert>
+        }
+
+    </MudStack>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback<GameJoined> OnJoined { get; set; }
+    private readonly JoinGameModel _model = new();
+    private bool _submitting;
+    private string? _error;
+
+    private async Task OnValidSubmit()
+    {
+        _submitting = true;
+        _error = null;
+
+        GameplayResult<JoinGameResponse> result = await GameplayApi.JoinGameAsync(_model.ToRequest());
+
+        if (result.IsSuccess)
+        {
+            await OnJoined.InvokeAsync(new(result.Value!.GameId, result.Value!.ParticipantId));
+            return;
+        }
+
+        _error = result.Error;
+        _submitting = false;
+    }
+    internal sealed class JoinGameModel
+    {
+        [Required]
+        public string ParticipantName { get; set; } = string.Empty;
+
+        [Required]
+        [Length(6, 6)]
+        public string JoinCode { get; set; } = string.Empty;
+
+        public JoinGameRequest ToRequest() => new(ParticipantName, JoinCode);
+    }
+
+    public readonly record struct GameJoined(Guid GameId, Guid ParticipantId);
+}

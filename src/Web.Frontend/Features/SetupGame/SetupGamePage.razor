@@ -1,0 +1,15 @@
+@page "/games/setup"
+@using Web.Frontend.Features.CreateGame
+@using Web.Frontend.Features.JoinGame
+
+@inject NavigationManager Nav
+
+<MudStack>
+    <CreateGameForm OnCreated="HandleGameCreated" />
+    <JoinGameForm OnJoined="HandleGameJoined" />
+</MudStack>
+
+@code {
+    private void HandleGameCreated(CreateGameForm.GameCreated gameCreated) => Nav.NavigateTo($"/games/temp");
+    private void HandleGameJoined(JoinGameForm.GameJoined gameJoined) => Nav.NavigateTo($"/games/temp");
+}

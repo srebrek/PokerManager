@@ -1,10 +1,10 @@
-using Contracts.Gameplay;
-using Microsoft.AspNetCore.Components;
+using Contracts.Api.Gameplay;
+using MudBlazor;
 using NSubstitute;
 using Shouldly;
 using Web.Frontend.Common.Http;
 using Web.Frontend.Component.Tests.Common;
-using CreateGamePage = Web.Frontend.Features.CreateGame.CreateGame;
+using Web.Frontend.Features.CreateGame;
 
 namespace Web.Frontend.Component.Tests.Features.CreateGame;
 
@@ -18,10 +18,10 @@ public sealed class CreateGameTests : MudBunitContext
     }
 
     [Fact]
-    public async Task CreateGame_WithEmptySubmit_ShouldNotCallApi()
+    public async Task CreateGame_InvalidSubmit_DoesNotCallApi()
     {
         // Arrange
-        IRenderedComponent<CreateGamePage> cut = Render<CreateGamePage>();
+        IRenderedComponent<CreateGameForm> cut = Render<CreateGameForm>();
 
         // Act
         await cut.Find("form").SubmitAsync();
@@ -31,38 +31,48 @@ public sealed class CreateGameTests : MudBunitContext
     }
 
     [Fact]
-    public async Task CreateGame_WithValidSubmit_ShouldCallApiAndNavigateOnSuccess()
+    public async Task CreateGame_ValidSubmit_CallsApiAndTriggersCallback()
     {
         // Arrange
-        Guid gameId = Guid.NewGuid();
-        IRenderedComponent<CreateGamePage> cut = Render<CreateGamePage>();
-        _api.CreateGameAsync(Arg.Any<CreateGameRequest>(), Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Success(new CreateGameResponse(gameId, "213769")));
+        CreateGameForm.GameCreated expectedGameCreated = new(Guid.NewGuid(), Guid.NewGuid());
+
+        CreateGameRequest expectedCreateGameRequest = new("TestHostName");
+        CreateGameResponse apiCreateGameResponse = new(expectedGameCreated.GameId, expectedGameCreated.ParticipantId);
+        _api.CreateGameAsync(expectedCreateGameRequest, Arg.Any<CancellationToken>())
+            .Returns(GameplayResult.Success(apiCreateGameResponse));
+
+        CreateGameForm.GameCreated actualGameCreated = default;
+        IRenderedComponent<CreateGameForm> cut = Render<CreateGameForm>(parameters => parameters
+            .Add(form => form.OnCreated, gc => actualGameCreated = gc));
 
         // Act
-        await cut.Find("input").ChangeAsync("srebrek");
+        await cut.Find("input").ChangeAsync("TestHostName");
         await cut.Find("form").SubmitAsync();
 
         // Assert
-        await _api.Received(1).CreateGameAsync(Arg.Is<CreateGameRequest>(r => r.HostName == "srebrek"), Arg.Any<CancellationToken>());
-        BunitNavigationManager nav = (BunitNavigationManager)Services.GetRequiredService<NavigationManager>();
-        nav.Uri.ShouldEndWith($"/games/{gameId}");
-
+        await _api.Received(1).CreateGameAsync(expectedCreateGameRequest, Arg.Any<CancellationToken>());
+        actualGameCreated.ShouldBe(expectedGameCreated);
     }
 
     [Fact]
-    public async Task CreateGame_WithValidSubmit_ShouldShowErrorOnFailure()
+    public async Task CreateGame_ApiReturnsError_DisplaysErrorAndDoesNotTriggerCallback()
     {
         // Arrange
+        string expectedErrorMessage = "Server error. Try again.";
         _api.CreateGameAsync(Arg.Any<CreateGameRequest>(), Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Failure<CreateGameResponse>("Server error. Try again."));
-        IRenderedComponent<CreateGamePage> cut = Render<CreateGamePage>();
+            .Returns(GameplayResult.Failure<CreateGameResponse>(expectedErrorMessage));
+
+        bool callbackCalled = false;
+        IRenderedComponent<CreateGameForm> cut = Render<CreateGameForm>(parameters => parameters
+            .Add(form => form.OnCreated, gc => callbackCalled = true));
 
         // Act
-        await cut.Find("input").ChangeAsync("srebrek");
+        await cut.Find("input").ChangeAsync("TestHostName");
         await cut.Find("form").SubmitAsync();
 
         // Assert
-        cut.Markup.ShouldContain("Server error. Try again.");
+        IRenderedComponent<MudAlert> alert = cut.FindComponent<MudAlert>();
+        alert.Markup.ShouldContain(expectedErrorMessage);
+        callbackCalled.ShouldBe(false);
     }
 }

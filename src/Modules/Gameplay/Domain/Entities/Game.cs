@@ -50,23 +50,23 @@ internal sealed class Game : AggregateRoot<GameId>
         return game;
     }
 
-    public Result Join(string name, ChipsStack chips)
+    public Result<ParticipantId> Join(string participantName, ChipsStack chips)
     {
-        if (Status is not GameStatus.NotStarted)
+        if (Status is GameStatus.Ended)
         {
-            return Result.Failure(GameErrors.JoinStartedGame);
+            return Result.Failure<ParticipantId>(GameErrors.JoinEndedGame);
         }
 
-        Result<Participant> participantResult = Participant.Create(name, chips);
+        Result<Participant> participantResult = Participant.Create(participantName, chips);
 
         if (participantResult.IsFailure)
         {
-            return Result.Failure(participantResult.Error);
+            return Result.Failure<ParticipantId>(participantResult.Error);
         }
 
         _participants.Add(participantResult.Value);
 
-        return Result.Success();
+        return participantResult.Value.Id;
     }
 
     public Result Start()

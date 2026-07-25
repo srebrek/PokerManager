@@ -1,4 +1,4 @@
-using Contracts.Gameplay;
+using Contracts.Api.Gameplay;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

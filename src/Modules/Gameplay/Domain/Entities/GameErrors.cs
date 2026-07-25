@@ -7,11 +7,8 @@ internal static class GameErrors
     public static readonly Error BigBlindLessThanSmallBlind =
         Error.Problem("Gameplay.Game.BigBlindLessThanSmallBlind", "Big blind can not be less than small blind.");
 
-    public static readonly Error JoinStartedGame =
-        Error.Conflict("Gameplay.Game.JoinStartedGame", "Can not join a game that has already started.");
-
-    public static readonly Error ParticipantAlreadyJoined =
-        Error.Conflict("Gameplay.Game.ParticipantAlreadyJoined", "Participant already joined this game.");
+    public static readonly Error JoinEndedGame =
+        Error.Conflict("Gameplay.Game.JoinEndedGame", "Can not join a game that has ended.");
 
     public static readonly Error GameAlreadyStarted =
         Error.Conflict("Gameplay.Game.GameAlreadyStarted", "Game has already started.");
@@ -29,4 +26,7 @@ internal static class GameErrors
         Error.Conflict(
             "Gameplay.Game.InsufficientActiveParticipantCount",
             "Active participants count can not be less than 2.");
+
+    public static readonly Error GameNotFound =
+        Error.NotFound("Gameplay.Game.GameNotFound", "Game not found.");
 }

@@ -1,16 +1,17 @@
-﻿@page "/games/create"
-@using Contracts.Gameplay
+﻿@using System.ComponentModel.DataAnnotations
+@using Contracts.Api.Gameplay
 
 @inject IGameplayApi GameplayApi
-@inject NavigationManager Nav
 
 <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator/>
 
     <MudStack Spacing="3">
+
         <MudText Typo="Typo.h4">New Game</MudText>
 
-        <MudTextField @bind-Value="_model.HostName" For="@(() => _model.HostName)" Label="Host Name"/>
+        <MudTextField @bind-Value="_model.HostName" For="@(() => _model.HostName)" Label="Your Name"/>
+
         <MudButton
             ButtonType="ButtonType.Submit"
             Variant="Variant.Filled"
@@ -18,14 +19,18 @@
             Disabled="_submitting">
             Create
         </MudButton>
+
         @if (_error is not null)
         {
             <MudAlert Severity="Severity.Error">@_error</MudAlert>
         }
+
     </MudStack>
 </EditForm>
 
 @code {
+    [Parameter]
+    public EventCallback<GameCreated> OnCreated { get; set; }
     private readonly CreateGameModel _model = new();
     private bool _submitting;
     private string? _error;
@@ -39,11 +44,21 @@
 
         if (result.IsSuccess)
         {
-            Nav.NavigateTo($"/games/{result.Value!.GameId}");
+            await OnCreated.InvokeAsync(new(result.Value!.GameId, result.Value!.ParticipantId));
             return;
         }
 
         _error = result.Error;
         _submitting = false;
     }
+
+    internal sealed class CreateGameModel
+    {
+        [Required]
+        public string HostName { get; set; } = string.Empty;
+
+        public CreateGameRequest ToRequest() => new(HostName);
+    }
+
+    public readonly record struct GameCreated(Guid GameId, Guid ParticipantId);
 }

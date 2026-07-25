@@ -1,11 +1,12 @@
 using System.Net.Http.Json;
-using Contracts.Gameplay;
+using Contracts.Api.Gameplay;
 
 namespace Web.Frontend.Common.Http;
 
 internal interface IGameplayApi
 {
     Task<GameplayResult<CreateGameResponse>> CreateGameAsync(CreateGameRequest request, CancellationToken ct = default);
+    Task<GameplayResult<JoinGameResponse>> JoinGameAsync(JoinGameRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
@@ -14,7 +15,14 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         CreateGameRequest request,
         CancellationToken ct = default) =>
         ExecuteAsync<CreateGameResponse>(
-            c => httpClient.PostAsJsonAsync(GameplayRoutes.CreateGame, request, c),
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.CreateGame, request, ct),
+            ct);
+
+    public Task<GameplayResult<JoinGameResponse>> JoinGameAsync(
+        JoinGameRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync<JoinGameResponse>(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.JoinGame, request, ct),
             ct);
 
     private async Task<GameplayResult<TValue>> ExecuteAsync<TValue>(

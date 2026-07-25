@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Contracts.Gameplay;
+using Contracts.Api.Gameplay;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
@@ -48,7 +48,7 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
     public async Task CreateGame_WithValidHostName_ShouldReturnCreated()
     {
         // Arrange
-        CreateGameRequest request = new(HostName: "Alice");
+        CreateGameRequest request = new("TestHostName");
 
         // Act
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
@@ -62,7 +62,7 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
         CreateGameResponse? body = await response.Content.ReadFromJsonAsync<CreateGameResponse>(CancellationToken);
         body.ShouldNotBeNull();
         body.GameId.ShouldNotBe(Guid.Empty);
-        body.JoinCode.ShouldNotBeNullOrWhiteSpace();
+        body.ParticipantId.ShouldNotBe(Guid.Empty);
 
         response.Headers.Location.ShouldNotBeNull();
         response.Headers.Location.ToString().ShouldBe($"gameplay/games/{body.GameId}");
@@ -70,10 +70,14 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
         await ExecuteWithContextAsync<GameplayDbContext>(async context =>
         {
             Game? game = await context.Games
+                .Include(g => g.Participants)
                 .SingleOrDefaultAsync(g => g.Id == GameId.From(body.GameId), CancellationToken);
 
             game.ShouldNotBeNull();
-            game.JoinCode.Value.ShouldBe(body.JoinCode);
+            game.Participants.Count.ShouldBe(1);
+            Participant? participant = game.Participants.SingleOrDefault();
+            participant.ShouldNotBeNull();
+            participant.Id.ShouldBe(game.HostParticipantId);
         });
     }
 }
