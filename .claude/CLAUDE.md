@@ -108,10 +108,16 @@ not run this yet — see `docs/architecture-review.md` #18).
   `result.Match(...)`/`CustomResults.Problem`.
 - FluentValidation runs at the HTTP boundary, inside `InvokeValidatedAsync` itself, before the command
   reaches the bus/DB/transaction — never inside a Wolverine handler chain, handlers never validate
-  manually. Every `IEndpoint` **must** call `InvokeValidatedAsync` — this is convention, not
-  build-enforced (an ArchUnitNET rule was tried and dropped: the actual call lives in a
-  compiler-generated lambda-closure class, not the endpoint class itself). Backed by per-endpoint
-  integration tests hitting the real HTTP boundary with invalid input.
+  manually. Enforced at compile time: `bus.InvokeAsync` is banned via `BannedSymbols.txt` (RS0030),
+  so the only way to invoke a command is `InvokeValidatedAsync`. Do **not** add per-endpoint
+  integration tests asserting that validation ran — the short-circuit and `ProblemDetails` shape are
+  proven once in `CreateGameIntegrationTests`.
+  An ArchUnitNET rule cannot replace the ban: the call sits in a compiler-generated lambda-closure
+  class rather than the endpoint type, and `InvokeAsync` is declared on `ICommandBus`, not
+  `IMessageBus` — both make the obvious rule silently match nothing.
+- Validators stay an explicit `IEnumerable<IValidator<TCommand>>` parameter of the endpoint lambda, not
+  resolved from `IServiceProvider` inside `InvokeValidatedAsync`: the generic parameter ties the
+  collection to the command type, so a copy-pasted mismatch is a compile error.
 - Domain events raised on aggregates (`AggregateRoot.Raise`, exposed via `IHasDomainEvents.Events`) are
   auto-published on EF `SaveChanges`; integration events are published explicitly via
   `IMessageContext`/`IMessageBus`. Wolverine persists messages durably in Postgres and wraps handlers in
@@ -119,10 +125,35 @@ not run this yet — see `docs/architecture-review.md` #18).
 - EF Core: Npgsql, snake_case naming, one `DbContext` + schema + migrations per module, shared connection
   string (`DatabaseConstants.ConnectionStringName`).
 
+### Testing
+
+Full rules and worked examples: `docs/testing-guidelines.md`. The decision rule:
+
+- **1 integration happy path per slice**, through real HTTP and real Postgres. Mandatory.
+- **Every other branch is a unit test** — unless the branch is unreachable without infrastructure (a
+  query returning `null`, a LINQ filter, a unique index, a transaction/outbox/cascade), which makes it
+  integration, one representative case.
+- Ceiling **2–4 integration tests per slice**. Integration count must not grow with the number of
+  domain branches — the diamond means every slice has an integration test, not every branch does.
+- Domain (aggregates, value objects, guards): unit, **all** branches, no mocks, no DB.
+- A handler that only does load → delegate → map gets **no test of its own**; unit-testing it would
+  need an EF fake, which tests the fake.
+- Shared mechanisms (`ErrorType` → HTTP status, validation short-circuit, CSRF, 401) are proven **once
+  per application**; mark such a test as not-to-be-repeated per slice.
+- A branch unreachable from HTTP is a design signal, not a coverage gap — fix the code instead.
+- Never test what the compiler or an architecture test already enforces.
+
 ### Build settings
 
 `Directory.Build.props`: nullable, warnings-as-errors, SonarAnalyzer, style enforced at build. Package
 versions are centrally managed in `Directory.Packages.props` — never inline `Version=` attributes.
+
+`BannedSymbols.txt` (root, wired to every project via `AdditionalFiles` in `Directory.Build.props`)
+turns conventions that docs and PR review would otherwise guard into build errors (RS0030). Prefer it
+over a test or a written rule whenever the convention is "never call this API". Docids must name the
+**declaring** type, use `` `n `` for type arity and ``` ``n ``` for method arity, and every overload
+needs its own line. Keep the include path prefixed with `$(MSBuildThisFileDirectory)` — a relative path
+resolves against the importing project, silently points at a missing file and disables the ban.
 
 Transitive package vulnerabilities (`NU1903`, error via warnings-as-errors) go in the dedicated
 "Vulnerability overrides" `ItemGroup` at the bottom of `Directory.Packages.props`, each with an explicit

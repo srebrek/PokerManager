@@ -62,6 +62,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="bunit" Version="2.7.2" />
     <!-- Tools & Analysis -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.24.0.138807" />
   </ItemGroup>
