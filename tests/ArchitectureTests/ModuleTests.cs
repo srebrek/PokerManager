@@ -15,7 +15,7 @@ public sealed class ModuleTests : BaseArchitectureTest
     private const string CoverageInstrumentationNamespace = @"^Microsoft\.CodeCoverage\..*";
 
     [Fact]
-    public void Modules_ShouldNotDependOn_OtherModules()
+    public void Module_DoesNotDependOnOtherModules()
     {
         foreach (ReflectionAssembly module in ModuleAssemblies)
         {
@@ -37,7 +37,7 @@ public sealed class ModuleTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Infrastructure_ShouldNotDependOn_FeaturesLayer()
+    public void Infrastructure_DoesNotDependOnFeaturesLayer()
     {
         foreach (string moduleName in ModuleNames())
         {
@@ -58,7 +58,7 @@ public sealed class ModuleTests : BaseArchitectureTest
     ];
 
     [Fact]
-    public void ModuleInfrastructure_ShouldBeInternal_ExceptWolverineCodegenSurface()
+    public void Infrastructure_IsInternalExceptWolverineCodegenSurface()
     {
         foreach (ReflectionAssembly module in ModuleAssemblies)
         {
@@ -91,7 +91,7 @@ public sealed class ModuleTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void ModuleDomain_ShouldBeInternal_ExceptEventTypes()
+    public void Domain_IsInternalExceptDomainEvent()
     {
         foreach (ReflectionAssembly module in ModuleAssemblies)
         {
@@ -101,8 +101,7 @@ public sealed class ModuleTests : BaseArchitectureTest
                 .Where(t => !t.IsNested
                     && t.Namespace is not null
                     && t.Namespace.StartsWith($"{moduleName}.Domain", StringComparison.Ordinal)
-                    && !typeof(Shared.Domain.IDomainEvent).IsAssignableFrom(t)
-                    && !typeof(Contracts.IntegrationEvents.IIntegrationEvent).IsAssignableFrom(t));
+                    && !typeof(Shared.Domain.IDomainEvent).IsAssignableFrom(t));
 
             foreach (Type type in domainTypes)
             {

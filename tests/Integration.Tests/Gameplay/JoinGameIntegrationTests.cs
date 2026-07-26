@@ -12,7 +12,7 @@ namespace Integration.Tests.Gameplay;
 public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]
-    public async Task JoinGame_WithValidRequest_ShouldReturnOk()
+    public async Task JoinGame_ValidRequest_ReturnsOk()
     {
         // Arrange
         Game game = Game.Create(
@@ -55,7 +55,7 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrati
 
     // This test also tests mapping of the NotFound response
     [Fact]
-    public async Task JoinGame_WithoutExistingGame_ShouldReturnNotFound()
+    public async Task JoinGame_GameDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         JoinGameRequest request = new("TestParticipantName", "123456");
@@ -73,7 +73,7 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrati
     // TODO: This test should be unit. Currently this is the only integration test that validates Conflict mapping
     // so remove when a naturally returning conflict test occurs.
     [Fact]
-    public async Task JoinGame_WithEndedStatus_ReturnsConflict()
+    public async Task JoinGame_EndedStatus_ReturnsConflict()
     {
         // Arrange
         Game game = Game.Create(

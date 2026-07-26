@@ -13,7 +13,7 @@ public sealed class RegisterCommandHandlerTests
     private readonly IUserAccountService _userAccountService = Substitute.For<IUserAccountService>();
 
     [Fact]
-    public async Task Handle_WhenRegistrationSucceeds_ShouldReturnUserRegisteredEvent()
+    public async Task Handle_RegistrationSucceeds_ReturnsUserRegisteredEvent()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
@@ -35,7 +35,7 @@ public sealed class RegisterCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenRegistrationFails_ShouldNotReturnAnyEvent()
+    public async Task Handle_RegistrationFails_DoesNotReturnAnyEvent()
     {
         // Arrange
         RegisterCommand command = new("duplicate@example.com", "Password123!");

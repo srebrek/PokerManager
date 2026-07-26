@@ -13,7 +13,7 @@ namespace Integration.Tests.Gameplay;
 public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]
-    public async Task CreateGame_WithEmptyHostName_ShouldBeRejectedByValidatorBeforeHandler()
+    public async Task CreateGame_EmptyHostName_IsRejectedByValidatorBeforeHandler()
     {
         // Arrange
         CreateGameRequest request = new(string.Empty);
@@ -45,7 +45,7 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
     }
 
     [Fact]
-    public async Task CreateGame_WithValidHostName_ShouldReturnCreated()
+    public async Task CreateGame_ValidHostName_ReturnsCreated()
     {
         // Arrange
         CreateGameRequest request = new("TestHostName");

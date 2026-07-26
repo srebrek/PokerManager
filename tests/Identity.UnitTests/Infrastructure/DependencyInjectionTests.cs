@@ -12,7 +12,7 @@ namespace Identity.UnitTests.Infrastructure;
 public sealed class DependencyInjectionTests
 {
     [Fact]
-    public void AddIdentityModule_WithValidConnection_ShouldConfigure_PasswordPolicy()
+    public void AddIdentityModule_ValidConnection_ConfiguresPasswordPolicy()
     {
         // Arrange
         ServiceCollection services = new();
@@ -39,7 +39,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddIdentityModule_ShouldConfigure_ApplicationCookie()
+    public void AddIdentityModule_ValidConnection_ConfiguresApplicationCookie()
     {
         // Arrange
         ServiceCollection services = new();

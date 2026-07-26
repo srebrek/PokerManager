@@ -19,7 +19,7 @@ public sealed class SharedArchitectureTests : BaseArchitectureTest
         Types().That().ResideInNamespaceMatching(@"^Shared\.Presentation").As("Shared.Presentation");
 
     [Fact]
-    public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
+    public void DomainLayer_DoesNotDependOnApplicationLayer()
     {
         Types()
             .That()
@@ -30,7 +30,7 @@ public sealed class SharedArchitectureTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void DomainLayer_ShouldNotDependOn_InfrastructureLayer()
+    public void DomainLayer_DoesNotDependOnInfrastructureLayer()
     {
         Types()
             .That()
@@ -41,7 +41,7 @@ public sealed class SharedArchitectureTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void DomainLayer_ShouldNotDependOn_PresentationLayer()
+    public void DomainLayer_DoesNotDependOnPresentationLayer()
     {
         Types()
             .That()
@@ -52,7 +52,7 @@ public sealed class SharedArchitectureTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void ApplicationLayer_ShouldNotDependOn_InfrastructureLayer()
+    public void ApplicationLayer_DoesNotDependOnInfrastructureLayer()
     {
         Types()
             .That()
@@ -63,7 +63,7 @@ public sealed class SharedArchitectureTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void ApplicationLayer_ShouldNotDependOn_PresentationLayer()
+    public void ApplicationLayer_DoesNotDependOnPresentationLayer()
     {
         Types()
             .That()

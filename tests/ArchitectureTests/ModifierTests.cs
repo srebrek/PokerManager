@@ -9,7 +9,7 @@ namespace ArchitectureTests;
 public sealed class ModifierTests : BaseArchitectureTest
 {
     [Fact]
-    public void Commands_ShouldBeSealed()
+    public void Command_IsSealed()
     {
         Classes()
             .That()
@@ -20,7 +20,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Queries_ShouldBeSealed()
+    public void Query_IsSealed()
     {
         Classes()
             .That()
@@ -32,7 +32,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Commands_ShouldBeRecords()
+    public void Command_IsRecord()
     {
         IEnumerable<Type> commandTypes = ModuleAssemblies
             .SelectMany(a => a.GetTypes())
@@ -47,7 +47,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Queries_ShouldBeRecords()
+    public void Query_IsRecord()
     {
         IEnumerable<Type> queryTypes = ModuleAssemblies
             .SelectMany(a => a.GetTypes())
@@ -62,7 +62,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Contracts_RequestsAndResponses_ShouldBeRecords()
+    public void RequestAndResponse_AreRecords()
     {
         IEnumerable<Type> contractTypes = ContractsAssembly
             .GetTypes()
@@ -77,7 +77,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Commands_ShouldBePublic() // Wolverine requirement
+    public void Command_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -88,7 +88,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Queries_ShouldBePublic() // Wolverine requirement
+    public void Query_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -100,7 +100,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void CommandHandlers_ShouldBePublic() // Wolverine requirement
+    public void CommandHandler_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -111,7 +111,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void QueryHandlers_ShouldBePublic() // Wolverine requirement
+    public void QueryHandler_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -123,7 +123,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Endpoints_ShouldBeInternal()
+    public void Endpoint_IsInternal()
     {
         Classes()
             .That()
@@ -134,7 +134,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Validators_ShouldBeInternal()
+    public void Validator_IsInternal()
     {
         Classes()
             .That()
@@ -145,7 +145,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void EventHandlers_ShouldBePublic() // Wolverine requirement
+    public void EventHandler_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -156,7 +156,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void IntegrationEvents_ShouldBePublic() // Wolverine requirement
+    public void IntegrationEvent_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -167,7 +167,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void DomainEvents_ShouldBePublic() // Wolverine requirement
+    public void DomainEvent_IsPublic() // Wolverine requirement
     {
         Classes()
             .That()
@@ -181,7 +181,7 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void DbContexts_ShouldBePublic() // Wolverine requirement
+    public void DbContext_IsPublic() // Wolverine requirement
     {
         Type[] dbContextTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())

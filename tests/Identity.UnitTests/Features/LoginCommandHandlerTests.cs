@@ -12,7 +12,7 @@ public sealed class LoginCommandHandlerTests
     private readonly IUserAccountService _userAccountService = Substitute.For<IUserAccountService>();
 
     [Fact]
-    public async Task Handle_WithValidCredentials_ShouldReturnSuccess()
+    public async Task Handle_ValidCredentials_ReturnsSuccess()
     {
         // Arrange
         LoginCommand command = new("user@example.com", "Password123!", RememberMe: false);
@@ -30,7 +30,7 @@ public sealed class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithInvalidCredentials_ShouldReturnFailure()
+    public async Task Handle_InvalidCredentials_ReturnsFailure()
     {
         // Arrange
         LoginCommand command = new("user@example.com", "WrongPassword!", RememberMe: false);

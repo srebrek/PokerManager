@@ -14,7 +14,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
 
     // TODO: add more complex cookie validation
     [Fact]
-    public async Task Login_WithRememberMe_ShouldSetPersistentAuthCookie()
+    public async Task Login_RememberMe_SetsPersistentAuthCookie()
     {
         // Arrange
         using HttpResponseMessage registerResponse = await Client.PostAsJsonAsync(
@@ -40,7 +40,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
     }
 
     [Fact]
-    public async Task Login_WithoutRememberMe_ShouldSetSessionAuthCookie()
+    public async Task Login_NoRememberMe_SetsSessionAuthCookie()
     {
         // Arrange
         using HttpResponseMessage registerResponse = await Client.PostAsJsonAsync(
@@ -66,7 +66,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
     }
 
     [Fact]
-    public async Task Login_WithInvalidCredentials_ShouldReturnProblem()
+    public async Task Login_InvalidCredentials_ReturnsProblem()
     {
         // Arrange
         LoginRequest request = new("nonexistent@example.com", "WrongPassword1!", false);

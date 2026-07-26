@@ -6,7 +6,7 @@ namespace ArchitectureTests;
 public sealed class ColocationTests : BaseArchitectureTest
 {
     [Fact]
-    public void FeatureComponents_ShouldResideInSameNamespace()
+    public void Command_ResidesInSameNamespaceAsHandler()
     {
         // Lookups are scoped per module assembly: two modules can legitimately contain
         // identically named handlers/endpoints, which must not match across modules.
@@ -60,7 +60,7 @@ public sealed class ColocationTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void RequestAndResponse_ShouldResideInSameNamespace()
+    public void RequestAndResponse_ResidesInSameNamespace()
     {
         Type[] allTypes = [.. ContractsAssembly
             .GetTypes()

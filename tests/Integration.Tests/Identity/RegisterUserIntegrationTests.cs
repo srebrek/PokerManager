@@ -11,7 +11,7 @@ namespace Integration.Tests.Identity;
 public sealed class RegisterUserIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]
-    public async Task Register_ShouldCreateUserInDatabase()
+    public async Task Register_ValidRequest_CreatesUserInDatabase()
     {
         // Arrange
         RegisterRequest request = new(
@@ -39,7 +39,7 @@ public sealed class RegisterUserIntegrationTests(ApiFactory factory) : BaseInteg
     }
 
     [Fact]
-    public async Task Register_ShouldNotSetAuthCookie()
+    public async Task Register_ValidRequest_DoesNotSetAuthCookie()
     {
         // Arrange
         using HttpClient noCookieClient = WithAntiCsrfHeader(Factory.CreateClientNoCookies());
@@ -63,7 +63,7 @@ public sealed class RegisterUserIntegrationTests(ApiFactory factory) : BaseInteg
     }
 
     [Fact]
-    public async Task Register_WithInvalidPassword_ShouldReturnBadRequestAndNotCreateUser()
+    public async Task Register_InvalidPassword_ReturnsBadRequestAndDoesNotCreateUser()
     {
         // Arrange
         RegisterRequest request = new(

@@ -9,7 +9,7 @@ public sealed class AuthenticationSmokeTests(AspireFixture fixture, ITestOutputH
     : AspireIntegrationTestBase(fixture, output)
 {
     [Fact]
-    public async Task RegisterLoginMe_RoundTrip_ShouldSucceed()
+    public async Task RegisterLoginMe_RoundTrip_Succeeds()
     {
         CancellationToken ct = TestContext.Current.CancellationToken;
 

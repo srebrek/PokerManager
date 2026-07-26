@@ -11,7 +11,7 @@ namespace ArchitectureTests;
 public sealed class NamingConventionTests : BaseArchitectureTest
 {
     [Fact]
-    public void DbContexts_ShouldHaveNameEndingWith_DbContext()
+    public void DbContext_HasNameEndingWithDbContext()
     {
         Type[] dbContextTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())
@@ -25,7 +25,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void DomainEvents_ShouldHaveNameEndingWith_DomainEvent()
+    public void DomainEvent_HasNameEndingWithDomainEvent()
     {
         Classes()
             .That()
@@ -39,7 +39,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void IntegrationEvents_ShouldHaveNameEndingWith_IntegrationEvent()
+    public void IntegrationEvent_HasNameEndingWithIntegrationEvent()
     {
         Classes()
             .That()
@@ -50,7 +50,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Commands_ShouldBeNamedAfter_FeatureNamespace()
+    public void Command_IsNamedAfterFeatureNamespace()
     {
         Type[] commandTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())
@@ -67,7 +67,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void CommandHandlers_ShouldBeNamedAfter_FeatureNamespace()
+    public void CommandHandler_IsNamedAfterFeatureNamespace()
     {
         Type[] handlerTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())
@@ -84,7 +84,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Validators_ShouldBeNamedAfter_FeatureNamespaceAndValidatedMessage()
+    public void Validator_IsNamedAfterFeatureNamespaceAndValidatedMessage()
     {
         static bool IsValidator(Type t) =>
             t is { IsClass: true, IsAbstract: false }
@@ -117,7 +117,7 @@ public sealed class NamingConventionTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Endpoints_ShouldBeNamedAfter_FeatureNamespace()
+    public void Endpoint_IsNamedAfterFeatureNamespace()
     {
         Type[] endpointTypes = [.. ModuleAssemblies
             .SelectMany(a => a.GetTypes())

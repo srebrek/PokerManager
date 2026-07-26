@@ -7,7 +7,7 @@ public sealed class LocationTests : BaseArchitectureTest
 {
 
     [Fact]
-    public void DbContext_ShouldResideIn_DataNamespace()
+    public void DbContext_ResidesInDataNamespace()
     {
         Classes()
             .That()
@@ -18,7 +18,7 @@ public sealed class LocationTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Command_ShouldResideIn_FeaturesNamespace()
+    public void Command_ResidesInFeaturesNamespace()
     {
         Classes()
             .That()
@@ -29,7 +29,7 @@ public sealed class LocationTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Query_ShouldResideIn_FeaturesNamespace()
+    public void Query_ResidesInFeaturesNamespace()
     {
         Classes()
             .That()

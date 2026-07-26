@@ -8,7 +8,7 @@ namespace Integration.Tests.Identity;
 public sealed class UnauthorizedBehaviorTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]
-    public async Task RequestToProtectedEndpoint_WithoutCookie_ShouldReturn_401()
+    public async Task RequestToProtectedEndpoint_NoCookie_Returns401()
     {
         using HttpResponseMessage response = await Client.GetAsync(
             new Uri("identity/me", UriKind.Relative),
@@ -18,7 +18,7 @@ public sealed class UnauthorizedBehaviorTests(ApiFactory factory) : BaseIntegrat
     }
 
     [Fact]
-    public async Task RequestToProtectedEndpoint_WithInvalidCookie_ShouldReturn_401()
+    public async Task RequestToProtectedEndpoint_InvalidCookie_Returns401()
     {
         Client.DefaultRequestHeaders.Add("Cookie", $"{IdentityCookies.AuthCookieName}=invalid-token");
 
@@ -30,7 +30,7 @@ public sealed class UnauthorizedBehaviorTests(ApiFactory factory) : BaseIntegrat
     }
 
     [Fact]
-    public async Task StateChangingRequest_WithoutAntiCsrfHeader_ShouldReturn_403()
+    public async Task StateChangingRequest_NoAntiCsrfHeader_Returns403()
     {
         Client.DefaultRequestHeaders.Remove(HttpDefenseHeaders.AntiCsrf);
 

@@ -7,7 +7,7 @@ namespace ArchitectureTests;
 public sealed class EventContractTests : BaseArchitectureTest
 {
     [Fact]
-    public void IntegrationEvents_ShouldResideIn_ContractsIntegrationEventsNamespace()
+    public void IntegrationEvent_ResidesInContractsIntegrationEventsNamespace()
     {
         Classes()
             .That()
@@ -18,7 +18,7 @@ public sealed class EventContractTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void NoType_ShouldImplementBoth_DomainAndIntegrationEvent()
+    public void Event_DoesNotImplementBothDomainAndIntegrationEvent()
     {
         IEnumerable<Type> offenders = ModuleAssemblies
             .SelectMany(a => a.GetTypes())
