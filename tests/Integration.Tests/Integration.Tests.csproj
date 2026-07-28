@@ -31,6 +31,9 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="System.Net" />
+    <Using Include="System.Net.Http.Json" />
+    <Using Include="Shouldly" />
   </ItemGroup>
 
   <!-- Vulnerability overrides (NU1903) - see matching PackageVersion comment in Directory.Packages.props -->

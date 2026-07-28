@@ -1,7 +1,5 @@
-using System.Net;
 using Contracts.Api.Http;
 using Identity.Infrastructure;
-using Shouldly;
 
 namespace Integration.Tests.Identity;
 

@@ -1,8 +1,5 @@
-using System.Net;
-using System.Net.Http.Json;
 using Contracts.Api.Authentication;
 using Identity.Infrastructure;
-using Shouldly;
 
 namespace Integration.Tests.Identity;
 

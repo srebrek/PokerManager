@@ -1,12 +1,9 @@
-using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Contracts.Api.Gameplay;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Shouldly;
 
 namespace Integration.Tests.Gameplay;
 
@@ -27,12 +24,11 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
 
+        // Proves the FluentValidation pipeline short-circuited, NOT the domain.
+        // DO NOT REPEAT THIS ASSERT
         using JsonDocument problem = JsonDocument.Parse(
             await response.Content.ReadAsStringAsync(CancellationToken));
         JsonElement root = problem.RootElement;
-
-        // Proves the FluentValidation pipeline short-circuited, NOT the domain.
-        // DO NOT REPEAT THIS ASSERT
         root.GetProperty("errorCode").GetString().ShouldBe("Validation.General");
         root.TryGetProperty("errors", out JsonElement errors).ShouldBeTrue();
         errors.TryGetProperty(nameof(CreateGameRequest.HostName), out _).ShouldBeTrue();

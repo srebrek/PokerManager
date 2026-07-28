@@ -1,11 +1,8 @@
-using System.Net;
-using System.Net.Http.Json;
 using Contracts.Api.Gameplay;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Shouldly;
 
 namespace Integration.Tests.Gameplay;
 
@@ -53,7 +50,6 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrati
         });
     }
 
-    // This test also tests mapping of the NotFound response
     [Fact]
     public async Task JoinGame_GameDoesNotExist_ReturnsNotFound()
     {
@@ -70,8 +66,6 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrati
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    // TODO: This test should be unit. Currently this is the only integration test that validates Conflict mapping
-    // so remove when a naturally returning conflict test occurs.
     [Fact]
     public async Task JoinGame_EndedStatus_ReturnsConflict()
     {
