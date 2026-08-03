@@ -1,3 +1,3 @@
 namespace Identity.Features.Register;
 
-public sealed record RegisterCommand(string Email, string Password);
+internal sealed record RegisterCommand(string Email, string Password);

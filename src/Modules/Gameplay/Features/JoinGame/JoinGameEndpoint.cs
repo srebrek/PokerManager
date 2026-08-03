@@ -3,12 +3,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Shared.Application.Validation;
 using Shared.Domain;
-using Shared.Infrastructure.Messaging;
 using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
-using Wolverine;
 
 namespace Gameplay.Features.JoinGame;
 
@@ -20,13 +19,13 @@ internal sealed class JoinGameEndpoint : IEndpoint
             GameplayRoutes.JoinGame,
             async (
                 JoinGameRequest request,
-                IMessageBus bus,
+                JoinGameCommandHandler handler,
                 IEnumerable<IValidator<JoinGameCommand>> validators,
                 CancellationToken ct) =>
             {
                 JoinGameCommand command = new(request.ParticipantName, request.JoinCode);
                 Result<JoinGameResponse> result =
-                    await bus.InvokeValidatedAsync<JoinGameCommand, JoinGameResponse>(command, validators, ct);
+                    await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags("Gameplay")

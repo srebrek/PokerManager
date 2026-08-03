@@ -23,7 +23,7 @@ public sealed class LoginCommandHandlerTests
         LoginCommandHandler handler = new(_userAccountService);
 
         // Act
-        Result result = await handler.Handle(command);
+        Result result = await handler.Handle(command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -41,7 +41,7 @@ public sealed class LoginCommandHandlerTests
         LoginCommandHandler handler = new(_userAccountService);
 
         // Act
-        Result result = await handler.Handle(command);
+        Result result = await handler.Handle(command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();

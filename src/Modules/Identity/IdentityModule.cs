@@ -59,8 +59,7 @@ public static class IdentityModule
             .UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.MigrationsHistoryTable(
                     HistoryRepository.DefaultTableName, IdentityDbContext.Schema))
-            .UseSnakeCaseNamingConvention()
-            .AddDomainEventsClearing());
+            .UseSnakeCaseNamingConvention());
 
         return services;
     }

@@ -3,12 +3,13 @@ using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Shared.Domain;
+using Wolverine.EntityFrameworkCore;
 
 namespace Gameplay.Features.CreateGame;
 
-public sealed class CreateGameCommandHandler(GameplayDbContext context)
+internal sealed class CreateGameCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
 {
-    public async Task<Result<CreateGameResponse>> Handle(CreateGameCommand command)
+    public async Task<Result<CreateGameResponse>> Handle(CreateGameCommand command, CancellationToken ct)
     {
         // TODO: remove later
         // temporary hardcoded values
@@ -24,7 +25,10 @@ public sealed class CreateGameCommandHandler(GameplayDbContext context)
 
         Game game = createGameResult.Value;
 
-        context.Games.Add(game);
+        outbox.DbContext.Games.Add(game);
+
+        await outbox.SaveChangesAndFlushMessagesAsync(ct);
+
         return new CreateGameResponse(game.Id.Value, game.HostParticipantId.Value);
     }
 }

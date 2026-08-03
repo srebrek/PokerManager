@@ -52,10 +52,8 @@ builder.Host.UseWolverine(opts =>
     opts.PersistMessagesWithPostgresql(databaseConnectionString);
     opts.Durability.MessageStorageSchemaName = "wolverine";
     opts.Policies.UseDurableLocalQueues();
-    opts.Policies.AutoApplyTransactions();
     opts.UseEntityFrameworkCoreTransactions();
     opts.PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents, IDomainEvent>(x => x.Events);
-
     opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
     opts.CodeGeneration.AlwaysUseServiceLocationFor<IUserAccountService>();
     opts.OnException<DbUpdateConcurrencyException>()
@@ -86,7 +84,10 @@ app.UseRequestContext();
 app.UseExceptionHandler();
 app.UseIdentityModule();
 app.MapDefaultEndpoints();
-app.MapEndpoints(app.MapGroup("api"));
+
+RouteGroupBuilder apiGroup = app.MapGroup("api");
+apiGroup.AddEndpointFilter<TelemetryFilter>();
+app.MapEndpoints(apiGroup);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {

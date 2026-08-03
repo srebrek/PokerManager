@@ -1,3 +1,3 @@
 namespace Gameplay.Features.CreateGame;
 
-public sealed record CreateGameCommand(string HostName);
+internal sealed record CreateGameCommand(string HostName);

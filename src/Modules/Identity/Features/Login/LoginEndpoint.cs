@@ -3,12 +3,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Shared.Application.Validation;
 using Shared.Domain;
-using Shared.Infrastructure.Messaging;
 using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
-using Wolverine;
 
 namespace Identity.Features.Login;
 
@@ -20,12 +19,12 @@ internal sealed class LoginEndpoint : IEndpoint
             "identity/login",
             async (
                 LoginRequest request,
-                IMessageBus bus,
+                LoginCommandHandler handler,
                 IEnumerable<IValidator<LoginCommand>> validators,
                 CancellationToken ct) =>
             {
                 LoginCommand command = new(request.Email, request.Password, request.RememberMe);
-                Result result = await bus.InvokeValidatedAsync(command, validators, ct);
+                Result result = await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(Results.NoContent, CustomResults.Problem);
             })
             .WithTags("Identity")

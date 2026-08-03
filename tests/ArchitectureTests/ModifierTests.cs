@@ -77,47 +77,47 @@ public sealed class ModifierTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Command_IsPublic() // Wolverine requirement
+    public void Command_IsInternal()
     {
         Classes()
             .That()
             .HaveNameEndingWith("Command")
             .Should()
-            .BePublic()
+            .BeInternal()
             .Check(Architecture);
     }
 
     [Fact]
-    public void Query_IsPublic() // Wolverine requirement
+    public void Query_IsInternal()
     {
         Classes()
             .That()
             .HaveNameEndingWith("Query")
             .Should()
-            .BePublic()
+            .BeInternal()
             .WithoutRequiringPositiveResults()
             .Check(Architecture);
     }
 
     [Fact]
-    public void CommandHandler_IsPublic() // Wolverine requirement
+    public void CommandHandler_IsInternal()
     {
         Classes()
             .That()
             .HaveNameEndingWith("CommandHandler")
             .Should()
-            .BePublic()
+            .BeInternal()
             .Check(Architecture);
     }
 
     [Fact]
-    public void QueryHandler_IsPublic() // Wolverine requirement
+    public void QueryHandler_IsInternal()
     {
         Classes()
             .That()
             .HaveNameEndingWith("QueryHandler")
             .Should()
-            .BePublic()
+            .BeInternal()
             .WithoutRequiringPositiveResults()
             .Check(Architecture);
     }

@@ -4,18 +4,20 @@ using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
+using Wolverine.EntityFrameworkCore;
 
 namespace Gameplay.Features.JoinGame;
 
-public sealed class JoinGameCommandHandler(GameplayDbContext context)
+internal sealed class JoinGameCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
 {
-    public async Task<Result<JoinGameResponse>> Handle(JoinGameCommand command)
+    public async Task<Result<JoinGameResponse>> Handle(JoinGameCommand command, CancellationToken ct)
     {
         // TODO: remove later
         // temporary hardcoded values
         ChipsStack participantChips = ChipsStack.Create(1000).Value;
 
-        Game? game = await context.Games.SingleOrDefaultAsync(g => g.JoinCode == JoinCode.From(command.JoinCode));
+        Game? game = await outbox.DbContext.Games
+            .SingleOrDefaultAsync(g => g.JoinCode == JoinCode.From(command.JoinCode), ct);
 
         if (game is null)
         {
@@ -27,6 +29,8 @@ public sealed class JoinGameCommandHandler(GameplayDbContext context)
         {
             return Result.Failure<JoinGameResponse>(joinGameResult.Error);
         }
+
+        await outbox.SaveChangesAndFlushMessagesAsync(ct);
 
         return new JoinGameResponse(game.Id.Value, joinGameResult.Value.Value);
     }

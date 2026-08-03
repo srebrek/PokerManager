@@ -42,8 +42,7 @@ public static class GameplayModule
             .UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.MigrationsHistoryTable(
                     HistoryRepository.DefaultTableName, GameplayDbContext.Schema))
-            .UseSnakeCaseNamingConvention()
-            .AddDomainEventsClearing());
+            .UseSnakeCaseNamingConvention());
 
         return services;
     }

@@ -1,5 +1,0 @@
-; Commands must go through IMessageBus.InvokeValidatedAsync
-M:Wolverine.ICommandBus.InvokeAsync(System.Object,System.Threading.CancellationToken,System.Nullable{System.TimeSpan});Use IMessageBus.InvokeValidatedAsync instead
-M:Wolverine.ICommandBus.InvokeAsync``1(System.Object,System.Threading.CancellationToken,System.Nullable{System.TimeSpan});Use IMessageBus.InvokeValidatedAsync instead
-M:Wolverine.ICommandBus.InvokeAsync(System.Object,Wolverine.DeliveryOptions,System.Threading.CancellationToken,System.Nullable{System.TimeSpan});Use IMessageBus.InvokeValidatedAsync instead
-M:Wolverine.ICommandBus.InvokeAsync``1(System.Object,Wolverine.DeliveryOptions,System.Threading.CancellationToken,System.Nullable{System.TimeSpan});Use IMessageBus.InvokeValidatedAsync instead
