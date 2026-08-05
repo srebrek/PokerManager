@@ -5,14 +5,18 @@ namespace Gameplay.Domain.Entities;
 
 internal sealed class Game : AggregateRoot<GameId>
 {
-    private readonly List<Participant> _participants;
+    public const int DefaultStartingStack = 1000;
 
     public JoinCode JoinCode { get; }
     public ParticipantId HostParticipantId { get; }
     public ChipsStack SmallBlind { get; }
     public ChipsStack BigBlind { get; }
-    public GameStatus Status { get; private set; }
+    public bool IsFinished { get; private set; }
+    public IReadOnlyList<ParticipantId> SeatingOrder => _seatingOrder.AsReadOnly();
     public IReadOnlyList<Participant> Participants => _participants.AsReadOnly();
+
+    private readonly List<ParticipantId> _seatingOrder;
+    private readonly List<Participant> _participants;
 
     private Game(
         GameId id,
@@ -26,18 +30,19 @@ internal sealed class Game : AggregateRoot<GameId>
         HostParticipantId = hostParticipantId;
         SmallBlind = smallBlind;
         BigBlind = bigBlind;
+        IsFinished = false;
+        _seatingOrder = [];
         _participants = [];
-        Status = GameStatus.NotStarted;
     }
 
-    public static Result<Game> Create(string hostName, ChipsStack hostChips, ChipsStack smallBlind, ChipsStack bigBlind)
+    public static Result<Game> Create(string hostName, ChipsStack smallBlind, ChipsStack bigBlind)
     {
         if (bigBlind.Value < smallBlind.Value)
         {
             return Result.Failure<Game>(GameErrors.BigBlindLessThanSmallBlind);
         }
 
-        Result<Participant> hostResult = Participant.Create(hostName, hostChips);
+        Result<Participant> hostResult = Participant.Create(hostName, ChipsStack.Create(DefaultStartingStack).Value);
 
         if (hostResult.IsFailure)
         {
@@ -46,18 +51,15 @@ internal sealed class Game : AggregateRoot<GameId>
 
         Game game = new(GameId.New(), JoinCode.Generate(), hostResult.Value.Id, smallBlind, bigBlind);
         game._participants.Add(hostResult.Value);
+        game._seatingOrder.Add(hostResult.Value.Id);
 
         return game;
     }
 
-    public Result<ParticipantId> Join(string participantName, ChipsStack chips)
+    public Result<ParticipantId> Join(string participantName)
     {
-        if (Status is GameStatus.Ended)
-        {
-            return Result.Failure<ParticipantId>(GameErrors.JoinEndedGame);
-        }
-
-        Result<Participant> participantResult = Participant.Create(participantName, chips);
+        Result<Participant> participantResult =
+            Participant.Create(participantName, ChipsStack.Create(DefaultStartingStack).Value);
 
         if (participantResult.IsFailure)
         {
@@ -65,56 +67,8 @@ internal sealed class Game : AggregateRoot<GameId>
         }
 
         _participants.Add(participantResult.Value);
+        _seatingOrder.Add(participantResult.Value.Id);
 
         return participantResult.Value.Id;
-    }
-
-    public Result Start()
-    {
-        if (Status is not GameStatus.NotStarted)
-        {
-            return Result.Failure(GameErrors.GameAlreadyStarted);
-        }
-
-        if (_participants.Count < 2)
-        {
-            return Result.Failure(GameErrors.InsufficientParticipantCount);
-        }
-
-        Status = GameStatus.InProgress;
-
-        return Result.Success();
-    }
-
-    public Result End()
-    {
-        if (Status is not GameStatus.InProgress)
-        {
-            return Result.Failure(GameErrors.EndNotInProgressGame);
-        }
-
-        Status = GameStatus.Ended;
-
-        return Result.Success();
-    }
-
-    public Result<List<HandSeat>> BuildSeatsForNextHand()
-    {
-        if (Status is not GameStatus.InProgress)
-        {
-            return Result.Failure<List<HandSeat>>(GameErrors.BuildSeatsForNotInProgressGame);
-        }
-
-        List<Participant> activeParticipants = [.. _participants.Where(p => !p.SittingOut)];
-
-        if (activeParticipants.Count < 2)
-        {
-            return Result.Failure<List<HandSeat>>(GameErrors.InsufficientActiveParticipantCount);
-        }
-
-        List<HandSeat> seats = [.. activeParticipants
-            .Select((participant, index) => new HandSeat(participant.Id, participant.Chips, index))];
-
-        return seats;
     }
 }

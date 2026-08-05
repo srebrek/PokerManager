@@ -9,26 +9,26 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.JoinGame;
+namespace Gameplay.Features.GetGameState;
 
-internal sealed class JoinGameEndpoint : IEndpoint
+internal sealed class GetGameStateEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost(
-            GameplayRoutes.JoinGame,
+        app.MapGet(
+            GameplayRoutes.GetGameState,
             async (
-                JoinGameRequest request,
-                JoinGameCommandHandler handler,
-                IEnumerable<IValidator<JoinGameCommand>> validators,
+                Guid gameId,
+                GetGameStateQueryHandler handler,
+                IEnumerable<IValidator<GetGameStateQuery>> validators,
                 CancellationToken ct) =>
             {
-                JoinGameCommand command = new(request.ParticipantName, request.JoinCode);
-                Result<JoinGameResponse> result =
-                    await validators.HandleValidatedAsync(command, handler.Handle, ct);
+                GetGameStateQuery query = new(gameId);
+                Result<GameStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)
+            .WithName(GameplayRoutes.GetGameStateEndpointName)
             .AllowAnonymous();
     }
 }

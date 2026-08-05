@@ -70,7 +70,7 @@ Game snapshots will be sent via SignalR. In the MVP the same snapshot is sent wh
 
 The game state becomes readable. One new query, no new commands.
 
-Two commits: `refactor(gameplay): make game playable from creation`, then `feat: add lobby slice`.
+Two commits: `feat: get game state BE`, then `feat: get game state FE`.
 
 ### Domain
 
@@ -120,10 +120,9 @@ GameStateResponse(
     string JoinCode,
     bool IsFinished,
     int SmallBlind, int BigBlind,
-    Guid HostParticipantId,
     IReadOnlyList<GameStateParticipant> Participants)   // ordered by SeatIndex
 
-GameStateParticipant(Guid Id, string Name, int Chips, int SeatIndex)
+GameStateParticipant(Guid Id, string Name, int Chips, int SeatIndex, bool IsHost)
 ```
 
 No per-recipient field — one payload is broadcastable. `CurrentHand` is added by the slice that can fill it.

@@ -1,13 +1,11 @@
 using System.Text.Json;
 using Contracts.Api.Gameplay;
-using Gameplay.Domain.Entities;
-using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Integration.Tests.Gameplay;
 
-public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
+public sealed class CreateGameIntegrationTests(ApiFactory factory) : GameplayIntegrationTest(factory)
 {
     [Fact]
     public async Task CreateGame_EmptyHostName_IsRejectedByValidatorBeforeHandler()
@@ -61,19 +59,15 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : BaseIntegra
         body.ParticipantId.ShouldNotBe(Guid.Empty);
 
         response.Headers.Location.ShouldNotBeNull();
-        response.Headers.Location.ToString().ShouldBe($"gameplay/games/{body.GameId}");
+        using HttpResponseMessage getGameStateResponse = await Client.GetAsync(
+            response.Headers.Location,
+            CancellationToken);
 
-        await ExecuteWithContextAsync<GameplayDbContext>(async context =>
-        {
-            Game? game = await context.Games
-                .Include(g => g.Participants)
-                .SingleOrDefaultAsync(g => g.Id == GameId.From(body.GameId), CancellationToken);
-
-            game.ShouldNotBeNull();
-            game.Participants.Count.ShouldBe(1);
-            Participant? participant = game.Participants.SingleOrDefault();
-            participant.ShouldNotBeNull();
-            participant.Id.ShouldBe(game.HostParticipantId);
-        });
+        getGameStateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        GameStateResponse? gameStateResponse =
+            await getGameStateResponse.Content.ReadFromJsonAsync<GameStateResponse>(CancellationToken);
+        gameStateResponse.ShouldNotBeNull();
+        gameStateResponse.GameId.ShouldBe(body.GameId);
+        gameStateResponse.Participants.ShouldHaveSingleItem().Id.ShouldBe(body.ParticipantId);
     }
 }

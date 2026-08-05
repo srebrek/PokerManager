@@ -27,10 +27,13 @@ internal sealed class CreateGameEndpoint : IEndpoint
                 Result<CreateGameResponse> result =
                     await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(
-                    value => Results.Created($"gameplay/games/{value.GameId}", value), // TODO: use LinkGenerator
+                    value => Results.CreatedAtRoute(
+                        GameplayRoutes.GetGameStateEndpointName,
+                        new { gameId = value.GameId },
+                        value),
                     CustomResults.Problem);
             })
-            .WithTags("Gameplay")
+            .WithTags(GameplayRoutes.Tag)
             .AllowAnonymous();
     }
 }

@@ -1,53 +1,68 @@
 using Contracts.Api.Gameplay;
-using Gameplay.Domain.Entities;
-using Gameplay.Domain.ValueObjects;
-using Gameplay.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Integration.Tests.Gameplay;
 
-public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
+public sealed class JoinGameIntegrationTests(ApiFactory factory) : GameplayIntegrationTest(factory)
 {
     [Fact]
-    public async Task JoinGame_ValidRequest_ReturnsOk()
+    public async Task JoinGame_TwoParticipantsJoin_AppendsThemInJoiningOrder()
     {
         // Arrange
-        Game game = Game.Create(
-            "TestHostName",
-            ChipsStack.Create(1000).Value,
-            ChipsStack.Create(10).Value,
-            ChipsStack.Create(20).Value).Value;
-
-        await ExecuteWithContextAsync<GameplayDbContext>(async context =>
-        {
-            context.Games.Add(game);
-            await context.SaveChangesAsync(CancellationToken);
-        });
-
-        JoinGameRequest request = new("TestParticipantName", game.JoinCode.Value);
+        CreateGameResponse createGameResponse = await CreateGameAsync("TestHostName");
+        string joinCode = await GetJoinCodeAsync(createGameResponse.GameId);
 
         // Act
-        using HttpResponseMessage response = await Client.PostAsJsonAsync(
+        using HttpResponseMessage join1HttpResponse = await Client.PostAsJsonAsync(
             GameplayRoutes.JoinGame,
-            request,
+            new JoinGameRequest("TestParticipant1Name", joinCode),
+            CancellationToken);
+
+        using HttpResponseMessage join2HttpResponse = await Client.PostAsJsonAsync(
+            GameplayRoutes.JoinGame,
+            new JoinGameRequest("TestParticipant2Name", joinCode),
             CancellationToken);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JoinGameResponse? joinGame1Response = await join1HttpResponse.Content
+            .ReadFromJsonAsync<JoinGameResponse>(CancellationToken);
+        JoinGameResponse? joinGame2Response = await join2HttpResponse.Content
+            .ReadFromJsonAsync<JoinGameResponse>(CancellationToken);
 
-        JoinGameResponse? body = await response.Content.ReadFromJsonAsync<JoinGameResponse>(CancellationToken);
-        body.ShouldNotBeNull();
-        body.GameId.ShouldBe(game.Id.Value);
+        joinGame1Response.ShouldNotBeNull();
+        joinGame2Response.ShouldNotBeNull();
+        joinGame1Response.GameId.ShouldBe(createGameResponse.GameId);
+        joinGame2Response.GameId.ShouldBe(createGameResponse.GameId);
+        joinGame1Response.ParticipantId.ShouldNotBe(Guid.Empty);
+        joinGame2Response.ParticipantId.ShouldNotBe(Guid.Empty);
 
-        await ExecuteWithContextAsync<GameplayDbContext>(async context =>
-        {
-            Game? retrievedGame = await context.Games
-                .Include(g => g.Participants)
-                .SingleOrDefaultAsync(g => g.Id == GameId.From(body.GameId), CancellationToken);
+        GameStateResponse state = await GetGameStateAsync(createGameResponse.GameId);
 
-            retrievedGame.ShouldNotBeNull();
-            retrievedGame.Participants.Any(p => p.Id.Value == body.ParticipantId).ShouldBeTrue();
-        });
+        state.Participants.Count.ShouldBe(3);
+
+        GameStateParticipant participant0 = state.Participants[0];
+        GameStateParticipant participant1 = state.Participants[1];
+        GameStateParticipant participant2 = state.Participants[2];
+
+        participant0.ShouldBe(new GameStateParticipant(
+            createGameResponse.ParticipantId,
+            "TestHostName",
+            1000,
+            0,
+            true));
+
+        participant1.ShouldBe(new GameStateParticipant(
+            joinGame1Response.ParticipantId,
+            "TestParticipant1Name",
+            1000,
+            1,
+            false));
+
+        participant2.ShouldBe(new GameStateParticipant(
+            joinGame2Response.ParticipantId,
+            "TestParticipant2Name",
+            1000,
+            2,
+            false));
     }
 
     [Fact]
@@ -64,46 +79,5 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : BaseIntegrati
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task JoinGame_EndedStatus_ReturnsConflict()
-    {
-        // Arrange
-        Game game = Game.Create(
-            "TestHostName",
-            ChipsStack.Create(1000).Value,
-            ChipsStack.Create(10).Value,
-            ChipsStack.Create(20).Value).Value;
-
-        game.Join("TestParticipantName1", ChipsStack.Create(1000).Value);
-        game.Start();
-        game.End();
-
-        await ExecuteWithContextAsync<GameplayDbContext>(async context =>
-        {
-            context.Games.Add(game);
-            await context.SaveChangesAsync(CancellationToken);
-        });
-
-        JoinGameRequest request = new("TestParticipantName2", game.JoinCode.Value);
-
-        // Act
-        using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.JoinGame,
-            request,
-            CancellationToken);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        await ExecuteWithContextAsync<GameplayDbContext>(async context =>
-        {
-            Game? retrievedGame = await context.Games
-                .Include(g => g.Participants)
-                .SingleOrDefaultAsync(g => g.Id == game.Id, CancellationToken);
-
-            retrievedGame.ShouldNotBeNull();
-            retrievedGame.Participants.Any(p => p.Name == request.ParticipantName).ShouldBeFalse();
-        });
     }
 }

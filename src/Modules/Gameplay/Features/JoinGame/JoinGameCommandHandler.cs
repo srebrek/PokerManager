@@ -12,10 +12,6 @@ internal sealed class JoinGameCommandHandler(IDbContextOutbox<GameplayDbContext>
 {
     public async Task<Result<JoinGameResponse>> Handle(JoinGameCommand command, CancellationToken ct)
     {
-        // TODO: remove later
-        // temporary hardcoded values
-        ChipsStack participantChips = ChipsStack.Create(1000).Value;
-
         Game? game = await outbox.DbContext.Games
             .SingleOrDefaultAsync(g => g.JoinCode == JoinCode.From(command.JoinCode), ct);
 
@@ -24,7 +20,7 @@ internal sealed class JoinGameCommandHandler(IDbContextOutbox<GameplayDbContext>
             return Result.Failure<JoinGameResponse>(GameErrors.GameNotFound);
         }
 
-        Result<ParticipantId> joinGameResult = game.Join(command.ParticipantName, participantChips);
+        Result<ParticipantId> joinGameResult = game.Join(command.ParticipantName);
         if (joinGameResult.IsFailure)
         {
             return Result.Failure<JoinGameResponse>(joinGameResult.Error);
