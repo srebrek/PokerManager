@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Web.Frontend;
+using Web.Frontend.Common;
 using Web.Frontend.Common.Http;
 using Web.Frontend.Features.Authentication;
 
@@ -29,5 +30,6 @@ builder.Services.AddScoped<CookieAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(
     sp => sp.GetRequiredService<CookieAuthenticationStateProvider>());
 builder.Services.AddScoped<IGameplayApi, GameplayApi>();
+builder.Services.AddScoped<ParticipantSession>();
 
 await builder.Build().RunAsync();

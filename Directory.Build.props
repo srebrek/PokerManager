@@ -12,7 +12,7 @@
 
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <!-- 1573/1591: missing XML docs are not enforced; 1712: type parameter docs -->
-    <NoWarn>$(NoWarn);1573;1591;1712</NoWarn>
+    <NoWarn>$(NoWarn);1573;1591;1712;S1135</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

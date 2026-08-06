@@ -4,12 +4,12 @@ namespace Web.Frontend.Common.Http;
 
 internal static class ApiErrorReader
 {
-    public static async Task<string?> ReadMessageAsync(HttpResponseMessage response)
+    public static async Task<string?> ReadMessageAsync(HttpResponseMessage response, CancellationToken ct = default)
     {
         try
         {
-            await using Stream stream = await response.Content.ReadAsStreamAsync();
-            using JsonDocument document = await JsonDocument.ParseAsync(stream);
+            await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
+            using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
             JsonElement root = document.RootElement;
 
             if (root.TryGetProperty("errors", out JsonElement errors) && errors.ValueKind == JsonValueKind.Object)

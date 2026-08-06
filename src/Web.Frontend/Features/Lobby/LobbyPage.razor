@@ -1,0 +1,136 @@
+@page "/games/{GameId:guid}"
+
+@using Contracts.Api.Gameplay
+
+@implements IDisposable
+
+@inject IGameplayApi GameplayApi
+@inject ParticipantSession Session
+
+<PageTitle>Lobby</PageTitle>
+
+<MudContainer>
+    @switch (_state)
+    {
+        case Loading:
+            <MudSkeleton />
+            break;
+        case Loaded(var snapshot):
+            <MudStack>
+                <MudStack StretchItems="StretchItems.All" Row>
+                    <MudPaper Class="pa-4 align-content-center">
+                        <MudText Typo="Typo.caption">Join Code</MudText>
+                        <MudText Typo="Typo.h5">@snapshot.JoinCode</MudText>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4">
+                        <MudText>Rules</MudText>
+                        <MudText>Big Blind: @snapshot.BigBlind</MudText>
+                        <MudText>Small Blind: @snapshot.SmallBlind</MudText>
+                    </MudPaper>
+                </MudStack>
+
+                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                    Refresh
+                </MudButton>
+
+                <MudList T="Guid" ReadOnly Dense>
+                    @foreach (GameStateParticipant participant in snapshot.Participants)
+                    {
+                        <MudListItem Value="participant.Id">
+                            <MudStack Row AlignItems="AlignItems.Center">
+                                <MudText Color="@(Session.IsMe(snapshot.GameId, participant.Id)
+                                    ? Color.Primary
+                                    : Color.Inherit)">
+                                    @participant.Name
+                                </MudText>
+
+                                <MudChip
+                                    T="string"
+                                    Variant="Variant.Text"
+                                    Class="@(participant.IsHost ? "visible" : "invisible")">
+                                    Host
+                                </MudChip>
+
+                                <MudSpacer />
+                                <MudText>@participant.Chips</MudText>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudStack>
+            break;
+        case NotFound:
+            <MudStack>
+                <MudAlert Severity="Severity.Warning">Game not found.</MudAlert>
+                <MudButton Href="/games/setup" Variant="Variant.Filled" Color="Color.Primary">
+                    Back to setup
+                </MudButton>
+            </MudStack>
+            break;
+        case Failed(var message):
+            <MudStack>
+                <MudAlert Severity="Severity.Error">@message</MudAlert>
+                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                    Refresh
+                </MudButton>
+            </MudStack>
+            break;
+    }
+</MudContainer>
+
+@code {
+    // TODO: add bunit tests
+    [Parameter]
+    public Guid GameId { get; set; }
+    private readonly CancellationTokenSource _cts = new();
+    private ILobbyState _state = new Loading();
+    private bool _isBusy;
+
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (_isBusy)
+        {
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            GameplayResult<GameStateResponse> result = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
+
+            if (result.IsSuccess)
+            {
+                _state = new Loaded(result.Value!);
+                return;
+            }
+
+            _state = result.ErrorKind == GameplayErrorKind.NotFound
+                ? new NotFound()
+                : new Failed(result.Error ?? "Unexpected error.");
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private interface ILobbyState;
+
+    private sealed record Loading : ILobbyState;
+
+    private sealed record Loaded(GameStateResponse Snapshot) : ILobbyState;
+
+    private sealed record NotFound : ILobbyState;
+
+    private sealed record Failed(string Message) : ILobbyState;
+}

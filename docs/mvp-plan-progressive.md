@@ -151,7 +151,8 @@ No per-recipient field — one payload is broadcastable. `CurrentHand` is added 
   - "Refresh" button. No polling, no timer.
   - not-found state with a link back to `/games/setup`.
 - `SetupGamePage`: replace both `/games/temp` stubs with `/games/{gameId}` and store the session.
-- The Lobby is the between-hands view, not a pre-game screen — later slices return here.
+- The Lobby is the side panel view, not a pre-game screen — later slices return here.
+- main component is the current hand view (may be empty in between hands)
 
 ### Tests
 

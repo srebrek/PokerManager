@@ -62,7 +62,7 @@ public sealed class JoinGameTests : MudBunitContext
         // Arrange
         string expectedErrorMessage = "Server error. Try again.";
         _api.JoinGameAsync(Arg.Any<JoinGameRequest>(), Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Failure<JoinGameResponse>(expectedErrorMessage));
+            .Returns(GameplayResult.Failure<JoinGameResponse>(expectedErrorMessage, GameplayErrorKind.Server));
 
         bool callbackCalled = false;
         IRenderedComponent<JoinGameForm> cut = Render<JoinGameForm>(parameters => parameters

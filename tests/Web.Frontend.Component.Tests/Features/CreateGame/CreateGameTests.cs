@@ -60,7 +60,7 @@ public sealed class CreateGameTests : MudBunitContext
         // Arrange
         string expectedErrorMessage = "Server error. Try again.";
         _api.CreateGameAsync(Arg.Any<CreateGameRequest>(), Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Failure<CreateGameResponse>(expectedErrorMessage));
+            .Returns(GameplayResult.Failure<CreateGameResponse>(expectedErrorMessage, GameplayErrorKind.Server));
 
         bool callbackCalled = false;
         IRenderedComponent<CreateGameForm> cut = Render<CreateGameForm>(parameters => parameters
