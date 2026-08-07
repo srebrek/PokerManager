@@ -3,7 +3,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using Identity.Infrastructure.Data;
 
-namespace E2E.Tests;
+namespace E2ETests;
 
 [Collection("Aspire Collection")]
 public abstract class AspireIntegrationTestBase : IAsyncDisposable

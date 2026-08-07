@@ -7,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
-[assembly: AssemblyFixture(typeof(Integration.Tests.GlobalDbFixture))]
+[assembly: AssemblyFixture(typeof(IntegrationTests.GlobalDbFixture))]
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 public class GlobalDbFixture : IAsyncLifetime
 {

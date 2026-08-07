@@ -3,7 +3,7 @@ using Contracts.Api.Authentication;
 using Contracts.Api.Http;
 using Shouldly;
 
-namespace E2E.Tests;
+namespace E2ETests;
 
 public sealed class AuthenticationSmokeTests(AspireFixture fixture, ITestOutputHelper output)
     : AspireIntegrationTestBase(fixture, output)

@@ -1,4 +1,4 @@
-namespace E2E.Tests;
+namespace E2ETests;
 
 [CollectionDefinition("Aspire Collection", DisableParallelization = true)]
 #pragma warning disable CA1515 // xUnit requires collection fixtures to be public.

@@ -7,7 +7,7 @@ using Npgsql;
 using Respawn;
 using Respawn.Graph;
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Program>, IAsyncLifetime
 {

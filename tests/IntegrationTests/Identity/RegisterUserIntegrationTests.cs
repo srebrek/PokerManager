@@ -3,7 +3,7 @@ using Identity.Infrastructure;
 using Identity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Integration.Tests.Identity;
+namespace IntegrationTests.Identity;
 
 public sealed class RegisterUserIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {

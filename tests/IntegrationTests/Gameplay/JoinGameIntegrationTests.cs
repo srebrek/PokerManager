@@ -1,6 +1,6 @@
 using Contracts.Api.Gameplay;
 
-namespace Integration.Tests.Gameplay;
+namespace IntegrationTests.Gameplay;
 
 public sealed class JoinGameIntegrationTests(ApiFactory factory) : GameplayIntegrationTest(factory)
 {

@@ -1,7 +1,7 @@
 using MudBlazor;
 using MudBlazor.Services;
 
-namespace Web.Frontend.Component.Tests.Common;
+namespace Web.Frontend.ComponentTests.Common;
 
 public abstract class MudBunitContext : BunitContext
 {

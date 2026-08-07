@@ -1,7 +1,7 @@
 using Contracts.Api.Http;
 using Identity.Infrastructure;
 
-namespace Integration.Tests.Identity;
+namespace IntegrationTests.Identity;
 
 public sealed class UnauthorizedBehaviorTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {

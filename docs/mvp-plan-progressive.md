@@ -170,7 +170,7 @@ New project: `dotnet new xunit3 -o tests/Gameplay.UnitTests && dotnet sln add te
 - **bUnit**: participants render with the "you" marker; the refresh button goes through `ApplyState` again.
 - **Update existing**: `JoinGameIntegrationTests` uses `game.Start()` (gone) and the old `Join` signature.
 - No per-endpoint validation / `ProblemDetails` test — proven once in `CreateGameIntegrationTests`.
-- New helper in `Integration.Tests`: build a game with 3 seated participants (`create` + 2 × `join`).
+- New helper in `IntegrationTests`: build a game with 3 seated participants (`create` + 2 × `join`).
 
 ---
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace E2E.Tests;
+namespace E2ETests;
 
 public sealed class AspireFixture : IAsyncLifetime
 {

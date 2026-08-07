@@ -2,7 +2,7 @@ using Contracts.Api.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 // TODO: add csrf tests
 public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime

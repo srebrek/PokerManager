@@ -14,5 +14,5 @@ aspire run        # or: F5 in VS Code ("Aspire: AppHost")
 
 ```bash
 dotnet test --filter "FullyQualifiedName!~E2E"   # what CI runs
-dotnet test tests/E2E.Tests                       # full AppHost smoke test (local only)
+dotnet test tests/E2ETests                       # full AppHost smoke test (local only)
 ```

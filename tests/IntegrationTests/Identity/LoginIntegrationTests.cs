@@ -1,7 +1,7 @@
 using Contracts.Api.Authentication;
 using Identity.Infrastructure;
 
-namespace Integration.Tests.Identity;
+namespace IntegrationTests.Identity;
 
 public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationTest(factory)
 {

@@ -3,7 +3,7 @@ using Contracts.Api.Gameplay;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Integration.Tests.Gameplay;
+namespace IntegrationTests.Gameplay;
 
 public sealed class CreateGameIntegrationTests(ApiFactory factory) : GameplayIntegrationTest(factory)
 {

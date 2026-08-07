@@ -37,8 +37,8 @@ jobs:
         project:
           - ArchitectureTests
           - Identity.UnitTests
-          - Integration.Tests
-          - E2E.Tests
+          - IntegrationTests
+          - E2ETests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,9 +51,9 @@ jobs:
       # E2E boots the full Aspire AppHost (DCP + containers + dev certs), which has
       # not been verified stable on hosted runners yet - kept non-blocking until proven.
       - name: Trust dev certs (E2E)
-        if: matrix.project == 'E2E.Tests'
+        if: matrix.project == 'E2ETests'
         run: dotnet dev-certs https --trust
 
       - name: Test ${{ matrix.project }}
-        continue-on-error: ${{ matrix.project == 'E2E.Tests' }}
+        continue-on-error: ${{ matrix.project == 'E2ETests' }}
         run: dotnet test tests/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release

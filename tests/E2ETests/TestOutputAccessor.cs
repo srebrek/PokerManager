@@ -1,6 +1,6 @@
 using MartinCostello.Logging.XUnit;
 
-namespace E2E.Tests;
+namespace E2ETests;
 
 internal sealed class TestOutputAccessor : ITestOutputHelperAccessor
 {

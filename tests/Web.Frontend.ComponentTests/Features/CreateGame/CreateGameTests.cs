@@ -3,10 +3,10 @@ using MudBlazor;
 using NSubstitute;
 using Shouldly;
 using Web.Frontend.Common.Http;
-using Web.Frontend.Component.Tests.Common;
+using Web.Frontend.ComponentTests.Common;
 using Web.Frontend.Features.CreateGame;
 
-namespace Web.Frontend.Component.Tests.Features.CreateGame;
+namespace Web.Frontend.ComponentTests.Features.CreateGame;
 
 public sealed class CreateGameTests : MudBunitContext
 {

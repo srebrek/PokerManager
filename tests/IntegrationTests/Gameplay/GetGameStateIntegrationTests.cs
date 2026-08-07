@@ -1,7 +1,7 @@
 using Contracts.Api.Gameplay;
 using Gameplay.Domain.Entities;
 
-namespace Integration.Tests.Gameplay;
+namespace IntegrationTests.Gameplay;
 
 public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayIntegrationTest(factory)
 {
