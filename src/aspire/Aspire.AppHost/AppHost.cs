@@ -15,7 +15,7 @@ IResourceBuilder<ProjectResource> apiService = builder
     .WithReference(database)
     .WaitFor(database)
     .WithExternalHttpEndpoints()
-    .WithHttpHealthCheck("/health")
+    .WithHttpHealthCheck("/health", endpointName: "http")
     .WithEnvironment("ASPNETCORE_PREVENTHOSTINGSTARTUP", "true"); // Required for frontend hot reload
 
 // The standalone WASM dev server exists only during development (hot reload, debug).
