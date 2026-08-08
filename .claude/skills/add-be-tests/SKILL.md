@@ -15,7 +15,7 @@ Backfill the three test types this template expects for every slice. Read the ta
 3. **Write domain unit tests (in `tests/{Module}.UnitTests/`)** - test for every branch.
 4. **Write validator tests (in `tests/IntegrationTests/{Module}/`)**
 5. **Write integration tests (in `tests/IntegrationTests/{Module}/`)**
-6. **Run** `dotnet test --filter "FullyQualifiedName!~E2E"` integration tests use testcontainers, so Docker/Podman must be running. Fix failures before finishing.
+6. **Run** `dotnet test --filter-not-namespace E2ETests --ignore-exit-code 8` integration tests use testcontainers, so Docker/Podman must be running. Fix failures before finishing.
 
 ## Conventions
 

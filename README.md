@@ -13,6 +13,8 @@ aspire run        # or: F5 in VS Code ("Aspire: AppHost")
 ## Tests
 
 ```bash
-dotnet test --filter "FullyQualifiedName!~E2E"   # what CI runs
-dotnet test tests/E2ETests                       # full AppHost smoke test (local only)
+dotnet test                                      # what CI runs — every test project, E2E included
+dotnet run scripts/coverage.cs                           # same, plus a coverage summary and HTML report
+dotnet test --filter-not-namespace E2ETests --ignore-exit-code 8   # skip the slow AppHost smoke test
+dotnet test --project tests/E2ETests             # only the AppHost smoke test
 ```

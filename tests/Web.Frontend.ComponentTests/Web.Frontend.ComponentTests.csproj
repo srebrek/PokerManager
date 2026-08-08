@@ -1,10 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);CA1515;CA1707</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bunit" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Web.Frontend\Web.Frontend.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Using Include="Bunit" />
@@ -12,30 +26,5 @@
     <Using Include="Microsoft.Extensions.DependencyInjection" />
     <Using Include="Xunit" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="bunit" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="coverlet.collector">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="NSubstitute" />
-    <PackageReference Include="Shouldly" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Web.Frontend\Web.Frontend.csproj" />
-  </ItemGroup>
-
-	<!-- Vulnerability overrides (NU1903) - see matching PackageVersion comment in Directory.Packages.props -->
-	<ItemGroup>
-		<PackageReference Include="AngleSharp" />
-	</ItemGroup>
 
 </Project>
