@@ -6,14 +6,14 @@ namespace Gameplay.Domain.Entities;
 
 internal sealed class Hand : AggregateRoot<HandId>
 {
-    private readonly List<HandSeat> _seats;
-    private readonly List<HandAction> _actions = [];
-
     public GameId GameId { get; }
+    public HandStatus Status { get; private set; }
+    public Street Street { get; private set; } = Street.PreFlop;
     public IReadOnlyList<HandSeat> Seats => _seats.AsReadOnly();
     public IReadOnlyList<HandAction> Actions => _actions.AsReadOnly();
-    public Street Street { get; private set; } = Street.PreFlop;
-    public HandStatus Status { get; private set; }
+
+    private readonly List<HandSeat> _seats;
+    private readonly List<HandAction> _actions = [];
 
     private Hand(HandId id, GameId gameId) : base(id)
     {
@@ -22,7 +22,7 @@ internal sealed class Hand : AggregateRoot<HandId>
         Status = HandStatus.InProgress;
     }
 
-    public static Result<Hand> Start(GameId gameId, List<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
+    public static Result<Hand> Start(GameId gameId, IReadOnlyList<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
     {
         if (ValidateStartInput(seats, smallBlind, bigBlind) is { IsFailure: true, Error: var error })
         {
@@ -52,7 +52,7 @@ internal sealed class Hand : AggregateRoot<HandId>
         return hand;
     }
 
-    private static Result ValidateStartInput(List<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
+    private static Result ValidateStartInput(IReadOnlyList<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
     {
         if (seats.Count < 2)
         {

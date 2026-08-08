@@ -6,5 +6,5 @@ public sealed record GameStateResponse(
     bool IsFinished,
     int SmallBlind,
     int BigBlind,
-    IReadOnlyList<GameStateParticipant> Participants
-);
+    IReadOnlyList<GameStateParticipant> Participants,
+    Guid? CurrentHandId);

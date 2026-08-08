@@ -31,7 +31,7 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         Guid gameId,
         CancellationToken ct = default) =>
         ExecuteAsync<GameStateResponse>(
-            ct => httpClient.GetAsync(GameplayRoutes.GetGameStateFor(gameId), ct),
+            ct => httpClient.GetAsync(GameplayRoutes.GameStateFor(gameId), ct),
             ct);
 
     private async Task<GameplayResult<TValue>> ExecuteAsync<TValue>(

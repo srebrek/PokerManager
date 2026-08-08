@@ -9,26 +9,26 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.GetGameState;
+namespace Gameplay.Features.HandState;
 
-internal sealed class GetGameStateEndpoint : IEndpoint
+internal sealed class HandStateEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            GameplayRoutes.GetGameState,
+            GameplayRoutes.HandState,
             async (
-                Guid gameId,
-                GetGameStateQueryHandler handler,
-                IEnumerable<IValidator<GetGameStateQuery>> validators,
+                Guid handId,
+                HandStateQueryHandler handler,
+                IEnumerable<IValidator<HandStateQuery>> validators,
                 CancellationToken ct) =>
             {
-                GetGameStateQuery query = new(gameId);
-                Result<GameStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
+                HandStateQuery query = new(handId);
+                Result<HandStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)
-            .WithName(GameplayRoutes.GetGameStateEndpointName)
+            .WithName(GameplayRoutes.HandStateEndpointName)
             .AllowAnonymous();
     }
 }

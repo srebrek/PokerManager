@@ -9,27 +9,28 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.CreateGame;
+namespace Gameplay.Features.StartHand;
 
-internal sealed class CreateGameEndpoint : IEndpoint
+internal sealed class StartHandEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            GameplayRoutes.CreateGame,
+            GameplayRoutes.StartHand,
             async (
-                CreateGameRequest request,
-                CreateGameCommandHandler handler,
-                IEnumerable<IValidator<CreateGameCommand>> validators,
+                Guid gameId,
+                StartHandRequest request,
+                StartHandCommandHandler handler,
+                IEnumerable<IValidator<StartHandCommand>> validators,
                 CancellationToken ct) =>
             {
-                CreateGameCommand command = new(request.HostName);
-                Result<CreateGameResponse> result =
+                StartHandCommand command = new(gameId, request.ActingParticipantId);
+                Result<StartHandResponse> result =
                     await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(
                     value => Results.CreatedAtRoute(
-                        GameplayRoutes.GameStateEndpointName,
-                        new { gameId = value.GameId },
+                        GameplayRoutes.HandStateEndpointName,
+                        new { handId = value.HandId },
                         value),
                     CustomResults.Problem);
             })

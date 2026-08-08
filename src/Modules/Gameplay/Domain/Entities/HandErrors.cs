@@ -39,4 +39,7 @@ internal static class HandErrors
 
     public static readonly Error CompleteCompletedHand =
         Error.Conflict("Gameplay.Hand.CompleteCompletedHand", "Can not complete completed hand.");
+
+    public static readonly Error HandNotFound =
+        Error.NotFound("Gameplay.Hand.HandNotFound", "Hand not found.");
 }

@@ -37,7 +37,7 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
     protected async Task<GameStateResponse> GetGameStateAsync(Guid gameId)
     {
         using HttpResponseMessage response = await Client.GetAsync(
-            GameplayRoutes.GetGameStateFor(gameId),
+            GameplayRoutes.GameStateFor(gameId),
             CancellationToken);
         response.EnsureSuccessStatusCode();
 

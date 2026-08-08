@@ -14,7 +14,7 @@ public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayI
 
         // Act
         using HttpResponseMessage response = await Client.GetAsync(
-            GameplayRoutes.GetGameStateFor(createGameResponse.GameId),
+            GameplayRoutes.GameStateFor(createGameResponse.GameId),
             CancellationToken);
 
         // Assert
@@ -43,7 +43,7 @@ public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayI
 
         // Act
         using HttpResponseMessage response = await Client.GetAsync(
-            GameplayRoutes.GetGameStateFor(unknownGameId),
+            GameplayRoutes.GameStateFor(unknownGameId),
             CancellationToken);
 
         // Assert

@@ -5,11 +5,11 @@ using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
 
-namespace Gameplay.Features.GetGameState;
+namespace Gameplay.Features.GameState;
 
-internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
+internal sealed class GameStateQueryHandler(GameplayDbContext db)
 {
-    public async Task<Result<GameStateResponse>> Handle(GetGameStateQuery query, CancellationToken ct)
+    public async Task<Result<GameStateResponse>> Handle(GameStateQuery query, CancellationToken ct)
     {
         var game = await db.Games
             .Where(g => g.Id == GameId.From(query.GameId))
@@ -21,7 +21,8 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
                 g.BigBlind,
                 g.HostParticipantId,
                 g.Participants,
-                g.SeatingOrder // This line loads whole aggregate for the clarity reason
+                g.SeatingOrder,
+                g.CurrentHandId
             })
             .AsNoTracking()
             .SingleOrDefaultAsync(ct);
@@ -49,6 +50,7 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
             game.IsFinished,
             game.SmallBlind.Value,
             game.BigBlind.Value,
-            participants);
+            participants,
+            game.CurrentHandId?.Value);
     }
 }

@@ -20,6 +20,7 @@ internal sealed class GameConfiguration : IEntityTypeConfiguration<Game>
         builder.PrimitiveCollection<List<ParticipantId>>("_seatingOrder")
             .ElementType(e => e.HasConversion<StronglyTypedIdValueConverter<ParticipantId>>())
             .HasColumnName("seating_order");
+        builder.Property(g => g.CurrentHandId).HasConversion(new StronglyTypedIdValueConverter<HandId>());
         builder.Property<uint>("Version").IsRowVersion();
     }
 }
