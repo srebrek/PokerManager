@@ -33,14 +33,13 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
 
         Dictionary<ParticipantId, Participant> participantsById = game.Participants.ToDictionary(p => p.Id);
 
-        List<GameStateParticipant> participants = [.. game.SeatingOrder.Select((id, index) =>
+        List<GameStateParticipant> participants = [.. game.SeatingOrder.Select(id =>
         {
             Participant participant = participantsById[id];
             return new GameStateParticipant(
                 id.Value,
                 participant.Name,
                 participant.Chips.Value,
-                index,
                 id == game.HostParticipantId);
         })];
 

@@ -47,21 +47,18 @@ public sealed class JoinGameIntegrationTests(ApiFactory factory) : GameplayInteg
             createGameResponse.ParticipantId,
             "TestHostName",
             1000,
-            0,
             true));
 
         participant1.ShouldBe(new GameStateParticipant(
             joinGame1Response.ParticipantId,
             "TestParticipant1Name",
             1000,
-            1,
             false));
 
         participant2.ShouldBe(new GameStateParticipant(
             joinGame2Response.ParticipantId,
             "TestParticipant2Name",
             1000,
-            2,
             false));
     }
 

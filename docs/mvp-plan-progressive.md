@@ -122,7 +122,7 @@ GameStateResponse(
     int SmallBlind, int BigBlind,
     IReadOnlyList<GameStateParticipant> Participants)   // ordered by SeatIndex
 
-GameStateParticipant(Guid Id, string Name, int Chips, int SeatIndex, bool IsHost)
+GameStateParticipant(Guid Id, string Name, int Chips, bool IsHost)
 ```
 
 No per-recipient field — one payload is broadcastable. `CurrentHand` is added by the slice that can fill it.

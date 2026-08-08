@@ -32,7 +32,6 @@ public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayI
         host.Id.ShouldBe(createGameResponse.ParticipantId);
         host.Name.ShouldBe("TestHostName");
         host.Chips.ShouldBe(Game.DefaultStartingStack);
-        host.SeatIndex.ShouldBe(0);
         host.IsHost.ShouldBeTrue();
     }
 
