@@ -1,0 +1,31 @@
+@using Contracts.Api.Gameplay
+
+<MudPaper>
+    <MudStack Row>
+        <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)">
+            @Model.Name
+        </MudText>
+
+        <MudChip T="string" Variant="Variant.Text">
+            @Model.State
+        </MudChip>
+
+        <MudText>
+            Chips: @Model.RemainingStack
+        </MudText>
+
+        <MudSpacer />
+
+        <MudText>
+            Bet: @Model.Contribution
+        </MudText>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required SeatCardModel Model { get; set; }
+
+    public sealed record SeatCardModel(string Name, int RemainingStack, int Contribution, SeatState State, bool IsMe);
+}

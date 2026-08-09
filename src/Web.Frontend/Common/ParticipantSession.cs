@@ -6,8 +6,10 @@ internal sealed class ParticipantSession
 
     public void Set(Guid gameId, Guid participantId) => _identity = new ParticipantIdentity(gameId, participantId);
 
-    public bool IsMe(Guid gameId, Guid participantId) =>
-        _identity is { } identity && identity.GameId == gameId && identity.ParticipantId == participantId;
+    public Guid? ParticipantIdFor(Guid gameId) =>
+        _identity is not null && _identity.GameId == gameId
+        ? _identity.ParticipantId
+        : null;
 
     private sealed record ParticipantIdentity(Guid GameId, Guid ParticipantId);
 }

@@ -9,6 +9,9 @@ internal interface IGameplayApi
     Task<GameplayResult<CreateGameResponse>> CreateGameAsync(CreateGameRequest request, CancellationToken ct = default);
     Task<GameplayResult<JoinGameResponse>> JoinGameAsync(JoinGameRequest request, CancellationToken ct = default);
     Task<GameplayResult<GameStateResponse>> GetGameStateAsync(Guid gameId, CancellationToken ct = default);
+    Task<GameplayResult<HandStateResponse>> GetHandStateAsync(Guid handId, CancellationToken ct = default);
+    Task<GameplayResult<StartHandResponse>> StartHandAsync(
+      Guid gameId, StartHandRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
@@ -32,6 +35,21 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         CancellationToken ct = default) =>
         ExecuteAsync<GameStateResponse>(
             ct => httpClient.GetAsync(GameplayRoutes.GameStateFor(gameId), ct),
+            ct);
+
+    public Task<GameplayResult<HandStateResponse>> GetHandStateAsync(
+        Guid handId,
+        CancellationToken ct = default) =>
+        ExecuteAsync<HandStateResponse>(
+            ct => httpClient.GetAsync(GameplayRoutes.HandStateFor(handId), ct),
+            ct);
+
+    public Task<GameplayResult<StartHandResponse>> StartHandAsync(
+        Guid gameId,
+        StartHandRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync<StartHandResponse>(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.StartHandFor(gameId), request, ct),
             ct);
 
     private async Task<GameplayResult<TValue>> ExecuteAsync<TValue>(

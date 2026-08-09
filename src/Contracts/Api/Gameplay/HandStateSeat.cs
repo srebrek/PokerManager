@@ -4,4 +4,12 @@ public sealed record HandStateSeat(
     Guid ParticipantId,
     int RemainingStack,
     int Contribution,
-    string State);
+    SeatState State);
+
+public enum SeatState
+{
+    Active,
+    Folded,
+    AllIn
+}
+

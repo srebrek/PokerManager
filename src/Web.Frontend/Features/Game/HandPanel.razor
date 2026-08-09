@@ -1,0 +1,49 @@
+@using Contracts.Api.Gameplay
+@using static Web.Frontend.Features.Game.SeatCard
+
+<MudStack>
+    <MudStack StretchItems="StretchItems.All" Row>
+        <MudPaper Class="pa-4 align-content-center">
+            <MudText Typo="Typo.caption">Pot</MudText>
+            <MudText Typo="Typo.h5">@Hand.Pot</MudText>
+        </MudPaper>
+
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.caption">Street</MudText>
+            <MudText Typo="Typo.h5">@Hand.Street.ToString()</MudText>
+        </MudPaper>
+    </MudStack>
+
+    <MudStack>
+        @foreach (SeatCardModel seatCardInput in _seats)
+        {
+            <SeatCard Model="seatCardInput"></SeatCard>
+        }
+    </MudStack>
+</MudStack>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required HandStateResponse Hand { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
+
+    [Parameter]
+    public Guid? MyParticipantId { get; set; }
+
+    private List<SeatCardModel> _seats = [];
+
+    protected override void OnParametersSet()
+    {
+        _seats = Hand.Seats.Select(s => new SeatCardModel(
+            Participants.Single(p => p.Id == s.ParticipantId).Name,
+            s.RemainingStack,
+            s.Contribution,
+            s.State,
+            s.ParticipantId == MyParticipantId))
+            .ToList();
+    }
+}

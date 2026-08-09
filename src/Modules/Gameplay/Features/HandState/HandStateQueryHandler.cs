@@ -33,17 +33,18 @@ internal sealed class HandStateQueryHandler(GameplayDbContext db)
 
         Domain.Services.HandState handState = HandStateCalculator.Calculate(hand.Seats, hand.Actions);
 
+        // TODO: consider better enum mapping
         List<HandStateSeat> handStateSeats = [.. hand.Seats.Select(handSeat => new HandStateSeat(
             handSeat.ParticipantId.Value,
             handState.RemainingStacks[handSeat.ParticipantId].Value,
             handState.Contributions[handSeat.ParticipantId].Value,
-            handState.SeatStates[handSeat.ParticipantId].ToString()))];
+            (Contracts.Api.Gameplay.SeatState)handState.SeatStates[handSeat.ParticipantId]))];
 
         return new HandStateResponse(
             query.HandId,
             hand.GameId.Value,
-            hand.Status.ToString(),
-            hand.Street.ToString(),
+            (Contracts.Api.Gameplay.HandStatus)hand.Status,
+            (Contracts.Api.Gameplay.Street)hand.Street,
             handState.Pot.Value,
             handStateSeats);
     }

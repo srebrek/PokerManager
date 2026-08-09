@@ -1,0 +1,50 @@
+@using Contracts.Api.Gameplay
+
+<MudStack>
+    <MudStack StretchItems="StretchItems.All" Row>
+        <MudPaper Class="pa-4 align-content-center">
+            <MudText Typo="Typo.caption">Join Code</MudText>
+            <MudText Typo="Typo.h5">@Game.JoinCode</MudText>
+        </MudPaper>
+
+        <MudPaper Class="pa-4">
+            <MudText>Rules</MudText>
+            <MudText>Big Blind: @Game.BigBlind</MudText>
+            <MudText>Small Blind: @Game.SmallBlind</MudText>
+        </MudPaper>
+    </MudStack>
+
+    <MudList T="Guid" ReadOnly Dense>
+        @foreach (GameStateParticipant participant in Game.Participants)
+        {
+            <MudListItem Value="participant.Id">
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudText Color="@(MyParticipantId == participant.Id
+                        ? Color.Primary
+                        : Color.Inherit)">
+                        @participant.Name
+                    </MudText>
+
+                    <MudChip
+                        T="string"
+                        Variant="Variant.Text"
+                        Class="@(participant.IsHost ? "visible" : "invisible")">
+                        Host
+                    </MudChip>
+
+                    <MudSpacer />
+                    <MudText>@participant.Chips</MudText>
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+</MudStack>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required GameStateResponse Game { get; set; }
+
+    [Parameter]
+    public Guid? MyParticipantId { get; set; }
+}

@@ -1,0 +1,173 @@
+@page "/games/{GameId:guid}"
+
+@using Contracts.Api.Gameplay
+
+@implements IDisposable
+
+@inject IGameplayApi GameplayApi
+@inject ParticipantSession Session
+@inject ISnackbar Snackbar
+
+<PageTitle>Game</PageTitle>
+
+<MudContainer>
+    @switch (_state)
+    {
+        case Loading:
+            <MudSkeleton />
+            break;
+        case Loaded loaded:
+            <MudStack>
+                <MudButton OnClick="@(() => _panelOpen = true)" Variant="Variant.Filled" Color="Color.Primary">
+                    Lobby
+                </MudButton>
+
+                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                    Refresh
+                </MudButton>
+
+                <MudDialog @bind-Visible="_panelOpen" Options="s_panelOptions">
+                    <DialogContent>
+                        <LobbyPanel Game="loaded.Game" MyParticipantId="@Session.ParticipantIdFor(GameId)"/>
+                    </DialogContent>
+                </MudDialog>
+
+                @if (loaded.Hand is null)
+                {
+                    <MudPaper Class="pa-8 d-flex justify-center">
+                        <MudText Typo="Typo.h6">No hand in progress</MudText>
+                    </MudPaper>
+
+                    <MudButton Disabled="@_isBusy" OnClick="StartHandAsync">
+                        Start Hand
+                    </MudButton>
+                }
+                else
+                {
+                    <HandPanel
+                        Hand="loaded.Hand"
+                        Participants="loaded.Game.Participants"
+                        MyParticipantId="@Session.ParticipantIdFor(GameId)" />
+                }
+
+            </MudStack>
+            break;
+        case NotFound:
+            <MudStack>
+                <MudAlert Severity="Severity.Warning">Game not found.</MudAlert>
+                <MudButton Href="/games/setup" Variant="Variant.Filled" Color="Color.Primary">
+                    Back to setup
+                </MudButton>
+            </MudStack>
+            break;
+        case Failed(var message):
+            <MudStack>
+                <MudAlert Severity="Severity.Error">@message</MudAlert>
+                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                    Refresh
+                </MudButton>
+            </MudStack>
+            break;
+    }
+</MudContainer>
+
+@code {
+    // TODO: add bunit tests
+    [Parameter]
+    public Guid GameId { get; set; }
+    private readonly CancellationTokenSource _cts = new();
+    private IPageState _state = new Loading();
+    private bool _isBusy;
+    private bool _panelOpen;
+    private static readonly DialogOptions s_panelOptions = new()
+    {
+
+    };
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (_isBusy)
+        {
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            _state = await LoadStateAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task<IPageState> LoadStateAsync()
+    {
+        GameplayResult<GameStateResponse> gameResult = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
+        if (!gameResult.IsSuccess)
+        {
+            return gameResult.ErrorKind == GameplayErrorKind.NotFound
+                ? new NotFound()
+                : new Failed(gameResult.Error ?? "Unexpected error.");
+        }
+
+        Guid? currentHandId = gameResult.Value!.CurrentHandId;
+        if (currentHandId is null)
+        {
+            return new Loaded(gameResult.Value, null);
+        }
+
+        GameplayResult<HandStateResponse> handResult =
+            await GameplayApi.GetHandStateAsync(currentHandId.Value, _cts.Token);
+        if (handResult.IsSuccess)
+        {
+            return new Loaded(gameResult.Value, handResult.Value);
+        }
+
+        return new Failed(handResult.Error ?? "Unexpected error.");
+    }
+
+    private async Task StartHandAsync()
+    {
+        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+
+        _isBusy = true;
+        try
+        {
+            GameplayResult<StartHandResponse> result =
+                await GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), _cts.Token);
+
+            if (!result.IsSuccess)
+            {
+                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                return;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private interface IPageState;
+
+    private sealed record Loading : IPageState;
+
+    private sealed record Loaded(GameStateResponse Game, HandStateResponse? Hand) : IPageState;
+
+    private sealed record NotFound : IPageState;
+
+    private sealed record Failed(string Message) : IPageState;
+}
