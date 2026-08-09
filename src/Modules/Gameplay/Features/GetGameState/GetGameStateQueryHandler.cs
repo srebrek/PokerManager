@@ -5,11 +5,11 @@ using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
 
-namespace Gameplay.Features.GameState;
+namespace Gameplay.Features.GetGameState;
 
-internal sealed class GameStateQueryHandler(GameplayDbContext db)
+internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
 {
-    public async Task<Result<GameStateResponse>> Handle(GameStateQuery query, CancellationToken ct)
+    public async Task<Result<GameStateResponse>> Handle(GetGameStateQuery query, CancellationToken ct)
     {
         var game = await db.Games
             .Where(g => g.Id == GameId.From(query.GameId))

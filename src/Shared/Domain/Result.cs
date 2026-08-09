@@ -45,4 +45,6 @@ public class Result<TValue>(TValue? value, bool isSuccess, Error error) : Result
 
     public static implicit operator Result<TValue>(TValue? value) =>
         value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
+
+    public static implicit operator TValue(Result<TValue> result) => result.Value;
 }

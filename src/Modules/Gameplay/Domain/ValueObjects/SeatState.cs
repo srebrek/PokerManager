@@ -4,5 +4,4 @@ internal enum SeatState
 {
     Active,
     Folded,
-    AllIn
 }

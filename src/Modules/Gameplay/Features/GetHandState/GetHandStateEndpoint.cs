@@ -9,9 +9,9 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.HandState;
+namespace Gameplay.Features.GetHandState;
 
-internal sealed class HandStateEndpoint : IEndpoint
+internal sealed class GetHandStateEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -19,12 +19,12 @@ internal sealed class HandStateEndpoint : IEndpoint
             GameplayRoutes.HandState,
             async (
                 Guid handId,
-                HandStateQueryHandler handler,
-                IEnumerable<IValidator<HandStateQuery>> validators,
+                GetHandStateQueryHandler handler,
+                IEnumerable<IValidator<GetHandStateQuery>> validators,
                 CancellationToken ct) =>
             {
-                HandStateQuery query = new(handId);
-                Result<HandStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
+                GetHandStateQuery query = new(handId);
+                Result<GetHandStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)

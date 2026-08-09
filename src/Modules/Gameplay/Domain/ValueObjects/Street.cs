@@ -5,5 +5,6 @@ internal enum Street
     PreFlop,
     Flop,
     Turn,
-    River
+    River,
+    Finished,
 }

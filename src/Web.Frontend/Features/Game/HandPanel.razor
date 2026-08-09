@@ -25,7 +25,7 @@
 @code {
     [Parameter]
     [EditorRequired]
-    public required HandStateResponse Hand { get; set; }
+    public required GetHandStateResponse Hand { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -41,7 +41,7 @@
         _seats = Hand.Seats.Select(s => new SeatCardModel(
             Participants.Single(p => p.Id == s.ParticipantId).Name,
             s.RemainingStack,
-            s.Contribution,
+            s.StreetContribution,
             s.State,
             s.ParticipantId == MyParticipantId))
             .ToList();

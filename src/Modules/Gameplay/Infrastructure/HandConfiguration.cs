@@ -14,7 +14,6 @@ internal sealed class HandConfiguration : IEntityTypeConfiguration<Hand>
 
         builder.Property(h => h.Id).HasConversion(new StronglyTypedIdValueConverter<HandId>());
         builder.Property(h => h.GameId).HasConversion(new StronglyTypedIdValueConverter<GameId>());
-        builder.Property(h => h.Street).HasConversion<string>();
         builder.Property(h => h.Status).HasConversion<string>();
         builder.Property<uint>("Version").IsRowVersion();
 
@@ -45,8 +44,7 @@ internal sealed class HandConfiguration : IEntityTypeConfiguration<Hand>
             action.Property(a => a.SequenceNumber).ValueGeneratedNever();
             action.Property(a => a.ParticipantId).HasConversion(new StronglyTypedIdValueConverter<ParticipantId>());
             action.Property(a => a.Type).HasConversion<string>();
-            action.Property(a => a.Street).HasConversion<string>();
-            action.Property(a => a.Amount).HasConversion(new ChipsStackValueConverter());
+            action.Property(a => a.AmountTo).HasConversion(new ChipsStackValueConverter());
 
             action.HasOne<Participant>().WithMany().OnDelete(DeleteBehavior.Restrict);
         });

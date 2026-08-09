@@ -9,9 +9,9 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.GameState;
+namespace Gameplay.Features.GetGameState;
 
-internal sealed class GameStateEndpoint : IEndpoint
+internal sealed class GetGameStateEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -19,11 +19,11 @@ internal sealed class GameStateEndpoint : IEndpoint
             GameplayRoutes.GameState,
             async (
                 Guid gameId,
-                GameStateQueryHandler handler,
-                IEnumerable<IValidator<GameStateQuery>> validators,
+                GetGameStateQueryHandler handler,
+                IEnumerable<IValidator<GetGameStateQuery>> validators,
                 CancellationToken ct) =>
             {
-                GameStateQuery query = new(gameId);
+                GetGameStateQuery query = new(gameId);
                 Result<GameStateResponse> result = await validators.HandleValidatedAsync(query, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })

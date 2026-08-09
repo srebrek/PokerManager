@@ -8,8 +8,11 @@ internal sealed class Hand : AggregateRoot<HandId>
 {
     public GameId GameId { get; }
     public HandStatus Status { get; private set; }
-    public Street Street { get; private set; } = Street.PreFlop;
+
+    // Navigation Property
     public IReadOnlyList<HandSeat> Seats => _seats.AsReadOnly();
+
+    // Navigation Property
     public IReadOnlyList<HandAction> Actions => _actions.AsReadOnly();
 
     private readonly List<HandSeat> _seats;
@@ -22,7 +25,11 @@ internal sealed class Hand : AggregateRoot<HandId>
         Status = HandStatus.InProgress;
     }
 
-    public static Result<Hand> Start(GameId gameId, IReadOnlyList<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
+    public static Result<Hand> Start(
+        GameId gameId,
+        IReadOnlyList<HandSeat> seats,
+        ChipsStack smallBlind,
+        ChipsStack bigBlind)
     {
         if (ValidateStartInput(seats, smallBlind, bigBlind) is { IsFailure: true, Error: var error })
         {
@@ -35,18 +42,16 @@ internal sealed class Hand : AggregateRoot<HandId>
         hand._seats.AddRange(orderedSeats);
 
         hand._actions.AddRange(
-            new HandAction(
+            HandAction.Create(
                 0,
                 orderedSeats[0].ParticipantId,
                 HandActionType.PostSmallBlind,
-                ChipsStack.Create(smallBlind.Value).Value,
-                Street.PreFlop),
-            new HandAction(
+                ChipsStack.Create(smallBlind.Value).Value),
+            HandAction.Create(
                 1,
                 orderedSeats[1].ParticipantId,
                 HandActionType.PostBigBlind,
-                ChipsStack.Create(bigBlind.Value).Value,
-                Street.PreFlop)
+                ChipsStack.Create(bigBlind.Value).Value)
         );
 
         return hand;
@@ -72,92 +77,30 @@ internal sealed class Hand : AggregateRoot<HandId>
         return Result.Success();
     }
 
-    public Result RecordAction(ParticipantId participantId, HandActionType type, ChipsStack? amount)
-    {
-        HandState handState = HandStateCalculator.Calculate(_seats, _actions);
-
-        if (ValidateRecordActionInput(participantId, handState) is { IsFailure: true, Error: var error })
-        {
-            return Result.Failure(error);
-        }
-
-        if (amount is not null && handState.RemainingStacks[participantId].Value < amount.Value.Value)
-        {
-            return Result.Failure(HandErrors.InsufficientChipsStack);
-        }
-
-        int sequenceNumber = _actions.Count;
-        _actions.Add(new HandAction(sequenceNumber, participantId, type, amount, Street));
-
-        return Result.Success();
-    }
-
-    private Result ValidateRecordActionInput(ParticipantId participantId, HandState handState)
+    public Result RecordAction(ParticipantId participantId, HandActionType type, ChipsStack? amountTo)
     {
         HandSeat? seat = _seats.SingleOrDefault(s => s.ParticipantId == participantId);
-
         if (seat is null)
         {
             return Result.Failure(HandErrors.ParticipantIdNotInSeats);
         }
 
-        SeatState seatState = handState.SeatStates[participantId];
-        if (seatState is SeatState.Folded)
+        Result<HandAction> handActionResult = HandAction.Create(
+            _actions[^1].SequenceNumber + 1,
+            participantId,
+            type,
+            amountTo);
+        if (handActionResult.IsFailure)
         {
-            return Result.Failure(HandErrors.SeatFolded);
+            return Result.Failure(handActionResult.Error);
         }
 
-        if (seatState is SeatState.AllIn)
+        _actions.Add(handActionResult.Value);
+        Result<HandState> handState = HandStateCalculator.Calculate(_seats, _actions);
+        if (handState.IsFailure)
         {
-            return Result.Failure(HandErrors.SeatAllIned);
+            return Result.Failure(handState.Error);
         }
-
-        return Result.Success();
-    }
-
-    public Result Undo()
-    {
-        if (Status is HandStatus.Completed)
-        {
-            return Result.Failure(HandErrors.UndoCompletedHand);
-        }
-
-        int actionCount = _actions.Count;
-        if (actionCount <= 2)
-        {
-            return Result.Failure(HandErrors.UndoBlind);
-        }
-
-        _actions.RemoveAt(actionCount - 1);
-
-        return Result.Success();
-    }
-
-    public Result AdvanceStreet()
-    {
-        if (Status is HandStatus.Completed)
-        {
-            return Result.Failure(HandErrors.AdvanceStreetOnCompletedHand);
-        }
-
-        if (Street is Street.River)
-        {
-            return Result.Failure(HandErrors.NoNextStreet);
-        }
-
-        Street = (Street)((int)Street + 1);
-
-        return Result.Success();
-    }
-
-    public Result Complete()
-    {
-        if (Status is HandStatus.Completed)
-        {
-            return Result.Failure(HandErrors.CompleteCompletedHand);
-        }
-
-        Status = HandStatus.Completed;
 
         return Result.Success();
     }

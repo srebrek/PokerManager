@@ -120,7 +120,7 @@
             return new Loaded(gameResult.Value, null);
         }
 
-        GameplayResult<HandStateResponse> handResult =
+        GameplayResult<GetHandStateResponse> handResult =
             await GameplayApi.GetHandStateAsync(currentHandId.Value, _cts.Token);
         if (handResult.IsSuccess)
         {
@@ -165,7 +165,7 @@
 
     private sealed record Loading : IPageState;
 
-    private sealed record Loaded(GameStateResponse Game, HandStateResponse? Hand) : IPageState;
+    private sealed record Loaded(GameStateResponse Game, GetHandStateResponse? Hand) : IPageState;
 
     private sealed record NotFound : IPageState;
 

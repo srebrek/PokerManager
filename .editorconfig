@@ -375,6 +375,9 @@ dotnet_diagnostic.S2325.severity = none
 # CA1030: Use events where appropriate
 dotnet_diagnostic.CA1030.severity = none
 
+# IDE0001: Simplify name
+dotnet_diagnostic.IDE0001.severity = warning
+
 # Generated files (EF migrations/designer) - don't enforce style cleanup.
 [**/Migrations/*.cs]
 generated_code = true

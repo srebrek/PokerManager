@@ -16,4 +16,5 @@ public static class GameplayRoutes
     public const string HandState = $"{Hands}/{{handId:guid}}";
     public static Uri HandStateFor(Guid handId) => new($"{Hands}/{handId}", UriKind.Relative);
     public const string HandStateEndpointName = "HandState";
+    public const string RecordAction = $"{Hands}/{{handId:guid}}/actions";
 }

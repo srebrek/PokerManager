@@ -1,6 +1,6 @@
 namespace Contracts.Api.Gameplay;
 
-public sealed record HandStateResponse(
+public sealed record GetHandStateResponse(
     Guid HandId,
     Guid GameId,
     HandStatus Status,
@@ -19,6 +19,18 @@ public enum Street
     PreFlop,
     Flop,
     Turn,
-    River
+    River,
+    Finished,
 }
 
+public sealed record HandStateSeat(
+    Guid ParticipantId,
+    int StreetContribution,
+    int RemainingStack,
+    SeatState State);
+
+public enum SeatState
+{
+    Active,
+    Folded,
+}
