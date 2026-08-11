@@ -8,6 +8,8 @@ internal readonly record struct ChipsStack
 
     private ChipsStack(int value) => Value = value;
 
+    public static readonly ChipsStack Zero = new(0);
+
     public static Result<ChipsStack> Create(int value)
     {
         if (value < 0)
@@ -22,7 +24,10 @@ internal readonly record struct ChipsStack
         Error.Problem("Gameplay.ChipsStack.NegativeValue", "Chips stack value cannot be negative.");
 
     // TODO: check places that can benefit from it
+    public static explicit operator ChipsStack(int amount) =>
+        Create(amount) is { IsSuccess: true } result
+            ? result.Value
+            : throw new InvalidOperationException($"Negative chips stack: {amount}.");
 
-    public static implicit operator ChipsStack(int amount) => Create(amount);
     public static implicit operator int(ChipsStack chipsStack) => chipsStack.Value;
 }

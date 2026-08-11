@@ -144,4 +144,36 @@ internal sealed class Game : AggregateRoot<GameId>
         CurrentHandId = handId;
         return Result.Success();
     }
+
+    public Result ApplyHandAwards(IReadOnlyList<HandAward> handAwards, ParticipantId actingParticipant, HandId handId)
+    {
+        if (HostParticipantId != actingParticipant)
+        {
+            return Result.Failure(GameErrors.NotHost);
+        }
+
+        if (CurrentHandId is null)
+        {
+            return Result.Failure(GameErrors.ApplyAwardsWithoutCurrentHand);
+        }
+
+        if (CurrentHandId != handId)
+        {
+            return Result.Failure(GameErrors.InvalidHandId);
+        }
+
+        CurrentHandId = null;
+
+        foreach (HandAward award in handAwards)
+        {
+            Participant participant = Participants.Single(p => p.Id == award.ParticipantId);
+            Result result = participant.AddChips(award.Net);
+            if (result.IsFailure)
+            {
+                return Result.Failure(result.Error);
+            }
+        }
+
+        return Result.Success();
+    }
 }

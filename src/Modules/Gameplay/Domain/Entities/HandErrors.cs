@@ -18,4 +18,13 @@ internal static class HandErrors
 
     public static readonly Error HandNotFound =
         Error.NotFound("Gameplay.Hand.HandNotFound", "Hand not found.");
+
+    public static readonly Error FinishFinishedHand =
+        Error.Conflict("Gameplay.Hand.FinishFinishedHand", "Can not finish already finished hand.");
+
+    public static readonly Error FoldedWinner =
+        Error.Conflict("Gameplay.Hand.FoldedWinner", "Winner can not be folded.");
+
+    public static readonly Error NotCompletedStreetFinish =
+        Error.Conflict("Gameplay.Hand.NotCompletedStreetFinish", "Can not finish hand that is still in play.");
 }

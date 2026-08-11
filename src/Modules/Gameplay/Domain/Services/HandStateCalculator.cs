@@ -11,11 +11,14 @@ internal static class HandStateCalculator
 
         List<HandSeatState> seatStates = [.. seats
                 .OrderBy(hs => hs.Position)
-                .Select(hs => new HandSeatState(hs.ParticipantId, 0, hs.StartingStack, ValueObjects.SeatState.Active))];
+                .Select(hs => new HandSeatState(
+                    hs.ParticipantId,
+                    ChipsStack.Zero,
+                    hs.StartingStack,
+                    SeatState.Active))];
 
-        ChipsStack pot = 0;
-
-        ChipsStack currentBet = 0;
+        ChipsStack pot = ChipsStack.Zero;
+        ChipsStack currentBet = ChipsStack.Zero;
         int actingParticipantIndex = 0;
         int participantCount = seats.Count;
         int newStreetCounter = participantCount + BlindNumber;
@@ -65,8 +68,8 @@ internal static class HandStateCalculator
             if (action.Type is HandActionType.Call or HandActionType.Bet or HandActionType.Raise)
             {
                 ChipsStack chipsToPush = action.AmountTo is not null
-                    ? action.AmountTo.Value - seatStates[actingParticipantIndex].StreetContribution
-                    : currentBet - seatStates[actingParticipantIndex].StreetContribution;
+                    ? (ChipsStack)(action.AmountTo.Value - seatStates[actingParticipantIndex].StreetContribution)
+                    : (ChipsStack)(currentBet - seatStates[actingParticipantIndex].StreetContribution);
 
                 if (chipsToPush > seatStates[actingParticipantIndex].RemainingStack)
                 {
@@ -93,19 +96,20 @@ internal static class HandStateCalculator
                 ChipsStack chipsToPush;
                 if (action.AmountTo is not null)
                 {
-                    chipsToPush = action.AmountTo.Value - seatStates[actingParticipantIndex].StreetContribution;
+                    chipsToPush =
+                        (ChipsStack)(action.AmountTo.Value - seatStates[actingParticipantIndex].StreetContribution);
                     currentBet = action.AmountTo.Value;
                 }
                 else
                 {
-                    chipsToPush = currentBet - seatStates[actingParticipantIndex].StreetContribution;
+                    chipsToPush = (ChipsStack)(currentBet - seatStates[actingParticipantIndex].StreetContribution);
                 }
 
                 HandSeatState current = seatStates[actingParticipantIndex];
                 seatStates[actingParticipantIndex] = seatStates[actingParticipantIndex] with
                 {
-                    StreetContribution = current.StreetContribution + chipsToPush,
-                    RemainingStack = current.RemainingStack - chipsToPush,
+                    StreetContribution = (ChipsStack)(current.StreetContribution + chipsToPush),
+                    RemainingStack = (ChipsStack)(current.RemainingStack - chipsToPush),
                 };
 
                 pot += chipsToPush;
@@ -121,11 +125,11 @@ internal static class HandStateCalculator
             {
                 for (int i = 0; i < seatStates.Count; i++)
                 {
-                    seatStates[i] = seatStates[i] with { StreetContribution = 0 };
+                    seatStates[i] = seatStates[i] with { StreetContribution = ChipsStack.Zero };
                 }
 
                 currentStreet++;
-                currentBet = 0;
+                currentBet = ChipsStack.Zero;
                 actingParticipantIndex = 0;
                 newStreetCounter = participantCount - foldCounter;
 

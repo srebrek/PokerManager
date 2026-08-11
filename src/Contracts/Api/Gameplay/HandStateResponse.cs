@@ -11,7 +11,7 @@ public sealed record GetHandStateResponse(
 public enum HandStatus
 {
     InProgress,
-    Completed
+    Finished,
 }
 
 public enum Street

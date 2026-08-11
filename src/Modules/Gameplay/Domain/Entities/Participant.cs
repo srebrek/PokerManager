@@ -24,4 +24,16 @@ internal sealed class Participant : Entity<ParticipantId>
 
         return new Participant(ParticipantId.New(), name, chips);
     }
+
+    public Result AddChips(int amount)
+    {
+        Result<ChipsStack> result = ChipsStack.Create(Chips + amount);
+        if (result.IsFailure)
+        {
+            return Result.Failure(result.Error);
+        }
+
+        Chips = result.Value;
+        return Result.Success();
+    }
 }

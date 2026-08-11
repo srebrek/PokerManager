@@ -30,8 +30,7 @@ internal sealed class RecordActionEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 RecordActionCommand command = new(handId, request.ActingParticipantId, request.Type, request.AmountTo);
-                Result result =
-                    await validators.HandleValidatedAsync(command, handler.Handle, ct);
+                Result result = await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(Results.NoContent, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)

@@ -104,4 +104,59 @@ internal sealed class Hand : AggregateRoot<HandId>
 
         return Result.Success();
     }
+
+    public Result<List<HandAward>> Finish(ParticipantId winnerParticipantId)
+    {
+        if (Status is HandStatus.Finished)
+        {
+            return Result.Failure<List<HandAward>>(HandErrors.FinishFinishedHand);
+        }
+
+        Status = HandStatus.Finished;
+
+        Result<HandState> handState = HandStateCalculator.Calculate(_seats, _actions);
+        if (handState.IsFailure)
+        {
+            return Result.Failure<List<HandAward>>(handState.Error);
+        }
+
+        if (handState.Value.Street is not Street.Finished)
+        {
+            return Result.Failure<List<HandAward>>(HandErrors.NotCompletedStreetFinish);
+        }
+
+        HandSeatState winner =
+            handState.Value.SeatStates.SingleOrDefault(ss => ss.ParticipantId == winnerParticipantId);
+        if (winner == default)
+        {
+            return Result.Failure<List<HandAward>>(HandErrors.ParticipantIdNotInSeats);
+        }
+
+        if (winner.State is SeatState.Folded)
+        {
+            return Result.Failure<List<HandAward>>(HandErrors.FoldedWinner);
+        }
+
+        List<HandAward> awards = new(handState.Value.SeatStates.Count);
+        foreach (HandSeatState seatState in handState.Value.SeatStates)
+        {
+            ChipsStack startingStack = _seats.Single(s => s.ParticipantId == seatState.ParticipantId).StartingStack;
+            int net = seatState.RemainingStack - startingStack;
+            if (seatState.ParticipantId == winnerParticipantId)
+            {
+                awards.Add(new(seatState.ParticipantId, handState.Value.Pot + net));
+            }
+            else
+            {
+                awards.Add(new(seatState.ParticipantId, net));
+            }
+        }
+
+        if (awards.Sum(a => a.Net) is not 0)
+        {
+            throw new InvalidOperationException("Awards does not sum up to zero.");
+        }
+
+        return awards;
+    }
 }
