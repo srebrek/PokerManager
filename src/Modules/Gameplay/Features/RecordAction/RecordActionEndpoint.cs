@@ -77,7 +77,7 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
     {
         Hand? hand = await outbox.DbContext.Hands
             .Include(h => h.Seats)
-            .Include(h => h.Actions)
+            .Include(h => h.Actions.OrderBy(a => a.SequenceNumber))
             .SingleOrDefaultAsync(h => h.Id == HandId.From(command.HandId), ct);
 
         if (hand is null)
@@ -90,6 +90,13 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
             ParticipantId.From(command.ActingParticipantId),
             (Domain.ValueObjects.HandActionType)command.Type,
             command.AmountTo is not null ? ChipsStack.Create(command.AmountTo.Value).Value : null);
+
+        if (recordActionResult.IsFailure)
+        {
+            return Result.Failure(recordActionResult.Error);
+        }
+
+        await outbox.SaveChangesAndFlushMessagesAsync(ct);
 
         return recordActionResult;
     }

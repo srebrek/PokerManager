@@ -19,7 +19,7 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
             {
                 h.GameId,
                 h.Seats,
-                h.Actions,
+                Actions = h.Actions.OrderBy(a => a.SequenceNumber).ToList(),
                 h.Status,
             })
             .AsNoTracking()

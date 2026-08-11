@@ -46,7 +46,15 @@
                 {
                     <HandPanel
                         Hand="loaded.Hand"
+                        SmallBlind="loaded.Game.SmallBlind"
                         Participants="loaded.Game.Participants"
+                        OnFold="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Fold, null))"
+                        OnCheck="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Check, null))"
+                        OnCall="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Call, null))"
+                        OnBet="@((int amountTo) =>
+                            RecordActionAsync(loaded.Hand.HandId, HandActionType.Bet, amountTo))"
+                        OnRaise="@((int amountTo) =>
+                            RecordActionAsync(loaded.Hand.HandId, HandActionType.Raise, amountTo))"
                         MyParticipantId="@Session.ParticipantIdFor(GameId)" />
                 }
 
@@ -154,6 +162,29 @@
         await LoadAsync();
     }
 
+    private async Task RecordActionAsync(Guid handId, HandActionType type, int? amount)
+    {
+        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+
+        _isBusy = true;
+        try
+        {
+            GameplayResult result =
+                await GameplayApi.RecordActionAsync(handId, new(myId, type, amount), _cts.Token);
+
+            if (!result.IsSuccess)
+            {
+                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                return;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        await LoadAsync();
+    }
 
     public void Dispose()
     {

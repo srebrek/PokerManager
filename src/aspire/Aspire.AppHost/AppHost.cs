@@ -1,7 +1,7 @@
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
 IResourceBuilder<PostgresServerResource> postgres = builder
-    .AddPostgres("db-server")
+    .AddPostgres("db-server", password: builder.AddParameter("password", "password"), port: 5433)
     .WithImageTag("18")
     .PublishAsConnectionString();
 

@@ -12,6 +12,7 @@ internal interface IGameplayApi
     Task<GameplayResult<GetHandStateResponse>> GetHandStateAsync(Guid handId, CancellationToken ct = default);
     Task<GameplayResult<StartHandResponse>> StartHandAsync(
       Guid gameId, StartHandRequest request, CancellationToken ct = default);
+    Task<GameplayResult> RecordActionAsync(Guid handId, RecordActionRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
@@ -52,10 +53,53 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.StartHandFor(gameId), request, ct),
             ct);
 
+    public Task<GameplayResult> RecordActionAsync(
+        Guid handId,
+        RecordActionRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.RecordActionFor(handId), request, ct),
+            ct);
+
+    private async Task<GameplayResult> ExecuteAsync(
+        Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
+        CancellationToken ct,
+        string genericErrorMessage = "Server error. Try again.")
+    {
+        RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
+        if (!outcome.Success)
+        {
+            return GameplayResult.Failure(outcome.Error!, outcome.ErrorKind);
+        }
+
+        return GameplayResult.Success();
+    }
+
     private async Task<GameplayResult<TValue>> ExecuteAsync<TValue>(
         Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
         CancellationToken ct,
         string genericErrorMessage = "Server error. Try again.")
+    {
+        RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
+        if (!outcome.Success)
+        {
+            return GameplayResult.Failure<TValue>(outcome.Error!, outcome.ErrorKind);
+        }
+
+        TValue? value = await outcome.Response!.Content.ReadFromJsonAsync<TValue>(ct);
+        return value is not null
+            ? GameplayResult.Success(value)
+            : throw new InvalidOperationException(
+                $"Gameplay API returned success without expected body: {typeof(TValue).Name}.");
+    }
+
+    private readonly record struct RequestOutcome(
+      bool Success, HttpResponseMessage? Response, string? Error, GameplayErrorKind ErrorKind);
+
+    private async Task<RequestOutcome> HandleHttpCallAsync(
+      Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
+      CancellationToken ct,
+      string genericErrorMessage = "Server error. Try again.")
     {
         try
         {
@@ -77,25 +121,20 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
                     _ => GameplayErrorKind.Server
                 };
 
-                return GameplayResult.Failure<TValue>(message ?? genericErrorMessage, errorKind);
+                return new RequestOutcome(false, response, message ?? genericErrorMessage, errorKind);
             }
 
-            TValue? value = await response.Content.ReadFromJsonAsync<TValue>(ct);
-
-            return value is not null
-                ? GameplayResult.Success(value)
-                : throw new InvalidOperationException(
-                    $"Gameplay API returned success without expected body: {typeof(TValue).Name}.");
+            return new RequestOutcome(true, response, null, GameplayErrorKind.None);
         }
         catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
         {
             LogRequestTimedOut(logger, ex);
-            return GameplayResult.Failure<TValue>("Connection error. Try again.", GameplayErrorKind.Connection);
+            return new RequestOutcome(false, null, "Connection error. Try again.", GameplayErrorKind.Connection);
         }
         catch (HttpRequestException ex)
         {
             LogRequestFailed(logger, ex);
-            return GameplayResult.Failure<TValue>("Connection error. Try again.", GameplayErrorKind.Connection);
+            return new RequestOutcome(false, null, "Connection error. Try again.", GameplayErrorKind.Connection);
         }
     }
 
@@ -111,30 +150,30 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
     private static partial void LogUnparsableErrorBody(ILogger logger, int statusCode);
 }
 
-internal static class GameplayResult
+// TODO: make it imposible to create invalid result e.g. value and error notnull
+internal class GameplayResult(bool isSuccess, string? error, GameplayErrorKind errorKind)
 {
+    public bool IsSuccess { get; } = isSuccess;
+    public string? Error { get; } = error;
+    public GameplayErrorKind ErrorKind { get; } = errorKind;
+
+    public static GameplayResult Success() =>
+        new(true, null, GameplayErrorKind.None);
+
     public static GameplayResult<TValue> Success<TValue>(TValue value) =>
         new(true, value, null, GameplayErrorKind.None);
+
+    public static GameplayResult Failure(string error, GameplayErrorKind errorKind) =>
+        new(false, error, errorKind);
 
     public static GameplayResult<TValue> Failure<TValue>(string error, GameplayErrorKind errorKind) =>
         new(false, default, error, errorKind);
 }
 
-// TODO: make it imposible to create invalid result e.g. value and error notnull
-internal sealed record GameplayResult<TValue>
+internal sealed class GameplayResult<TValue>(bool isSuccess, TValue? value, string? error, GameplayErrorKind errorKind)
+    : GameplayResult(isSuccess, error, errorKind)
 {
-    internal GameplayResult(bool isSuccess, TValue? value, string? error, GameplayErrorKind errorKind)
-    {
-        IsSuccess = isSuccess;
-        Value = value;
-        Error = error;
-        ErrorKind = errorKind;
-    }
-
-    public bool IsSuccess { get; }
-    public TValue? Value { get; }
-    public string? Error { get; }
-    public GameplayErrorKind ErrorKind { get; }
+    public TValue? Value { get; } = value;
 }
 
 internal enum GameplayErrorKind

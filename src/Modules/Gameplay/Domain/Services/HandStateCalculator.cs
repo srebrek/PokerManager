@@ -47,7 +47,7 @@ internal static class HandStateCalculator
                 return AdjustErrorType(NotYourTurn, isLastAction);
             }
 
-            if (seatStates[actingParticipantIndex].State is not ValueObjects.SeatState.Active)
+            if (seatStates[actingParticipantIndex].State is not SeatState.Active)
             {
                 return AdjustErrorType(InactiveSeatActs, isLastAction);
             }
@@ -55,6 +55,11 @@ internal static class HandStateCalculator
             if (action.Type is HandActionType.Check or HandActionType.Bet && currentBet != 0)
             {
                 return AdjustErrorType(CheckOrBetWhenBetIsNotZero, isLastAction);
+            }
+
+            if (action.Type is HandActionType.Call && currentBet == 0)
+            {
+                return AdjustErrorType(ZeroBetCall, isLastAction);
             }
 
             if (action.Type is HandActionType.Call or HandActionType.Bet or HandActionType.Raise)
@@ -67,6 +72,11 @@ internal static class HandStateCalculator
                 {
                     return AdjustErrorType(InsufficientStack, isLastAction);
                 }
+            }
+
+            if (action.Type is HandActionType.Raise && action.AmountTo <= currentBet)
+            {
+                return AdjustErrorType(RaiseBellowCurrentBet, isLastAction);
             }
 
             // act
@@ -125,8 +135,10 @@ internal static class HandStateCalculator
                     currentStreet = Street.Finished;
                 }
             }
-
-            actingParticipantIndex = (actingParticipantIndex + 1) % participantCount;
+            else
+            {
+                actingParticipantIndex = (actingParticipantIndex + 1) % participantCount;
+            }
         }
 
         return new HandState(pot, currentStreet, seatStates);
@@ -158,6 +170,12 @@ internal static class HandStateCalculator
 
     public static readonly Error HandFinished =
         Error.Failure("Gameplay.HandStateCalculator.HandFinished", "Hand is already finished.");
+
+    public static readonly Error RaiseBellowCurrentBet =
+        Error.Failure("Gameplay.HandStateCalculator.RaiseBellowCurrentBet", "Raise cannot be under current bet.");
+
+    public static readonly Error ZeroBetCall =
+        Error.Failure("Gameplay.HandStateCalculator.ZeroBetCall", "Cannot call when the current bet is zero");
 }
 
 internal readonly record struct HandState(

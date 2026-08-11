@@ -20,6 +20,53 @@
             <SeatCard Model="seatCardInput"></SeatCard>
         }
     </MudStack>
+
+    <MudStack Row>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled>
+            All-in
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="OnFold">
+            Fold
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCheck">
+            Check
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCall">
+            Call
+        </MudButton>
+    </MudStack>
+
+    <MudStack Row>
+        <MudPaper>
+            <MudText>
+                @_selectedAmount
+            </MudText>
+        </MudPaper>
+
+        <MudButton
+            Variant="Variant.Outlined"
+            Color="Color.Primary"
+            OnClick="@(() => IncrementSelectedAmount(SmallBlind))">
+            +@SmallBlind
+        </MudButton>
+
+        <MudButton
+            Variant="Variant.Outlined"
+            Color="Color.Primary"
+            OnClick="@(() => IncrementSelectedAmount(-SmallBlind))">
+            -@SmallBlind
+        </MudButton>
+
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            OnClick="@(() => _isBet ? OnBet(_selectedAmount) : OnRaise(_selectedAmount))">
+            @(_isBet ? "Bet" : "Raise")
+        </MudButton>
+    </MudStack>
 </MudStack>
 
 @code {
@@ -32,9 +79,37 @@
     public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
 
     [Parameter]
+    [EditorRequired]
+    public int SmallBlind { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> OnFold { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> OnCheck { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> OnCall { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<int, Task> OnBet { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<int, Task> OnRaise { get; set; }
+
+    [Parameter]
     public Guid? MyParticipantId { get; set; }
 
     private List<SeatCardModel> _seats = [];
+    private HandStateSeat? _mySeat;
+    private int? _amountToCall;
+    private int _selectedAmount = 0;
+    private bool _isBet;
 
     protected override void OnParametersSet()
     {
@@ -45,5 +120,15 @@
             s.State,
             s.ParticipantId == MyParticipantId))
             .ToList();
+
+        _mySeat = Hand.Seats.SingleOrDefault(s => s.ParticipantId == MyParticipantId);
+        if (_mySeat is not null)
+        {
+            _amountToCall = Hand.Seats.Max(s => s.StreetContribution - _mySeat.StreetContribution);
+        }
+
+        _isBet = _amountToCall is 0;
     }
+
+    private void IncrementSelectedAmount(int value) => _selectedAmount += value;
 }
