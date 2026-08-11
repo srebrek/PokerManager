@@ -55,6 +55,7 @@
                             RecordActionAsync(loaded.Hand.HandId, HandActionType.Bet, amountTo))"
                         OnRaise="@((int amountTo) =>
                             RecordActionAsync(loaded.Hand.HandId, HandActionType.Raise, amountTo))"
+                        OnFinish="@((Guid winnerId) => FinishHandAsync(loaded.Hand.HandId, winnerId))"
                         MyParticipantId="@Session.ParticipantIdFor(GameId)" />
                 }
 
@@ -171,6 +172,30 @@
         {
             GameplayResult result =
                 await GameplayApi.RecordActionAsync(handId, new(myId, type, amount), _cts.Token);
+
+            if (!result.IsSuccess)
+            {
+                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                return;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task FinishHandAsync(Guid handId, Guid winnerId)
+    {
+        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+
+        _isBusy = true;
+        try
+        {
+            GameplayResult result =
+                await GameplayApi.FinishHandAsync(handId, new(myId, winnerId), _cts.Token);
 
             if (!result.IsSuccess)
             {

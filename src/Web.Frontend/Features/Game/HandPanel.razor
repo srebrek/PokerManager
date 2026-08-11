@@ -2,6 +2,10 @@
 @using static Web.Frontend.Features.Game.SeatCard
 
 <MudStack>
+    <MudButton OnClick="@(() => OnFinish(_selectedWinnerId))">
+        Finish Hand
+    </MudButton>
+
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Pot</MudText>
@@ -17,7 +21,11 @@
     <MudStack>
         @foreach (SeatCardModel seatCardInput in _seats)
         {
-            <SeatCard Model="seatCardInput"></SeatCard>
+            <SeatCard
+                Model="seatCardInput"
+                OnClick="SetWinnerId"
+                IsSelected="@(seatCardInput.ParticipantId == _selectedWinnerId)">
+            </SeatCard>
         }
     </MudStack>
 
@@ -103,6 +111,10 @@
     public Func<int, Task> OnRaise { get; set; }
 
     [Parameter]
+    [EditorRequired]
+    public Func<Guid, Task> OnFinish { get; set; }
+
+    [Parameter]
     public Guid? MyParticipantId { get; set; }
 
     private List<SeatCardModel> _seats = [];
@@ -110,10 +122,12 @@
     private int? _amountToCall;
     private int _selectedAmount = 0;
     private bool _isBet;
+    private Guid _selectedWinnerId;
 
     protected override void OnParametersSet()
     {
         _seats = Hand.Seats.Select(s => new SeatCardModel(
+            s.ParticipantId,
             Participants.Single(p => p.Id == s.ParticipantId).Name,
             s.RemainingStack,
             s.StreetContribution,
@@ -131,4 +145,7 @@
     }
 
     private void IncrementSelectedAmount(int value) => _selectedAmount += value;
+
+    private void SetWinnerId(Guid winnerId) =>
+        _selectedWinnerId = _selectedWinnerId != winnerId ? winnerId : Guid.Empty;
 }

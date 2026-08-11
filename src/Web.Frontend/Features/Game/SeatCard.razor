@@ -1,25 +1,27 @@
 @using Contracts.Api.Gameplay
 
 <MudPaper>
-    <MudStack Row>
-        <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)">
-            @Model.Name
-        </MudText>
+    <MudButton OnClick="ClickAsync" Variant="Variant.Outlined" Color="@(IsSelected ? Color.Warning : Color.Inherit)">
+        <MudStack Row>
+            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)">
+                @Model.Name
+            </MudText>
 
-        <MudChip T="string" Variant="Variant.Text">
-            @Model.State
-        </MudChip>
+            <MudText>
+                State: @Model.State
+            </MudText>
 
-        <MudText>
-            Chips: @Model.RemainingStack
-        </MudText>
+            <MudText>
+                Chips: @Model.RemainingStack
+            </MudText>
 
-        <MudSpacer />
+            <MudSpacer />
 
-        <MudText>
-            Bet: @Model.Contribution
-        </MudText>
-    </MudStack>
+            <MudText>
+                Bet: @Model.Contribution
+            </MudText>
+        </MudStack>
+    </MudButton>
 </MudPaper>
 
 @code {
@@ -27,5 +29,21 @@
     [EditorRequired]
     public required SeatCardModel Model { get; set; }
 
-    public sealed record SeatCardModel(string Name, int RemainingStack, int Contribution, SeatState State, bool IsMe);
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnClick { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsSelected { get; set; }
+
+    public sealed record SeatCardModel(
+        Guid ParticipantId,
+        string Name,
+        int RemainingStack,
+        int Contribution,
+        SeatState State,
+        bool IsMe);
+
+    private async Task ClickAsync() => await OnClick.InvokeAsync(Model.ParticipantId);
 }

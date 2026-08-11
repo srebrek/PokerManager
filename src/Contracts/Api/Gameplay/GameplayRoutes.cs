@@ -19,4 +19,5 @@ public static class GameplayRoutes
     public const string RecordAction = $"{Hands}/{{handId:guid}}/actions";
     public static Uri RecordActionFor(Guid handId) => new($"{Hands}/{handId}/actions", UriKind.Relative);
     public const string FinishHand = $"{Hands}/{{handId:guid}}/finish";
+    public static Uri FinishHandFor(Guid handId) => new($"{Hands}/{handId}/finish", UriKind.Relative);
 }
