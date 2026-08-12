@@ -107,9 +107,9 @@ internal sealed class Hand : AggregateRoot<HandId>
 
     public Result<List<HandAward>> Finish(ParticipantId winnerParticipantId)
     {
-        if (Status is HandStatus.Finished)
+        if (Status is not HandStatus.InProgress)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.FinishFinishedHand);
+            return Result.Failure<List<HandAward>>(HandErrors.NotInProgressHandFinish);
         }
 
         Status = HandStatus.Finished;
@@ -122,7 +122,7 @@ internal sealed class Hand : AggregateRoot<HandId>
 
         if (handState.Value.Street is not Street.Finished)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.NotCompletedStreetFinish);
+            return Result.Failure<List<HandAward>>(HandErrors.NotFinishedStreetFinish);
         }
 
         HandSeatState winner =
@@ -158,5 +158,16 @@ internal sealed class Hand : AggregateRoot<HandId>
         }
 
         return awards;
+    }
+
+    public Result Abort()
+    {
+        if (Status is not HandStatus.InProgress)
+        {
+            return Result.Failure(HandErrors.NotInProgressHandAbort);
+        }
+
+        Status = HandStatus.Aborted;
+        return Result.Success();
     }
 }

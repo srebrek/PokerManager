@@ -4,4 +4,5 @@ internal enum HandStatus
 {
     InProgress,
     Finished,
+    Aborted,
 }

@@ -20,4 +20,6 @@ public static class GameplayRoutes
     public static Uri RecordActionFor(Guid handId) => new($"{Hands}/{handId}/actions", UriKind.Relative);
     public const string FinishHand = $"{Hands}/{{handId:guid}}/finish";
     public static Uri FinishHandFor(Guid handId) => new($"{Hands}/{handId}/finish", UriKind.Relative);
+    public const string AbortHand = $"{Hands}/{{handId:guid}}/abort";
+    public static Uri AbortHandFor(Guid handId) => new($"{Hands}/{handId}/abort", UriKind.Relative);
 }

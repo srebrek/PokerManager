@@ -12,6 +12,7 @@ public enum HandStatus
 {
     InProgress,
     Finished,
+    Aborted,
 }
 
 public enum Street

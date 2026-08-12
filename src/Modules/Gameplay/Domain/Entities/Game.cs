@@ -145,6 +145,27 @@ internal sealed class Game : AggregateRoot<GameId>
         return Result.Success();
     }
 
+    public Result DetachHand(ParticipantId actingParticipantId, HandId handId)
+    {
+        if (HostParticipantId != actingParticipantId)
+        {
+            return Result.Failure(GameErrors.NotHost);
+        }
+
+        if (CurrentHandId is null)
+        {
+            return Result.Failure(GameErrors.NoCurrentHand);
+        }
+
+        if (CurrentHandId != handId)
+        {
+            return Result.Failure(GameErrors.InvalidHandId);
+        }
+
+        CurrentHandId = null;
+        return Result.Success();
+    }
+
     public Result ApplyHandAwards(IReadOnlyList<HandAward> handAwards, ParticipantId actingParticipant, HandId handId)
     {
         if (HostParticipantId != actingParticipant)
@@ -154,7 +175,7 @@ internal sealed class Game : AggregateRoot<GameId>
 
         if (CurrentHandId is null)
         {
-            return Result.Failure(GameErrors.ApplyAwardsWithoutCurrentHand);
+            return Result.Failure(GameErrors.NoCurrentHand);
         }
 
         if (CurrentHandId != handId)

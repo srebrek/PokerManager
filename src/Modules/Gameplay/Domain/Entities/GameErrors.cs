@@ -26,9 +26,9 @@ internal static class GameErrors
     public static readonly Error HandIsRunning =
         Error.Conflict("Gameplay.Game.HandIsRunning", "Hand is already running.");
 
-    public static readonly Error ApplyAwardsWithoutCurrentHand =
-        Error.Conflict("Gameplay.Game.ApplyAwardsWithoutCurrentHand", "Can not apply awards without current hand.");
-
     public static readonly Error InvalidHandId =
         Error.Conflict("Gameplay.Game.InvalidHandId", "Hand id is invalid.");
+
+    public static readonly Error NoCurrentHand =
+        Error.Conflict("Gameplay.Game.NoCurrentHand", "There is no active hand.");
 }

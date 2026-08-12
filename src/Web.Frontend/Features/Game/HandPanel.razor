@@ -6,6 +6,10 @@
         Finish Hand
     </MudButton>
 
+    <MudButton OnClick="OnAbort">
+        Abort Hand
+    </MudButton>
+
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Pot</MudText>
@@ -113,6 +117,10 @@
     [Parameter]
     [EditorRequired]
     public Func<Guid, Task> OnFinish { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnAbort { get; set; }
 
     [Parameter]
     public Guid? MyParticipantId { get; set; }
