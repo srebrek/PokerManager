@@ -1,14 +1,14 @@
 @page "/games/setup"
 @using Contracts.Api.Gameplay
 @using Web.Frontend.Features.CreateGame
-@using Web.Frontend.Features.JoinGame
+@using Web.Frontend.Features.FindGame
 
 @inject NavigationManager Nav
 @inject ParticipantSession Session
 
 <MudStack>
     <CreateGameForm OnCreated="HandleGameCreated" />
-    <JoinGameForm OnJoined="HandleGameJoined" />
+    <FindGameForm OnFound="HandleGameFound" />
 </MudStack>
 
 @code {
@@ -18,9 +18,6 @@
         Nav.NavigateTo($"/games/{gameCreated.GameId}");
     }
 
-    private void HandleGameJoined(JoinGameForm.GameJoined gameJoined)
-    {
-        Session.Set(gameJoined.GameId, gameJoined.ParticipantId);
-        Nav.NavigateTo($"/games/{gameJoined.GameId}");
-    }
+    private void HandleGameFound(FindGameForm.GameFound gameFound) =>
+        Nav.NavigateTo($"/games/{gameFound.GameId}");
 }

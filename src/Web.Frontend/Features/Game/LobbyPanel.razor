@@ -1,3 +1,4 @@
+@using System.ComponentModel.DataAnnotations
 @using Contracts.Api.Gameplay
 
 <MudStack>
@@ -42,6 +43,21 @@
             </MudListItem>
         }
     </MudList>
+
+    @if (MyParticipantId is null)
+    {
+        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+
+            <MudStack Row AlignItems="AlignItems.Center">
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Your Name" />
+
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                    Join as new player
+                </MudButton>
+            </MudStack>
+        </EditForm>
+    }
 </MudStack>
 
 @code {
@@ -56,4 +72,18 @@
     [Parameter]
     [EditorRequired]
     public EventCallback OnGameFinished { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<string> OnParticipantCreated { get; set; }
+
+    private readonly AddParticipantModel _model = new();
+
+    private Task OnValidSubmit() => OnParticipantCreated.InvokeAsync(_model.Name);
+
+    internal sealed class AddParticipantModel
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+    }
 }

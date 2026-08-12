@@ -7,7 +7,9 @@ namespace Web.Frontend.Common.Http;
 internal interface IGameplayApi
 {
     Task<GameplayResult<CreateGameResponse>> CreateGameAsync(CreateGameRequest request, CancellationToken ct = default);
-    Task<GameplayResult<JoinGameResponse>> JoinGameAsync(JoinGameRequest request, CancellationToken ct = default);
+    Task<GameplayResult<GameLookupResponse>> GetGameByJoinCodeAsync(string joinCode, CancellationToken ct = default);
+    Task<GameplayResult<AddParticipantResponse>> AddParticipantAsync(
+      Guid gameId, AddParticipantRequest request, CancellationToken ct = default);
     Task<GameplayResult<GameStateResponse>> GetGameStateAsync(Guid gameId, CancellationToken ct = default);
     Task<GameplayResult<GetHandStateResponse>> GetHandStateAsync(Guid handId, CancellationToken ct = default);
     Task<GameplayResult<StartHandResponse>> StartHandAsync(
@@ -27,11 +29,19 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.CreateGame, request, ct),
             ct);
 
-    public Task<GameplayResult<JoinGameResponse>> JoinGameAsync(
-        JoinGameRequest request,
+    public Task<GameplayResult<GameLookupResponse>> GetGameByJoinCodeAsync(
+        string joinCode,
         CancellationToken ct = default) =>
-        ExecuteAsync<JoinGameResponse>(
-            ct => httpClient.PostAsJsonAsync(GameplayRoutes.JoinGame, request, ct),
+        ExecuteAsync<GameLookupResponse>(
+            ct => httpClient.GetAsync(GameplayRoutes.GetGameByJoinCodeFor(joinCode), ct),
+            ct);
+
+    public Task<GameplayResult<AddParticipantResponse>> AddParticipantAsync(
+        Guid gameId,
+        AddParticipantRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync<AddParticipantResponse>(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.AddParticipantFor(gameId), request, ct),
             ct);
 
     public Task<GameplayResult<GameStateResponse>> GetGameStateAsync(

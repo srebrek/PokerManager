@@ -7,14 +7,12 @@
 
     <MudStack Spacing="3">
 
-        <MudText Typo="Typo.h4">Join Game</MudText>
-
-        <MudTextField @bind-Value="_model.ParticipantName" For="@(() => _model.ParticipantName)" Label="Your Name" />
+        <MudText Typo="Typo.h4">Find Game</MudText>
 
         <MudTextField @bind-Value="_model.JoinCode" For="@(() => _model.JoinCode)" Label="Join Code" />
 
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="_submitting">
-            Join
+            Find
         </MudButton>
 
         @if (_error is not null)
@@ -27,8 +25,9 @@
 
 @code {
     [Parameter]
-    public EventCallback<GameJoined> OnJoined { get; set; }
-    private readonly JoinGameModel _model = new();
+    [EditorRequired]
+    public EventCallback<GameFound> OnFound { get; set; }
+    private readonly FindGameModel _model = new();
     private bool _submitting;
     private string? _error;
 
@@ -37,28 +36,23 @@
         _submitting = true;
         _error = null;
 
-        GameplayResult<JoinGameResponse> result = await GameplayApi.JoinGameAsync(_model.ToRequest());
+        GameplayResult<GameLookupResponse> result = await GameplayApi.GetGameByJoinCodeAsync(_model.JoinCode);
 
         if (result.IsSuccess)
         {
-            await OnJoined.InvokeAsync(new(result.Value!.GameId, result.Value!.ParticipantId));
+            await OnFound.InvokeAsync(new(result.Value!.GameId));
             return;
         }
 
         _error = result.Error;
         _submitting = false;
     }
-    internal sealed class JoinGameModel
+    internal sealed class FindGameModel
     {
-        [Required]
-        public string ParticipantName { get; set; } = string.Empty;
-
         [Required]
         [Length(6, 6)]
         public string JoinCode { get; set; } = string.Empty;
-
-        public JoinGameRequest ToRequest() => new(ParticipantName, JoinCode);
     }
 
-    public readonly record struct GameJoined(Guid GameId, Guid ParticipantId);
+    public readonly record struct GameFound(Guid GameId);
 }

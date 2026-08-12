@@ -9,23 +9,23 @@ using Shared.Presentation;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
 
-namespace Gameplay.Features.JoinGame;
+namespace Gameplay.Features.GetGameByJoinCode;
 
-internal sealed class JoinGameEndpoint : IEndpoint
+internal sealed class GetGameByJoinCodeEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost(
-            GameplayRoutes.JoinGame,
+        app.MapGet(
+            GameplayRoutes.GetGameByJoinCode,
             async (
-                JoinGameRequest request,
-                JoinGameCommandHandler handler,
-                IEnumerable<IValidator<JoinGameCommand>> validators,
+                string joinCode,
+                GetGameByJoinCodeQueryHandler handler,
+                IEnumerable<IValidator<GetGameByJoinCodeQuery>> validators,
                 CancellationToken ct) =>
             {
-                JoinGameCommand command = new(request.ParticipantName, request.JoinCode);
-                Result<JoinGameResponse> result =
-                    await validators.HandleValidatedAsync(command, handler.Handle, ct);
+                GetGameByJoinCodeQuery query = new(joinCode);
+                Result<GameLookupResponse> result =
+                    await validators.HandleValidatedAsync(query, handler.Handle, ct);
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)

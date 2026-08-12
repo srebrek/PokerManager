@@ -18,28 +18,21 @@
             break;
         case Loaded loaded:
             <MudStack>
-                <MudButton OnClick="@(() => _panelOpen = true)" Variant="Variant.Filled" Color="Color.Primary">
-                    Lobby
-                </MudButton>
-
                 <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
                     Refresh
                 </MudButton>
-
-                <MudDialog @bind-Visible="_panelOpen" Options="s_panelOptions">
-                    <DialogContent>
-                        <LobbyPanel
-                            Game="loaded.Game"
-                            MyParticipantId="@Session.ParticipantIdFor(GameId)"
-                            OnGameFinished="FinishGameAsync"/>
-                    </DialogContent>
-                </MudDialog>
 
                 @if (loaded.Hand is null)
                 {
                     <MudPaper Class="pa-8 d-flex justify-center">
                         <MudText Typo="Typo.h6">No hand in progress</MudText>
                     </MudPaper>
+
+                    <LobbyPanel
+                        Game="loaded.Game"
+                        MyParticipantId="@Session.ParticipantIdFor(GameId)"
+                        OnGameFinished="FinishGameAsync"
+                        OnParticipantCreated="CreateParticipantAsync"/>
 
                     <MudButton Disabled="@_isBusy" OnClick="StartHandAsync">
                         Start Hand
@@ -91,11 +84,6 @@
     private readonly CancellationTokenSource _cts = new();
     private IPageState _state = new Loading();
     private bool _isBusy;
-    private bool _panelOpen;
-    private static readonly DialogOptions s_panelOptions = new()
-    {
-
-    };
 
     protected override Task OnParametersSetAsync() => LoadAsync();
 
@@ -230,6 +218,30 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task CreateParticipantAsync(string name)
+    {
+        _isBusy = true;
+        try
+        {
+            GameplayResult<AddParticipantResponse> result =
+                await GameplayApi.AddParticipantAsync(GameId, new(name), _cts.Token);
+
+            if (!result.IsSuccess)
+            {
+                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                return;
+            }
+
+            Session.Set(GameId, result.Value!.ParticipantId);
         }
         finally
         {

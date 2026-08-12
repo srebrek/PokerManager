@@ -18,16 +18,17 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
         return body;
     }
 
-    protected async Task<JoinGameResponse> JoinGameAsync(string participantName, string joinCode)
+    protected async Task<AddParticipantResponse> AddParticipantAsync(Guid gameId, string participantName)
     {
-        JoinGameRequest request = new(participantName, joinCode);
+        AddParticipantRequest request = new(participantName);
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.JoinGame,
+            GameplayRoutes.AddParticipantFor(gameId),
             request,
             CancellationToken);
         response.EnsureSuccessStatusCode();
 
-        JoinGameResponse? body = await response.Content.ReadFromJsonAsync<JoinGameResponse>(CancellationToken);
+        AddParticipantResponse? body =
+            await response.Content.ReadFromJsonAsync<AddParticipantResponse>(CancellationToken);
         body.ShouldNotBeNull();
         return body;
     }

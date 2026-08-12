@@ -61,7 +61,7 @@ internal sealed class Game : AggregateRoot<GameId>
         return game;
     }
 
-    public Result<ParticipantId> Join(string participantName)
+    public Result<ParticipantId> AddParticipant(string participantName)
     {
         Result<Participant> participantResult =
             Participant.Create(participantName, ChipsStack.Create(DefaultStartingStack).Value);

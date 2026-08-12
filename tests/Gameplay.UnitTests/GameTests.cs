@@ -63,7 +63,7 @@ public sealed class GameTests
     }
 
     [Fact]
-    public void Join_ValidInput_ReturnsParticipantId()
+    public void AddParticipant_ValidInput_ReturnsParticipantId()
     {
         // Arrange
         string hostName = "TestHostName";
@@ -75,7 +75,7 @@ public sealed class GameTests
         string participantName = "TestParticipantName";
 
         // Act
-        Result<ParticipantId> result = game.Join(participantName);
+        Result<ParticipantId> result = game.AddParticipant(participantName);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -86,7 +86,7 @@ public sealed class GameTests
     }
 
     [Fact]
-    public void Join_EmptyParticipantName_ReturnsInvalidNameFailure()
+    public void AddParticipant_EmptyParticipantName_ReturnsInvalidNameFailure()
     {
         // Arrange
         string hostName = "TestHostName";
@@ -98,7 +98,7 @@ public sealed class GameTests
         string participantName = string.Empty;
 
         // Act
-        Result<ParticipantId> result = game.Join(participantName);
+        Result<ParticipantId> result = game.AddParticipant(participantName);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -106,7 +106,7 @@ public sealed class GameTests
     }
 
     [Fact]
-    public void Join_TwoJoin_GameHasCorrectSeatingOrder()
+    public void AddParticipant_TwoAdded_GameHasCorrectSeatingOrder()
     {
         // Arrange
         string hostName = "TestHostName";
@@ -117,10 +117,10 @@ public sealed class GameTests
 
         // Act
         string participant1Name = "Participant1Name";
-        ParticipantId participant1Id = game.Join(participant1Name).Value;
+        ParticipantId participant1Id = game.AddParticipant(participant1Name).Value;
 
         string participant2Name = "Participant2Name";
-        ParticipantId participant2Id = game.Join(participant2Name).Value;
+        ParticipantId participant2Id = game.AddParticipant(participant2Name).Value;
 
         // Assert
         game.Participants.Count.ShouldBe(3);
