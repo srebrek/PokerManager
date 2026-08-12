@@ -28,7 +28,10 @@
 
                 <MudDialog @bind-Visible="_panelOpen" Options="s_panelOptions">
                     <DialogContent>
-                        <LobbyPanel Game="loaded.Game" MyParticipantId="@Session.ParticipantIdFor(GameId)"/>
+                        <LobbyPanel
+                            Game="loaded.Game"
+                            MyParticipantId="@Session.ParticipantIdFor(GameId)"
+                            OnGameFinished="FinishGameAsync"/>
                     </DialogContent>
                 </MudDialog>
 
@@ -221,6 +224,30 @@
         {
             GameplayResult result =
                 await GameplayApi.AbortHandAsync(handId, new(myId), _cts.Token);
+
+            if (!result.IsSuccess)
+            {
+                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                return;
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task FinishGameAsync()
+    {
+        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+
+        _isBusy = true;
+        try
+        {
+            GameplayResult result =
+                await GameplayApi.FinishGameAsync(GameId, new(myId), _cts.Token);
 
             if (!result.IsSuccess)
             {

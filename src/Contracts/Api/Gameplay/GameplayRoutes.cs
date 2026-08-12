@@ -11,6 +11,8 @@ public static class GameplayRoutes
     public const string GameStateEndpointName = "GameState";
     public const string StartHand = $"{Games}/{{gameId:guid}}/hands";
     public static Uri StartHandFor(Guid gameId) => new($"{Games}/{gameId}/hands", UriKind.Relative);
+    public const string FinishGame = $"{Games}/{{gameId:guid}}/finish";
+    public static Uri FinishGameFor(Guid gameId) => new($"{Games}/{gameId}/finish", UriKind.Relative);
 
     private const string Hands = "gameplay/hands";
     public const string HandState = $"{Hands}/{{handId:guid}}";

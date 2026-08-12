@@ -197,4 +197,25 @@ internal sealed class Game : AggregateRoot<GameId>
 
         return Result.Success();
     }
+
+    public Result Finish(ParticipantId actingParticipantId)
+    {
+        if (HostParticipantId != actingParticipantId)
+        {
+            return Result.Failure(GameErrors.NotHost);
+        }
+
+        if (IsFinished)
+        {
+            return Result.Failure(GameErrors.GameFinished);
+        }
+
+        if (CurrentHandId is not null)
+        {
+            return Result.Failure(GameErrors.HandIsRunning);
+        }
+
+        IsFinished = true;
+        return Result.Success();
+    }
 }

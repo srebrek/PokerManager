@@ -2,6 +2,10 @@
 
 <MudStack>
     <MudStack StretchItems="StretchItems.All" Row>
+        <MudButton OnClick="OnGameFinished">
+            Finish Game
+        </MudButton>
+
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Join Code</MudText>
             <MudText Typo="Typo.h5">@Game.JoinCode</MudText>
@@ -43,8 +47,13 @@
 @code {
     [Parameter]
     [EditorRequired]
-    public required GameStateResponse Game { get; set; }
+    public GameStateResponse Game { get; set; }
 
     [Parameter]
+    [EditorRequired]
     public Guid? MyParticipantId { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnGameFinished { get; set; }
 }
