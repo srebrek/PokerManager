@@ -1,10 +1,9 @@
 using Contracts.Api.Http;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
-namespace Web.Frontend.Features.Authentication;
+namespace Web.Frontend.Common.Http;
 
-// TODO: Consider removing cookies as they should be provided by default
-internal sealed class CookieHandler : DelegatingHandler
+internal sealed class ApiRequestHandler : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,

@@ -1,8 +1,4 @@
 @inherits LayoutComponentBase
-@inject CookieAuthenticationStateProvider AuthStateProvider
-@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
 
 <MudThemeProvider @ref="_themeProvider" Theme="@AppTheme.Default" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -10,26 +6,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle" />
-        <MudText Typo="Typo.h6" Class="ml-2">PokerManager</MudText>
-        <MudSpacer />
-        <MudIconButton Icon="@DarkLightModeButtonIcon" Color="Color.Inherit" OnClick="DarkModeToggle" />
-        <AuthorizeView>
-            <Authorized>
-                <MudButton Color="Color.Inherit" OnClick="Logout">Logout</MudButton>
-            </Authorized>
-            <NotAuthorized>
-                <MudButton Href="/login" Color="Color.Inherit">Login</MudButton>
-            </NotAuthorized>
-        </AuthorizeView>
-    </MudAppBar>
-
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu />
-    </MudDrawer>
-
-    <MudMainContent Class="pt-16 pa-4">
+    <MudMainContent>
         @Body
     </MudMainContent>
 
@@ -38,7 +15,6 @@
 
 @code {
     private MudThemeProvider _themeProvider = default!;
-    private bool _drawerOpen = true;
     private bool _isDarkMode = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -57,39 +33,4 @@
         StateHasChanged();
         return Task.CompletedTask;
     }
-
-    private void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
-
-    private void DarkModeToggle()
-    {
-        _isDarkMode = !_isDarkMode;
-    }
-
-    private async Task Logout()
-    {
-        try
-        {
-            using HttpResponseMessage response = await Http.PostAsync("identity/logout", null);
-            if (!response.IsSuccessStatusCode)
-            {
-                Snackbar.Add("Logout failed. Please try again.", Severity.Error);
-                return;
-            }
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Add("Logout failed. Check your connection and try again.", Severity.Error);
-            return;
-        }
-
-        AuthStateProvider.NotifyAuthenticationStateChanged();
-        Navigation.NavigateTo("/");
-    }
-
-    public string DarkLightModeButtonIcon => _isDarkMode
-        ? Icons.Material.Outlined.LightMode
-        : Icons.Material.Outlined.DarkMode;
 }
