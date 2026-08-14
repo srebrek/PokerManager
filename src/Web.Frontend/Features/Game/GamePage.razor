@@ -18,13 +18,18 @@
             break;
         case Loaded loaded:
             <MudStack>
-                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton
+                    Disabled="@_isBusy"
+                    OnClick="LoadAsync"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    data-testid="refresh">
                     Refresh
                 </MudButton>
 
                 @if (loaded.Hand is null)
                 {
-                    <MudPaper Class="pa-8 d-flex justify-center">
+                    <MudPaper Class="pa-8 d-flex justify-center" data-testid="no-hand">
                         <MudText Typo="Typo.h6">No hand in progress</MudText>
                     </MudPaper>
 
@@ -34,7 +39,7 @@
                         OnGameFinished="FinishGameAsync"
                         OnParticipantCreated="CreateParticipantAsync"/>
 
-                    <MudButton Disabled="@_isBusy" OnClick="StartHandAsync">
+                    <MudButton Disabled="@_isBusy" OnClick="StartHandAsync" data-testid="start-hand">
                         Start Hand
                     </MudButton>
                 }

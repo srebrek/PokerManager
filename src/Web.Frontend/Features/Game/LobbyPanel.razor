@@ -3,13 +3,13 @@
 
 <MudStack>
     <MudStack StretchItems="StretchItems.All" Row>
-        <MudButton OnClick="OnGameFinished">
+        <MudButton OnClick="OnGameFinished" data-testid="finish-game">
             Finish Game
         </MudButton>
 
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Join Code</MudText>
-            <MudText Typo="Typo.h5">@Game.JoinCode</MudText>
+            <MudText Typo="Typo.h5" data-testid="join-code">@Game.JoinCode</MudText>
         </MudPaper>
 
         <MudPaper Class="pa-4">
@@ -23,8 +23,10 @@
         @foreach (GameStateParticipant participant in Game.Participants)
         {
             <MudListItem Value="participant.Id">
-                <MudStack Row AlignItems="AlignItems.Center">
-                    <MudText Color="@(MyParticipantId == participant.Id
+                <MudStack Row AlignItems="AlignItems.Center" data-testid="participant-row">
+                    <MudText
+                        data-testid="participant-name"
+                        Color="@(MyParticipantId == participant.Id
                         ? Color.Primary
                         : Color.Inherit)">
                         @participant.Name
@@ -38,7 +40,7 @@
                     </MudChip>
 
                     <MudSpacer />
-                    <MudText>@participant.Chips</MudText>
+                    <MudText data-testid="participant-chips">@participant.Chips</MudText>
                 </MudStack>
             </MudListItem>
         }
@@ -52,7 +54,11 @@
             <MudStack Row AlignItems="AlignItems.Center">
                 <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Your Name" />
 
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton
+                    ButtonType="ButtonType.Submit"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    data-testid="join-as-new-player">
                     Join as new player
                 </MudButton>
             </MudStack>

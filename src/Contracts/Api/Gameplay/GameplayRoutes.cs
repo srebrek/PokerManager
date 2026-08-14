@@ -2,6 +2,7 @@ namespace Contracts.Api.Gameplay;
 
 public static class GameplayRoutes
 {
+    // TODO: refactor names eg we dont need CreateGame
     private const string Games = "gameplay/games";
     public const string Tag = "Gameplay";
     public const string CreateGame = Games;

@@ -25,9 +25,6 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>IntegrationTests</_Parameter1>
     </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>E2ETests</_Parameter1>
-    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

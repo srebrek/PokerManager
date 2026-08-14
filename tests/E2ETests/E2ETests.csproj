@@ -11,14 +11,16 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="MartinCostello.Logging.XUnit.v3" />
+    <PackageReference Include="Microsoft.Playwright" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Respawn" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\aspire\Aspire.AppHost\Aspire.AppHost.csproj" />
-    <ProjectReference Include="..\..\src\Modules\Identity\Identity.csproj" />
     <ProjectReference Include="..\..\src\Contracts\Contracts.csproj" />
   </ItemGroup>
 

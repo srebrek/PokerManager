@@ -1,24 +1,24 @@
 @using Contracts.Api.Gameplay
 @using static Web.Frontend.Features.Game.SeatCard
 
-<MudStack>
-    <MudButton OnClick="@(() => OnFinish(_selectedWinnerId))">
+<MudStack data-testid="hand-panel">
+    <MudButton OnClick="@(() => OnFinish(_selectedWinnerId))" data-testid="finish-hand">
         Finish Hand
     </MudButton>
 
-    <MudButton OnClick="OnAbort">
+    <MudButton OnClick="OnAbort" data-testid="abort-hand">
         Abort Hand
     </MudButton>
 
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Pot</MudText>
-            <MudText Typo="Typo.h5">@Hand.Pot</MudText>
+            <MudText Typo="Typo.h5" data-testid="pot">@Hand.Pot</MudText>
         </MudPaper>
 
         <MudPaper Class="pa-4">
             <MudText Typo="Typo.caption">Street</MudText>
-            <MudText Typo="Typo.h5">@Hand.Street.ToString()</MudText>
+            <MudText Typo="Typo.h5" data-testid="street">@Hand.Street.ToString()</MudText>
         </MudPaper>
     </MudStack>
 
@@ -34,26 +34,26 @@
     </MudStack>
 
     <MudStack Row>
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled data-testid="action-all-in">
             All-in
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="OnFold">
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="OnFold" data-testid="action-fold">
             Fold
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCheck">
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCheck" data-testid="action-check">
             Check
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCall">
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCall" data-testid="action-call">
             Call
         </MudButton>
     </MudStack>
 
     <MudStack Row>
         <MudPaper>
-            <MudText>
+            <MudText data-testid="selected-amount">
                 @_selectedAmount
             </MudText>
         </MudPaper>
@@ -61,21 +61,24 @@
         <MudButton
             Variant="Variant.Outlined"
             Color="Color.Primary"
-            OnClick="@(() => IncrementSelectedAmount(SmallBlind))">
+            OnClick="@(() => IncrementSelectedAmount(SmallBlind))"
+            data-testid="amount-increment">
             +@SmallBlind
         </MudButton>
 
         <MudButton
             Variant="Variant.Outlined"
             Color="Color.Primary"
-            OnClick="@(() => IncrementSelectedAmount(-SmallBlind))">
+            OnClick="@(() => IncrementSelectedAmount(-SmallBlind))"
+            data-testid="amount-decrement">
             -@SmallBlind
         </MudButton>
 
         <MudButton
             Variant="Variant.Filled"
             Color="Color.Primary"
-            OnClick="@(() => _isBet ? OnBet(_selectedAmount) : OnRaise(_selectedAmount))">
+            OnClick="@(() => _isBet ? OnBet(_selectedAmount) : OnRaise(_selectedAmount))"
+            data-testid="action-bet-raise">
             @(_isBet ? "Bet" : "Raise")
         </MudButton>
     </MudStack>

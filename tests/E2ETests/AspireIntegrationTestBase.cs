@@ -1,16 +1,16 @@
 using System.Diagnostics.CodeAnalysis;
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
-using Identity.Infrastructure.Data;
+using Microsoft.Playwright;
 
 namespace E2ETests;
 
 [Collection("Aspire Collection")]
-public abstract class AspireIntegrationTestBase : IAsyncDisposable
+public abstract class AspireIntegrationTestBase : IAsyncLifetime
 {
     private readonly AspireFixture _fixture;
 
-    private protected IdentityDbContext IdentityDbContext => _fixture.IdentityDbContext;
+    private readonly List<IBrowserContext> _browserContexts = [];
 
     protected AspireIntegrationTestBase(AspireFixture fixture, ITestOutputHelper output)
     {
@@ -21,11 +21,31 @@ public abstract class AspireIntegrationTestBase : IAsyncDisposable
     protected DistributedApplication App => _fixture.App
         ?? throw new InvalidOperationException("App is not initialized.");
 
-    // The auth cookie is marked Secure, so cookie round-trips only work over HTTPS.
-    // The dev certificate isn't trusted on CI machines, hence the validation override.
-    protected HttpClient CreateApiClient() => CreateClient(useCookies: true);
+    protected Uri FrontendBaseUri => _fixture.FrontendBaseUri;
 
-    protected HttpClient CreateApiClientNoCookies() => CreateClient(useCookies: false);
+    protected IPage Page { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync()
+    {
+        await _fixture.ResetDatabaseAsync(TestContext.Current.CancellationToken);
+        Page = await NewPageAsync();
+    }
+
+    protected async Task<IPage> NewPageAsync()
+    {
+        IBrowserContext context =
+            await _fixture.Browser.NewContextAsync(new BrowserNewContextOptions { IgnoreHTTPSErrors = true });
+
+        _browserContexts.Add(context);
+
+        IPage page = await context.NewPageAsync();
+        page.SetDefaultTimeout(AspireFixture.DefaultUiTimeoutMilliseconds);
+        return page;
+    }
+
+    protected HttpClient CreateApiClientWithCookies() => CreateClient(true);
+
+    protected HttpClient CreateApiClient() => CreateClient(false);
 
     [SuppressMessage("Reliability", "CA2000", Justification = "HttpClient is responsible for disposing the handler.")]
     [SuppressMessage("Security", "CA5359", Justification = "Dev certificate in tests only.")]
@@ -70,8 +90,13 @@ public abstract class AspireIntegrationTestBase : IAsyncDisposable
     {
         if (disposing)
         {
+            foreach (IBrowserContext context in _browserContexts)
+            {
+                await context.CloseAsync();
+            }
+
+            _browserContexts.Clear();
             _fixture.OutputAccessor.OutputHelper = null;
-            await _fixture.ResetIdentitySchemaAsync(TestContext.Current.CancellationToken);
         }
     }
 }

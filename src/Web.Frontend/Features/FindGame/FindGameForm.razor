@@ -11,7 +11,12 @@
 
         <MudTextField @bind-Value="_model.JoinCode" For="@(() => _model.JoinCode)" Label="Join Code" />
 
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="_submitting">
+        <MudButton
+            ButtonType="ButtonType.Submit"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Disabled="_submitting"
+            data-testid="find-game-submit">
             Find
         </MudButton>
 

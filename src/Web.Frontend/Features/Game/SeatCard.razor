@@ -1,23 +1,27 @@
 @using Contracts.Api.Gameplay
 
 <MudPaper>
-    <MudButton OnClick="ClickAsync" Variant="Variant.Outlined" Color="@(IsSelected ? Color.Warning : Color.Inherit)">
+    <MudButton
+        OnClick="ClickAsync"
+        Variant="Variant.Outlined"
+        Color="@(IsSelected ? Color.Warning : Color.Inherit)"
+        data-testid="seat-card">
         <MudStack Row>
-            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)">
+            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)" data-testid="seat-name">
                 @Model.Name
             </MudText>
 
-            <MudText>
+            <MudText data-testid="seat-state">
                 State: @Model.State
             </MudText>
 
-            <MudText>
+            <MudText data-testid="seat-chips">
                 Chips: @Model.RemainingStack
             </MudText>
 
             <MudSpacer />
 
-            <MudText>
+            <MudText data-testid="seat-bet">
                 Bet: @Model.Contribution
             </MudText>
         </MudStack>

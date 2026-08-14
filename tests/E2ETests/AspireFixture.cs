@@ -1,10 +1,12 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
-using Identity.Infrastructure.Data;
 using MartinCostello.Logging.XUnit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Playwright;
+using Npgsql;
+using Respawn;
+using Respawn.Graph;
 
 namespace E2ETests;
 
@@ -12,19 +14,36 @@ public sealed class AspireFixture : IAsyncLifetime
 {
     private static readonly TimeSpan s_defaultTimeout = TimeSpan.FromSeconds(60);
 
+    internal const float DefaultUiTimeoutMilliseconds = 30_000;
+
     public DistributedApplication? App { get; private set; }
 
     internal TestOutputAccessor OutputAccessor { get; } = new();
 
-    internal IdentityDbContext IdentityDbContext
-    {
-        get => field ?? throw new InvalidOperationException("IdentityDbContext is not initialized.");
-        private set;
-    }
+    internal IBrowser Browser => _browser ?? throw new InvalidOperationException("Browser is not initialized.");
+
+    internal Uri FrontendBaseUri => App?.GetEndpoint("apiservice", "https")
+        ?? throw new InvalidOperationException("App is not initialized.");
+
+    private IPlaywright? _playwright;
+    private IBrowser? _browser;
+    private Respawner? _respawner;
+    private string _connectionString = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
         CancellationToken ct = TestContext.Current.CancellationToken;
+
+        int installExitCode = Microsoft.Playwright.Program.Main(["install", "chromium"]);
+        if (installExitCode is not 0)
+        {
+            throw new InvalidOperationException($"Playwright browser install failed with exit code {installExitCode}.");
+        }
+
+        _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions());
+
+        Assertions.SetDefaultExpectTimeout(DefaultUiTimeoutMilliseconds);
 
         IDistributedApplicationTestingBuilder appHost = await DistributedApplicationTestingBuilder
             .CreateAsync<Projects.Aspire_AppHost>(ct);
@@ -51,7 +70,7 @@ public sealed class AspireFixture : IAsyncLifetime
 
         await App.ResourceNotifications.WaitForResourceHealthyAsync("apiservice", ct).WaitAsync(s_defaultTimeout, ct);
 
-        await AddDatabaseAsync(ct);
+        await CreateRespawnerAsync(ct);
     }
 
     public async ValueTask DisposeAsync()
@@ -60,17 +79,32 @@ public sealed class AspireFixture : IAsyncLifetime
         {
             await App.DisposeAsync();
         }
+
+        if (_browser is not null)
+        {
+            await _browser.CloseAsync();
+        }
+
+        _playwright?.Dispose();
     }
 
-    private async Task AddDatabaseAsync(CancellationToken ct)
+    private async Task CreateRespawnerAsync(CancellationToken ct)
     {
-        string connectionString = await GetConnectionStringAsync(ct);
-        DbContextOptions<IdentityDbContext> options = new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseNpgsql(connectionString)
-            .UseSnakeCaseNamingConvention()
-            .Options;
+        _connectionString = await GetConnectionStringAsync(ct);
 
-        IdentityDbContext = new(options);
+        await using NpgsqlConnection connection = new(_connectionString);
+        await connection.OpenAsync(ct);
+
+        _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.Postgres,
+            SchemasToExclude = ["wolverine"],
+            TablesToIgnore =
+            [
+                new Table("__EFMigrationsHistory"),
+                new Table("data_protection_keys"),
+            ]
+        });
     }
 
     private async Task<string> GetConnectionStringAsync(CancellationToken ct)
@@ -81,24 +115,15 @@ public sealed class AspireFixture : IAsyncLifetime
             ?? throw new InvalidOperationException("Connection string for 'PokerManager-db' is not available.");
     }
 
-    public async Task ResetIdentitySchemaAsync(CancellationToken ct)
+    public async Task ResetDatabaseAsync(CancellationToken ct)
     {
-        const string sql = """
-            DO $$
-            DECLARE truncate_commands text;
-            BEGIN
-                SELECT string_agg(format('TRUNCATE TABLE %I.%I RESTART IDENTITY CASCADE;', schemaname, tablename), ' ')
-                INTO truncate_commands
-                FROM pg_tables
-                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND tablename NOT IN ('__EFMigrationsHistory', 'data_protection_keys');
-                             
-                IF truncate_commands IS NOT NULL THEN
-                EXECUTE truncate_commands;
-                END IF;
-            END $$;
-            """;
+        if (_respawner is null)
+        {
+            throw new InvalidOperationException("Respawner is not initialized.");
+        }
 
-        await IdentityDbContext.Database.ExecuteSqlRawAsync(sql, ct);
+        await using NpgsqlConnection connection = new(_connectionString);
+        await connection.OpenAsync(ct);
+        await _respawner.ResetAsync(connection);
     }
 }
