@@ -32,6 +32,7 @@
 
   <!-- Vulnerability overrides (NU1903) - see matching PackageVersion comment in Directory.Packages.props -->
   <ItemGroup>
+    <PackageReference Include="SSH.NET" />
     <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 

@@ -64,13 +64,14 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.24.0.138807" />
   </ItemGroup>
-
   <!--
     Vulnerability overrides (NU1903)
     Review periodically: remove an entry and rebuild the referencing project(s); if it still
     builds clean, the transitive minimum has caught up and the override/reference can go.
   -->
   <ItemGroup>
+    <!-- Transitive dependency of Testcontainers.PostgreSql -->
+    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <!-- Transitive dependency of DataProtection.EntityFrameworkCore -->
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.10" />
   </ItemGroup>
