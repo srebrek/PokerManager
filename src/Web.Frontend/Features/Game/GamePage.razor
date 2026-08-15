@@ -19,7 +19,6 @@
         case Loaded loaded:
             <MudStack>
                 <MudButton
-                    Disabled="@_isBusy"
                     OnClick="LoadAsync"
                     Variant="Variant.Filled"
                     Color="Color.Primary"
@@ -39,7 +38,7 @@
                         OnGameFinished="FinishGameAsync"
                         OnParticipantCreated="CreateParticipantAsync"/>
 
-                    <MudButton Disabled="@_isBusy" OnClick="StartHandAsync" data-testid="start-hand">
+                    <MudButton OnClick="StartHandAsync" data-testid="start-hand">
                         Start Hand
                     </MudButton>
                 }
@@ -63,18 +62,10 @@
 
             </MudStack>
             break;
-        case NotFound:
-            <MudStack>
-                <MudAlert Severity="Severity.Warning">Game not found.</MudAlert>
-                <MudButton Href="/games/setup" Variant="Variant.Filled" Color="Color.Primary">
-                    Back to setup
-                </MudButton>
-            </MudStack>
-            break;
         case Failed(var message):
             <MudStack>
                 <MudAlert Severity="Severity.Error">@message</MudAlert>
-                <MudButton Disabled="@_isBusy" OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
                     Refresh
                 </MudButton>
             </MudStack>
@@ -115,9 +106,7 @@
         GameplayResult<GameStateResponse> gameResult = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
         if (!gameResult.IsSuccess)
         {
-            return gameResult.ErrorKind == GameplayErrorKind.NotFound
-                ? new NotFound()
-                : new Failed(gameResult.Error ?? "Unexpected error.");
+            return new Failed(gameResult.Error ?? "Unexpected error.");
         }
 
         Guid? currentHandId = gameResult.Value!.CurrentHandId;
@@ -139,6 +128,7 @@
     private async Task StartHandAsync()
     {
         if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+        if (_isBusy) return;
 
         _isBusy = true;
         try
@@ -151,18 +141,19 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     private async Task RecordActionAsync(Guid handId, HandActionType type, int? amount)
     {
         if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+        if (_isBusy) return;
 
         _isBusy = true;
         try
@@ -175,18 +166,19 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     private async Task FinishHandAsync(Guid handId, Guid winnerId)
     {
         if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+        if (_isBusy) return;
 
         _isBusy = true;
         try
@@ -199,18 +191,19 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     private async Task AbortHandAsync(Guid handId)
     {
         if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+        if (_isBusy) return;
 
         _isBusy = true;
         try
@@ -223,17 +216,19 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     private async Task CreateParticipantAsync(string name)
     {
+        if (_isBusy) return;
+
         _isBusy = true;
         try
         {
@@ -247,18 +242,18 @@
             }
 
             Session.Set(GameId, result.Value!.ParticipantId);
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     private async Task FinishGameAsync()
     {
         if (Session.ParticipantIdFor(GameId) is not { } myId) return;
+        if (_isBusy) return;
 
         _isBusy = true;
         try
@@ -271,13 +266,13 @@
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
                 return;
             }
+
+            _state = await LoadStateAsync();
         }
         finally
         {
             _isBusy = false;
         }
-
-        await LoadAsync();
     }
 
     public void Dispose()
@@ -291,8 +286,6 @@
     private sealed record Loading : IPageState;
 
     private sealed record Loaded(GameStateResponse Game, GetHandStateResponse? Hand) : IPageState;
-
-    private sealed record NotFound : IPageState;
 
     private sealed record Failed(string Message) : IPageState;
 }
