@@ -2,7 +2,7 @@
 @using static Web.Frontend.Features.Game.SeatCard
 
 <MudStack data-testid="hand-panel">
-    <MudButton OnClick="@(() => OnFinish(_selectedWinnerId))" data-testid="finish-hand">
+    <MudButton OnClick="@(() => OnFinish.InvokeAsync(_selectedWinnerId))" data-testid="finish-hand">
         Finish Hand
     </MudButton>
 
@@ -77,7 +77,7 @@
         <MudButton
             Variant="Variant.Filled"
             Color="Color.Primary"
-            OnClick="@(() => _isBet ? OnBet(_selectedAmount) : OnRaise(_selectedAmount))"
+            OnClick="@(() => _isBet ? OnBet.InvokeAsync(_selectedAmount) : OnRaise.InvokeAsync(_selectedAmount))"
             data-testid="action-bet-raise">
             @(_isBet ? "Bet" : "Raise")
         </MudButton>
@@ -99,27 +99,27 @@
 
     [Parameter]
     [EditorRequired]
-    public Func<Task> OnFold { get; set; }
+    public EventCallback OnFold { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public Func<Task> OnCheck { get; set; }
+    public EventCallback OnCheck { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public Func<Task> OnCall { get; set; }
+    public EventCallback OnCall { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public Func<int, Task> OnBet { get; set; }
+    public EventCallback<int> OnBet { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public Func<int, Task> OnRaise { get; set; }
+    public EventCallback<int> OnRaise { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public Func<Guid, Task> OnFinish { get; set; }
+    public EventCallback<Guid> OnFinish { get; set; }
 
     [Parameter]
     [EditorRequired]
