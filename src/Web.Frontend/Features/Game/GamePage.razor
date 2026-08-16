@@ -7,6 +7,7 @@
 @inject IGameplayApi GameplayApi
 @inject ParticipantSession Session
 @inject ISnackbar Snackbar
+@inject GameHubConnection HubConnection
 
 <PageTitle>Game</PageTitle>
 
@@ -80,8 +81,22 @@
     private readonly CancellationTokenSource _cts = new();
     private IPageState _state = new Loading();
     private bool _isBusy;
+    private IDisposable? _hubSubscription;
 
-    protected override Task OnParametersSetAsync() => LoadAsync();
+    protected override void OnInitialized()
+    {
+        _hubSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
+        {
+            await LoadAsync();
+            StateHasChanged();
+        }));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await HubConnection.JoinGameAsync(GameId, _cts.Token);
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
@@ -277,6 +292,7 @@
 
     public void Dispose()
     {
+        _hubSubscription?.Dispose();
         _cts.Cancel();
         _cts.Dispose();
     }

@@ -1,3 +1,4 @@
+using Gameplay.Domain.Events;
 using Gameplay.Domain.Services;
 using Gameplay.Domain.ValueObjects;
 using Shared.Domain;
@@ -54,6 +55,8 @@ internal sealed class Hand : AggregateRoot<HandId>
                 ChipsStack.Create(bigBlind.Value).Value)
         );
 
+        hand.Raise(new HandStartedDomainEvent(gameId.Value, hand.Id.Value));
+
         return hand;
     }
 
@@ -101,6 +104,8 @@ internal sealed class Hand : AggregateRoot<HandId>
         {
             return Result.Failure(handState.Error);
         }
+
+        Raise(new HandActionRecordedDomainEvent(GameId.Value, Id.Value));
 
         return Result.Success();
     }
@@ -157,6 +162,8 @@ internal sealed class Hand : AggregateRoot<HandId>
             throw new InvalidOperationException("Awards does not sum up to zero.");
         }
 
+        Raise(new HandFinishedDomainEvent(GameId.Value, Id.Value));
+
         return awards;
     }
 
@@ -168,6 +175,9 @@ internal sealed class Hand : AggregateRoot<HandId>
         }
 
         Status = HandStatus.Aborted;
+
+        Raise(new HandAbortedDomainEvent(GameId.Value, Id.Value));
+
         return Result.Success();
     }
 }

@@ -23,7 +23,8 @@ public static class GameplayModule
         services
             .AddDatabase(connectionString)
             .AddApplication(typeof(GameplayModule).Assembly)
-            .AddEndpoints(typeof(GameplayModule).Assembly);
+            .AddEndpoints(typeof(GameplayModule).Assembly)
+            .AddRealtime();
 
         return services;
     }
@@ -44,6 +45,12 @@ public static class GameplayModule
                     HistoryRepository.DefaultTableName, GameplayDbContext.Schema))
             .UseSnakeCaseNamingConvention());
 
+        return services;
+    }
+
+    private static IServiceCollection AddRealtime(this IServiceCollection services)
+    {
+        services.AddSignalR();
         return services;
     }
 }

@@ -24,5 +24,6 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddScoped<IGameplayApi, GameplayApi>();
 builder.Services.AddScoped<ParticipantSession>();
+builder.Services.AddScoped<GameHubConnection>();
 
 await builder.Build().RunAsync();

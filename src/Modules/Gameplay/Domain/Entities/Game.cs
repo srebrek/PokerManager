@@ -1,3 +1,4 @@
+using Gameplay.Domain.Events;
 using Gameplay.Domain.ValueObjects;
 using Shared.Domain;
 
@@ -74,6 +75,8 @@ internal sealed class Game : AggregateRoot<GameId>
         _participants.Add(participantResult.Value);
         _seatingOrder.Add(participantResult.Value.Id);
 
+        Raise(new ParticipantAddedDomainEvent(Id.Value, participantResult.Value.Id.Value));
+
         return participantResult.Value.Id;
     }
 
@@ -142,6 +145,9 @@ internal sealed class Game : AggregateRoot<GameId>
         }
 
         CurrentHandId = handId;
+
+        Raise(new HandAttachedDomainEvent(Id.Value, handId.Value));
+
         return Result.Success();
     }
 
@@ -163,6 +169,9 @@ internal sealed class Game : AggregateRoot<GameId>
         }
 
         CurrentHandId = null;
+
+        Raise(new HandDetachedDomainEvent(Id.Value, handId.Value));
+
         return Result.Success();
     }
 
@@ -195,6 +204,8 @@ internal sealed class Game : AggregateRoot<GameId>
             }
         }
 
+        Raise(new HandAwardsAppliedDomainEvent(Id.Value, handId.Value));
+
         return Result.Success();
     }
 
@@ -216,6 +227,9 @@ internal sealed class Game : AggregateRoot<GameId>
         }
 
         IsFinished = true;
+
+        Raise(new GameFinishedDomainEvent(Id.Value));
+
         return Result.Success();
     }
 }
