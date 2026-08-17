@@ -98,7 +98,7 @@
         {
             if (_state is Loaded { Hand: { } hand } loaded && effect.ActionNumber == hand.LastActionNumber + 1)
             {
-                _state = loaded with { Hand = ApplyEffect(hand, effect) };
+                _state = loaded with { Hand = HandEffectProjection.Apply(hand, effect) };
                 StateHasChanged();
             }
             else
@@ -107,34 +107,6 @@
                 StateHasChanged();
             }
         }));
-    }
-
-    private static GetHandStateResponse ApplyEffect(GetHandStateResponse hand, HandActionEffect effect)
-    {
-        bool streetRolledOver = effect.NewStreet is not null;
-
-        return hand with
-        {
-            Pot = hand.Pot + effect.PotDelta,
-            Street = effect.NewStreet ?? hand.Street,
-            LastActionNumber = effect.ActionNumber,
-            Seats = [.. hand.Seats.Select(seat =>
-            {
-                if (seat.ParticipantId != effect.Seat.ParticipantId)
-                {
-                    return streetRolledOver ? seat with { StreetContribution = 0 } : seat;
-                }
-
-                return seat with
-                {
-                    StreetContribution = streetRolledOver
-                        ? 0
-                        : seat.StreetContribution - effect.Seat.ChipsDelta,
-                    RemainingStack = seat.RemainingStack + effect.Seat.ChipsDelta,
-                    State = effect.Seat.NewState ?? seat.State,
-                };
-            })],
-        };
     }
 
     protected override async Task OnParametersSetAsync()
@@ -202,133 +174,57 @@
         return new Failed(handResult.Error ?? "Unexpected error.");
     }
 
-    private async Task StartHandAsync()
-    {
-        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
-        if (_isBusy) return;
+    private Task StartHandAsync() =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), ct));
 
-        _isBusy = true;
-        try
-        {
-            GameplayResult<StartHandResponse> result =
-                await GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), _cts.Token);
+    private Task RecordActionAsync(Guid handId, HandActionType type, int? amount) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.RecordActionAsync(handId, new(myId, type, amount), ct));
 
-            if (!result.IsSuccess)
-            {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-            }
-        }
-        finally
-        {
-            _isBusy = false;
-        }
-    }
+    private Task FinishHandAsync(Guid handId, Guid winnerId) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.FinishHandAsync(handId, new(myId, winnerId), ct));
 
-    private async Task RecordActionAsync(Guid handId, HandActionType type, int? amount)
-    {
-        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
-        if (_isBusy) return;
+    private Task AbortHandAsync(Guid handId) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.AbortHandAsync(handId, new(myId), ct));
 
-        _isBusy = true;
-        try
-        {
-            GameplayResult result =
-                await GameplayApi.RecordActionAsync(handId, new(myId, type, amount), _cts.Token);
-
-            if (!result.IsSuccess)
-            {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-            }
-        }
-        finally
-        {
-            _isBusy = false;
-        }
-    }
-
-    private async Task FinishHandAsync(Guid handId, Guid winnerId)
-    {
-        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
-        if (_isBusy) return;
-
-        _isBusy = true;
-        try
-        {
-            GameplayResult result =
-                await GameplayApi.FinishHandAsync(handId, new(myId, winnerId), _cts.Token);
-
-            if (!result.IsSuccess)
-            {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-            }
-        }
-        finally
-        {
-            _isBusy = false;
-        }
-    }
-
-    private async Task AbortHandAsync(Guid handId)
-    {
-        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
-        if (_isBusy) return;
-
-        _isBusy = true;
-        try
-        {
-            GameplayResult result =
-                await GameplayApi.AbortHandAsync(handId, new(myId), _cts.Token);
-
-            if (!result.IsSuccess)
-            {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-            }
-        }
-        finally
-        {
-            _isBusy = false;
-        }
-    }
+    private Task FinishGameAsync() =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.FinishGameAsync(GameId, new(myId), ct));
 
     private async Task CreateParticipantAsync(string name)
     {
-        if (_isBusy) return;
+        GameplayResult<AddParticipantResponse>? result =
+            await RunAsync(ct => GameplayApi.AddParticipantAsync(GameId, new(name), ct));
 
-        _isBusy = true;
-        try
+        if (result is { IsSuccess: true })
         {
-            GameplayResult<AddParticipantResponse> result =
-                await GameplayApi.AddParticipantAsync(GameId, new(name), _cts.Token);
-
-            if (!result.IsSuccess)
-            {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
-            }
-
             Session.Set(GameId, result.Value!.ParticipantId);
-        }
-        finally
-        {
-            _isBusy = false;
         }
     }
 
-    private async Task FinishGameAsync()
+    private Task<TResult?> RunAsParticipantAsync<TResult>(Func<Guid, CancellationToken, Task<TResult>> callApiAsync)
+        where TResult : GameplayResult =>
+        Session.ParticipantIdFor(GameId) is { } myId
+            ? RunAsync(ct => callApiAsync(myId, ct))
+            : Task.FromResult<TResult?>(null);
+
+    private async Task<TResult?> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> callApiAsync)
+        where TResult : GameplayResult
     {
-        if (Session.ParticipantIdFor(GameId) is not { } myId) return;
-        if (_isBusy) return;
+        if (_isBusy)
+        {
+            return null;
+        }
 
         _isBusy = true;
         try
         {
-            GameplayResult result =
-                await GameplayApi.FinishGameAsync(GameId, new(myId), _cts.Token);
+            TResult result = await callApiAsync(_cts.Token);
 
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
             }
+
+            return result;
         }
         finally
         {
