@@ -49,13 +49,7 @@
                         Hand="loaded.Hand"
                         SmallBlind="loaded.Game.SmallBlind"
                         Participants="loaded.Game.Participants"
-                        OnFold="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Fold, null))"
-                        OnCheck="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Check, null))"
-                        OnCall="@(() => RecordActionAsync(loaded.Hand.HandId, HandActionType.Call, null))"
-                        OnBet="@((int amountTo) =>
-                            RecordActionAsync(loaded.Hand.HandId, HandActionType.Bet, amountTo))"
-                        OnRaise="@((int amountTo) =>
-                            RecordActionAsync(loaded.Hand.HandId, HandActionType.Raise, amountTo))"
+                        OnAction="@(action => RecordActionAsync(loaded.Hand.HandId, action))"
                         OnFinish="@((Guid winnerId) => FinishHandAsync(loaded.Hand.HandId, winnerId))"
                         OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
                         MyParticipantId="@Session.ParticipantIdFor(GameId)" />
@@ -177,8 +171,9 @@
     private Task StartHandAsync() =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), ct));
 
-    private Task RecordActionAsync(Guid handId, HandActionType type, int? amount) =>
-        RunAsParticipantAsync((myId, ct) => GameplayApi.RecordActionAsync(handId, new(myId, type, amount), ct));
+    private Task RecordActionAsync(Guid handId, HandPanel.HandActionSelected action) =>
+        RunAsParticipantAsync((myId, ct) =>
+            GameplayApi.RecordActionAsync(handId, new(myId, action.Type, action.AmountTo), ct));
 
     private Task FinishHandAsync(Guid handId, Guid winnerId) =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.FinishHandAsync(handId, new(myId, winnerId), ct));

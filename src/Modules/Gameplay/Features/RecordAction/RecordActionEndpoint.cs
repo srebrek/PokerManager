@@ -38,7 +38,8 @@ internal sealed class RecordActionEndpoint : IEndpoint
     }
 }
 
-internal sealed record RecordActionCommand(Guid HandId, Guid ActingParticipantId, Contracts.Api.Gameplay.HandActionType Type, int? AmountTo = null);
+internal sealed record RecordActionCommand(
+    Guid HandId, Guid ActingParticipantId, Contracts.Api.Gameplay.HandActionType Type, int? AmountTo = null);
 
 internal sealed class RecordActionCommandValidator : AbstractValidator<RecordActionCommand>
 {

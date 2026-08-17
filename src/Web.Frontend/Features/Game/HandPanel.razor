@@ -38,15 +38,27 @@
             All-in
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="OnFold" data-testid="action-fold">
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Secondary"
+            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Fold)))"
+            data-testid="action-fold">
             Fold
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCheck" data-testid="action-check">
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Warning"
+            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Check)))"
+            data-testid="action-check">
             Check
         </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnCall" data-testid="action-call">
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Warning"
+            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Call)))"
+            data-testid="action-call">
             Call
         </MudButton>
     </MudStack>
@@ -77,7 +89,8 @@
         <MudButton
             Variant="Variant.Filled"
             Color="Color.Primary"
-            OnClick="@(() => _isBet ? OnBet.InvokeAsync(_selectedAmount) : OnRaise.InvokeAsync(_selectedAmount))"
+            OnClick="@(() =>
+                OnAction.InvokeAsync(new(_isBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount)))"
             data-testid="action-bet-raise">
             @(_isBet ? "Bet" : "Raise")
         </MudButton>
@@ -99,23 +112,7 @@
 
     [Parameter]
     [EditorRequired]
-    public EventCallback OnFold { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public EventCallback OnCheck { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public EventCallback OnCall { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public EventCallback<int> OnBet { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public EventCallback<int> OnRaise { get; set; }
+    public EventCallback<HandActionSelected> OnAction { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -159,4 +156,6 @@
 
     private void SetWinnerId(Guid winnerId) =>
         _selectedWinnerId = _selectedWinnerId != winnerId ? winnerId : Guid.Empty;
+
+    public readonly record struct HandActionSelected(HandActionType Type, int? AmountTo = null);
 }
