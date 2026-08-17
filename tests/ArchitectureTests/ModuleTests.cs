@@ -91,17 +91,16 @@ public sealed class ModuleTests : BaseArchitectureTest
     }
 
     [Fact]
-    public void Domain_IsInternalExceptDomainEvent()
+    public void Domain_IsInternalExceptEvents()
     {
         foreach (ReflectionAssembly module in ModuleAssemblies)
         {
             string moduleName = module.GetName().Name!;
             IEnumerable<Type> domainTypes = module
                 .GetTypes()
-                .Where(t => !t.IsNested
-                    && t.Namespace is not null
+                .Where(t => t.Namespace is not null
                     && t.Namespace.StartsWith($"{moduleName}.Domain", StringComparison.Ordinal)
-                    && !typeof(Shared.Domain.IDomainEvent).IsAssignableFrom(t));
+                    && !t.Namespace.StartsWith($"{moduleName}.Domain.Events", StringComparison.Ordinal));
 
             foreach (Type type in domainTypes)
             {

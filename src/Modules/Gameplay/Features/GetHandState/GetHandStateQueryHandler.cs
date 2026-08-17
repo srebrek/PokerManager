@@ -17,7 +17,6 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
             .Where(h => h.Id == HandId.From(query.HandId))
             .Select(h => new
             {
-                h.GameId,
                 h.Seats,
                 Actions = h.Actions.OrderBy(a => a.SequenceNumber).ToList(),
                 h.Status,
@@ -45,10 +44,10 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
 
         return new GetHandStateResponse(
             query.HandId,
-            hand.GameId.Value,
             (Contracts.Api.Gameplay.HandStatus)hand.Status,
             (Contracts.Api.Gameplay.Street)handStateResult.Value.Street,
             handStateResult.Value.Pot.Value,
-            handStateSeats);
+            handStateSeats,
+            hand.Actions[^1].SequenceNumber);
     }
 }

@@ -28,13 +28,29 @@ internal sealed partial class GameHubConnection : IAsyncDisposable
 
     public async Task JoinGameAsync(Guid gameId, CancellationToken ct)
     {
-        if (_connection.State == HubConnectionState.Disconnected)
+        if (_connection.State is HubConnectionState.Disconnected)
         {
             await _connection.StartAsync(ct);
         }
 
         await _connection.InvokeAsync(GameplayRoutes.HubJoinGameMethod, gameId, ct);
     }
+
+    public async Task JoinHandAsync(Guid handId, CancellationToken ct)
+    {
+        if (_connection.State is HubConnectionState.Disconnected)
+        {
+            await _connection.StartAsync(ct);
+        }
+
+        await _connection.InvokeAsync(GameplayRoutes.HubJoinHandMethod, handId, ct);
+    }
+
+    public async Task LeaveHandAsync(Guid handId, CancellationToken ct) =>
+        await _connection.InvokeAsync(GameplayRoutes.HubLeaveHandMethod, handId, ct);
+
+    public IDisposable OnHandActionEffectReceived(Func<HandActionEffect, Task> onHandActionEffectReceived) =>
+        _connection.On(GameplayRoutes.HubApplyHandActionEffectMethod, onHandActionEffectReceived);
 
     public async ValueTask DisposeAsync() => await _connection.DisposeAsync();
 

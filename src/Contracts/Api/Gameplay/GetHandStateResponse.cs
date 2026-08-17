@@ -2,11 +2,11 @@ namespace Contracts.Api.Gameplay;
 
 public sealed record GetHandStateResponse(
     Guid HandId,
-    Guid GameId,
     HandStatus Status,
     Street Street,
     int Pot,
-    IReadOnlyList<HandStateSeat> Seats);
+    IReadOnlyList<HandStateSeat> Seats,
+    int LastActionNumber);
 
 public enum HandStatus
 {

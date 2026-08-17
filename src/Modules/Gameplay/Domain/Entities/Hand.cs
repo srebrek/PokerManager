@@ -105,7 +105,17 @@ internal sealed class Hand : AggregateRoot<HandId>
             return Result.Failure(handState.Error);
         }
 
-        Raise(new HandActionRecordedDomainEvent(GameId.Value, Id.Value));
+        HandActionEffect effect = handState.Value.LastActionEffect;
+
+        Raise(new HandActionRecordedDomainEvent(
+            Id.Value,
+            handActionResult.Value.SequenceNumber,
+            effect.PotDelta,
+            (int?)effect.NewStreet,
+            new HandActionSeatEffect(
+                effect.SeatEffect.ParticipantId.Value,
+                effect.SeatEffect.ChipsDelta,
+                (int?)effect.SeatEffect.NewState)));
 
         return Result.Success();
     }

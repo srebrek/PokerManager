@@ -25,6 +25,12 @@ internal static class HandStateCalculator
         Street currentStreet = Street.PreFlop;
         int foldCounter = 0;
 
+        int lastActionPotDelta = default;
+        ParticipantId lastActionParticipantId = default;
+        int lastActionParticipantChipsDelta = default;
+        SeatState? lastActionNewSeatState = default;
+        Street? lastActionNewStreet = default;
+
         foreach ((int index, HandAction action) in actions.Index())
         {
             bool isLastAction = index == actions.Count - 1;
@@ -83,12 +89,18 @@ internal static class HandStateCalculator
             }
 
             // act
+            lastActionPotDelta = 0;
+            lastActionParticipantId = action.ParticipantId;
+            lastActionParticipantChipsDelta = 0;
+            lastActionNewSeatState = null;
+            lastActionNewStreet = null;
 
             if (action.Type is HandActionType.Fold)
             {
                 seatStates[actingParticipantIndex] =
                     seatStates[actingParticipantIndex] with { State = SeatState.Folded };
                 foldCounter++;
+                lastActionNewSeatState = SeatState.Folded;
             }
 
             if (action.AmountTo is not null || action.Type is HandActionType.Call)
@@ -113,6 +125,8 @@ internal static class HandStateCalculator
                 };
 
                 pot += chipsToPush;
+                lastActionPotDelta = chipsToPush;
+                lastActionParticipantChipsDelta = -chipsToPush;
             }
 
             // advance
@@ -138,6 +152,8 @@ internal static class HandStateCalculator
                 {
                     currentStreet = Street.Finished;
                 }
+
+                lastActionNewStreet = currentStreet;
             }
             else
             {
@@ -145,7 +161,14 @@ internal static class HandStateCalculator
             }
         }
 
-        return new HandState(pot, currentStreet, seatStates);
+        return new HandState(
+            pot,
+            currentStreet,
+            seatStates,
+            new(
+                lastActionPotDelta,
+                new(lastActionParticipantId, lastActionParticipantChipsDelta, lastActionNewSeatState),
+                lastActionNewStreet));
     }
 
     private static Result<HandState> AdjustErrorType(Error error, bool isLastAction)
@@ -185,10 +208,15 @@ internal static class HandStateCalculator
 internal readonly record struct HandState(
     ChipsStack Pot,
     Street Street,
-    IReadOnlyList<HandSeatState> SeatStates);
+    IReadOnlyList<HandSeatState> SeatStates,
+    HandActionEffect LastActionEffect);
 
 internal readonly record struct HandSeatState(
     ParticipantId ParticipantId,
     ChipsStack StreetContribution,
     ChipsStack RemainingStack,
     SeatState State);
+
+internal readonly record struct HandActionEffect(int PotDelta, HandSeatEffect SeatEffect, Street? NewStreet);
+
+internal readonly record struct HandSeatEffect(ParticipantId ParticipantId, int ChipsDelta, SeatState? NewState);

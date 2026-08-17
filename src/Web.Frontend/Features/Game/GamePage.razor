@@ -81,15 +81,60 @@
     private readonly CancellationTokenSource _cts = new();
     private IPageState _state = new Loading();
     private bool _isBusy;
-    private IDisposable? _hubSubscription;
+    private bool _isLoading;
+    private IDisposable? _gameSubscription;
+    private Guid? _currentHandId;
+    private IDisposable? _handSubscription;
 
     protected override void OnInitialized()
     {
-        _hubSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
+        _gameSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
         {
             await LoadAsync();
             StateHasChanged();
         }));
+
+        _handSubscription = HubConnection.OnHandActionEffectReceived(effect => InvokeAsync(async () =>
+        {
+            if (_state is Loaded { Hand: { } hand } loaded && effect.ActionNumber == hand.LastActionNumber + 1)
+            {
+                _state = loaded with { Hand = ApplyEffect(hand, effect) };
+                StateHasChanged();
+            }
+            else
+            {
+                await LoadAsync();
+                StateHasChanged();
+            }
+        }));
+    }
+
+    private static GetHandStateResponse ApplyEffect(GetHandStateResponse hand, HandActionEffect effect)
+    {
+        bool streetRolledOver = effect.NewStreet is not null;
+
+        return hand with
+        {
+            Pot = hand.Pot + effect.PotDelta,
+            Street = effect.NewStreet ?? hand.Street,
+            LastActionNumber = effect.ActionNumber,
+            Seats = [.. hand.Seats.Select(seat =>
+            {
+                if (seat.ParticipantId != effect.Seat.ParticipantId)
+                {
+                    return streetRolledOver ? seat with { StreetContribution = 0 } : seat;
+                }
+
+                return seat with
+                {
+                    StreetContribution = streetRolledOver
+                        ? 0
+                        : seat.StreetContribution - effect.Seat.ChipsDelta,
+                    RemainingStack = seat.RemainingStack + effect.Seat.ChipsDelta,
+                    State = effect.Seat.NewState ?? seat.State,
+                };
+            })],
+        };
     }
 
     protected override async Task OnParametersSetAsync()
@@ -100,19 +145,19 @@
 
     private async Task LoadAsync()
     {
-        if (_isBusy)
+        if (_isLoading)
         {
             return;
         }
 
-        _isBusy = true;
+        _isLoading = true;
         try
         {
             _state = await LoadStateAsync();
         }
         finally
         {
-            _isBusy = false;
+            _isLoading = false;
         }
     }
 
@@ -127,6 +172,12 @@
         Guid? currentHandId = gameResult.Value!.CurrentHandId;
         if (currentHandId is null)
         {
+            if (_currentHandId is not null)
+            {
+                await HubConnection.LeaveHandAsync(_currentHandId.Value, _cts.Token);
+                _currentHandId = null;
+            }
+
             return new Loaded(gameResult.Value, null);
         }
 
@@ -134,6 +185,17 @@
             await GameplayApi.GetHandStateAsync(currentHandId.Value, _cts.Token);
         if (handResult.IsSuccess)
         {
+            if (_currentHandId is null || _currentHandId != currentHandId)
+            {
+                if (_currentHandId is not null)
+                {
+                    await HubConnection.LeaveHandAsync(_currentHandId.Value, _cts.Token);
+                }
+
+                _currentHandId = currentHandId;
+                await HubConnection.JoinHandAsync(_currentHandId.Value, _cts.Token);
+            }
+
             return new Loaded(gameResult.Value, handResult.Value);
         }
 
@@ -154,10 +216,7 @@
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
             }
-
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -179,10 +238,7 @@
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
             }
-
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -204,10 +260,7 @@
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
             }
-
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -229,10 +282,7 @@
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
             }
-
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -257,7 +307,6 @@
             }
 
             Session.Set(GameId, result.Value!.ParticipantId);
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -279,10 +328,7 @@
             if (!result.IsSuccess)
             {
                 Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
-                return;
             }
-
-            _state = await LoadStateAsync();
         }
         finally
         {
@@ -292,7 +338,8 @@
 
     public void Dispose()
     {
-        _hubSubscription?.Dispose();
+        _gameSubscription?.Dispose();
+        _handSubscription?.Dispose();
         _cts.Cancel();
         _cts.Dispose();
     }
