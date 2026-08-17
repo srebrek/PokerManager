@@ -41,17 +41,18 @@
         _submitting = true;
         _error = null;
 
-        GameplayResult<GameLookupResponse> result = await GameplayApi.GetGameByJoinCodeAsync(_model.JoinCode);
+        ApiResult<GameLookupResponse> result = await GameplayApi.GetGameByJoinCodeAsync(_model.JoinCode);
 
         if (result.IsSuccess)
         {
-            await OnFound.InvokeAsync(new(result.Value!.GameId));
+            await OnFound.InvokeAsync(new(result.Value.GameId));
             return;
         }
 
-        _error = result.Error;
+        _error = result.Error.Message;
         _submitting = false;
     }
+
     internal sealed class FindGameModel
     {
         [Required]

@@ -6,37 +6,37 @@ namespace Web.Frontend.Common.Http;
 
 internal interface IGameplayApi
 {
-    Task<GameplayResult<CreateGameResponse>> CreateGameAsync(CreateGameRequest request, CancellationToken ct = default);
-    Task<GameplayResult<GameLookupResponse>> GetGameByJoinCodeAsync(string joinCode, CancellationToken ct = default);
-    Task<GameplayResult<AddParticipantResponse>> AddParticipantAsync(
+    Task<ApiResult<CreateGameResponse>> CreateGameAsync(CreateGameRequest request, CancellationToken ct = default);
+    Task<ApiResult<GameLookupResponse>> GetGameByJoinCodeAsync(string joinCode, CancellationToken ct = default);
+    Task<ApiResult<AddParticipantResponse>> AddParticipantAsync(
       Guid gameId, AddParticipantRequest request, CancellationToken ct = default);
-    Task<GameplayResult<GameStateResponse>> GetGameStateAsync(Guid gameId, CancellationToken ct = default);
-    Task<GameplayResult<GetHandStateResponse>> GetHandStateAsync(Guid handId, CancellationToken ct = default);
-    Task<GameplayResult<StartHandResponse>> StartHandAsync(
+    Task<ApiResult<GameStateResponse>> GetGameStateAsync(Guid gameId, CancellationToken ct = default);
+    Task<ApiResult<GetHandStateResponse>> GetHandStateAsync(Guid handId, CancellationToken ct = default);
+    Task<ApiResult<StartHandResponse>> StartHandAsync(
       Guid gameId, StartHandRequest request, CancellationToken ct = default);
-    Task<GameplayResult> RecordActionAsync(Guid handId, RecordActionRequest request, CancellationToken ct = default);
-    Task<GameplayResult> FinishHandAsync(Guid handId, FinishHandRequest request, CancellationToken ct = default);
-    Task<GameplayResult> AbortHandAsync(Guid handId, AbortHandRequest request, CancellationToken ct = default);
-    Task<GameplayResult> FinishGameAsync(Guid gameId, FinishGameRequest request, CancellationToken ct = default);
+    Task<ApiResult> RecordActionAsync(Guid handId, RecordActionRequest request, CancellationToken ct = default);
+    Task<ApiResult> FinishHandAsync(Guid handId, FinishHandRequest request, CancellationToken ct = default);
+    Task<ApiResult> AbortHandAsync(Guid handId, AbortHandRequest request, CancellationToken ct = default);
+    Task<ApiResult> FinishGameAsync(Guid gameId, FinishGameRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
 {
-    public Task<GameplayResult<CreateGameResponse>> CreateGameAsync(
+    public Task<ApiResult<CreateGameResponse>> CreateGameAsync(
         CreateGameRequest request,
         CancellationToken ct = default) =>
         ExecuteAsync<CreateGameResponse>(
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.CreateGame, request, ct),
             ct);
 
-    public Task<GameplayResult<GameLookupResponse>> GetGameByJoinCodeAsync(
+    public Task<ApiResult<GameLookupResponse>> GetGameByJoinCodeAsync(
         string joinCode,
         CancellationToken ct = default) =>
         ExecuteAsync<GameLookupResponse>(
             ct => httpClient.GetAsync(GameplayRoutes.GetGameByJoinCodeFor(joinCode), ct),
             ct);
 
-    public Task<GameplayResult<AddParticipantResponse>> AddParticipantAsync(
+    public Task<ApiResult<AddParticipantResponse>> AddParticipantAsync(
         Guid gameId,
         AddParticipantRequest request,
         CancellationToken ct = default) =>
@@ -44,21 +44,21 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.AddParticipantFor(gameId), request, ct),
             ct);
 
-    public Task<GameplayResult<GameStateResponse>> GetGameStateAsync(
+    public Task<ApiResult<GameStateResponse>> GetGameStateAsync(
         Guid gameId,
         CancellationToken ct = default) =>
         ExecuteAsync<GameStateResponse>(
             ct => httpClient.GetAsync(GameplayRoutes.GameStateFor(gameId), ct),
             ct);
 
-    public Task<GameplayResult<GetHandStateResponse>> GetHandStateAsync(
+    public Task<ApiResult<GetHandStateResponse>> GetHandStateAsync(
         Guid handId,
         CancellationToken ct = default) =>
         ExecuteAsync<GetHandStateResponse>(
             ct => httpClient.GetAsync(GameplayRoutes.HandStateFor(handId), ct),
             ct);
 
-    public Task<GameplayResult<StartHandResponse>> StartHandAsync(
+    public Task<ApiResult<StartHandResponse>> StartHandAsync(
         Guid gameId,
         StartHandRequest request,
         CancellationToken ct = default) =>
@@ -66,7 +66,7 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.StartHandFor(gameId), request, ct),
             ct);
 
-    public Task<GameplayResult> RecordActionAsync(
+    public Task<ApiResult> RecordActionAsync(
         Guid handId,
         RecordActionRequest request,
         CancellationToken ct = default) =>
@@ -74,7 +74,7 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.RecordActionFor(handId), request, ct),
             ct);
 
-    public Task<GameplayResult> FinishHandAsync(
+    public Task<ApiResult> FinishHandAsync(
         Guid handId,
         FinishHandRequest request,
         CancellationToken ct = default) =>
@@ -82,7 +82,7 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.FinishHandFor(handId), request, ct),
             ct);
 
-    public Task<GameplayResult> AbortHandAsync(
+    public Task<ApiResult> AbortHandAsync(
         Guid handId,
         AbortHandRequest request,
         CancellationToken ct = default) =>
@@ -90,7 +90,7 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.AbortHandFor(handId), request, ct),
             ct);
 
-    public Task<GameplayResult> FinishGameAsync(
+    public Task<ApiResult> FinishGameAsync(
         Guid gameId,
         FinishGameRequest request,
         CancellationToken ct = default) =>
@@ -98,80 +98,83 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.FinishGameFor(gameId), request, ct),
             ct);
 
-    private async Task<GameplayResult> ExecuteAsync(
+    private async Task<ApiResult> ExecuteAsync(
         Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
         CancellationToken ct,
         string genericErrorMessage = "Server error. Try again.")
     {
         RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
-        if (!outcome.Success)
-        {
-            return GameplayResult.Failure(outcome.Error!, outcome.ErrorKind);
-        }
 
-        return GameplayResult.Success();
+        return outcome.Error is { } error
+            ? ApiResult.Failure(error)
+            : ApiResult.Success();
     }
 
-    private async Task<GameplayResult<TValue>> ExecuteAsync<TValue>(
+    private async Task<ApiResult<TValue>> ExecuteAsync<TValue>(
         Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
         CancellationToken ct,
         string genericErrorMessage = "Server error. Try again.")
     {
         RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
-        if (!outcome.Success)
+        if (outcome.Error is { } error)
         {
-            return GameplayResult.Failure<TValue>(outcome.Error!, outcome.ErrorKind);
+            return ApiResult.Failure<TValue>(error);
         }
 
         TValue? value = await outcome.Response!.Content.ReadFromJsonAsync<TValue>(ct);
         return value is not null
-            ? GameplayResult.Success(value)
+            ? ApiResult.Success(value)
             : throw new InvalidOperationException(
                 $"Gameplay API returned success without expected body: {typeof(TValue).Name}.");
     }
 
-    private readonly record struct RequestOutcome(
-      bool Success, HttpResponseMessage? Response, string? Error, GameplayErrorKind ErrorKind);
+    private readonly record struct RequestOutcome(HttpResponseMessage? Response, ApiError? Error);
 
     private async Task<RequestOutcome> HandleHttpCallAsync(
-      Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
-      CancellationToken ct,
-      string genericErrorMessage = "Server error. Try again.")
+        Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
+        CancellationToken ct,
+        string genericErrorMessage = "Server error. Try again.")
     {
         try
         {
             HttpResponseMessage response = await sendAsync(ct);
 
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
-                string? message = await ApiErrorReader.ReadMessageAsync(response, ct);
-
-                if (message is null)
-                {
-                    LogUnparsableErrorBody(logger, (int)response.StatusCode);
-                }
-
-                GameplayErrorKind errorKind = response.StatusCode switch
-                {
-                    HttpStatusCode.BadRequest => GameplayErrorKind.Validation,
-                    HttpStatusCode.NotFound => GameplayErrorKind.NotFound,
-                    _ => GameplayErrorKind.Server
-                };
-
-                return new RequestOutcome(false, response, message ?? genericErrorMessage, errorKind);
+                return new RequestOutcome(response, null);
             }
 
-            return new RequestOutcome(true, response, null, GameplayErrorKind.None);
+            ApiErrorBody body = await ApiErrorReader.ReadAsync(response, ct);
+
+            if (body.Message is null)
+            {
+                LogUnparsableErrorBody(logger, (int)response.StatusCode);
+            }
+
+            ApiErrorKind kind = response.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => ApiErrorKind.Validation,
+                HttpStatusCode.NotFound => ApiErrorKind.NotFound,
+                HttpStatusCode.Conflict => ApiErrorKind.Conflict,
+                _ => ApiErrorKind.Server
+            };
+
+            string message = body.Message ?? genericErrorMessage;
+            ApiError error = body.Code is { } code
+                ? new ApiError(code, message, kind)
+                : ApiError.Uncoded(message, kind);
+
+            return new RequestOutcome(response, error);
         }
         catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
         {
             LogRequestTimedOut(logger, ex);
-            return new RequestOutcome(false, null, "Connection error. Try again.", GameplayErrorKind.Connection);
+            return new RequestOutcome(null, ApiError.Connection("Connection error. Try again."));
         }
         catch (HttpRequestException ex)
         {
             LogRequestFailed(logger, ex);
-            return new RequestOutcome(false, null, "Connection error. Try again.", GameplayErrorKind.Connection);
+            return new RequestOutcome(null, ApiError.Connection("Connection error. Try again."));
         }
     }
 
@@ -185,39 +188,4 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         Level = LogLevel.Warning,
         Message = "Gameplay API error response body could not be parsed: status {StatusCode}.")]
     private static partial void LogUnparsableErrorBody(ILogger logger, int statusCode);
-}
-
-// TODO: make it imposible to create invalid result e.g. value and error notnull
-internal class GameplayResult(bool isSuccess, string? error, GameplayErrorKind errorKind)
-{
-    public bool IsSuccess { get; } = isSuccess;
-    public string? Error { get; } = error;
-    public GameplayErrorKind ErrorKind { get; } = errorKind;
-
-    public static GameplayResult Success() =>
-        new(true, null, GameplayErrorKind.None);
-
-    public static GameplayResult<TValue> Success<TValue>(TValue value) =>
-        new(true, value, null, GameplayErrorKind.None);
-
-    public static GameplayResult Failure(string error, GameplayErrorKind errorKind) =>
-        new(false, error, errorKind);
-
-    public static GameplayResult<TValue> Failure<TValue>(string error, GameplayErrorKind errorKind) =>
-        new(false, default, error, errorKind);
-}
-
-internal sealed class GameplayResult<TValue>(bool isSuccess, TValue? value, string? error, GameplayErrorKind errorKind)
-    : GameplayResult(isSuccess, error, errorKind)
-{
-    public TValue? Value { get; } = value;
-}
-
-internal enum GameplayErrorKind
-{
-    None,
-    Validation,
-    NotFound,
-    Server,
-    Connection
 }

@@ -41,15 +41,15 @@
         _submitting = true;
         _error = null;
 
-        GameplayResult<CreateGameResponse> result = await GameplayApi.CreateGameAsync(_model.ToRequest());
+        ApiResult<CreateGameResponse> result = await GameplayApi.CreateGameAsync(_model.ToRequest());
 
         if (result.IsSuccess)
         {
-            await OnCreated.InvokeAsync(new(result.Value!.GameId, result.Value!.ParticipantId));
+            await OnCreated.InvokeAsync(new(result.Value.GameId, result.Value.ParticipantId));
             return;
         }
 
-        _error = result.Error;
+        _error = result.Error.Message;
         _submitting = false;
     }
 

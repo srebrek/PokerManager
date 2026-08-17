@@ -30,17 +30,14 @@ public class Result
     public static Result<TValue> Failure<TValue>(Error error) => new(default, false, error);
 }
 
-public class Result<TValue>(TValue? value, bool isSuccess, Error error) : Result(isSuccess, error)
+public sealed class Result<TValue>(TValue? value, bool isSuccess, Error error) : Result(isSuccess, error)
 {
     [NotNull]
     public TValue Value
     {
-        get
-        {
-            return IsSuccess
-                ? field!
-                : throw new InvalidOperationException("The value of a failure result can't be accessed.");
-        }
+        get => IsSuccess
+            ? field!
+            : throw new InvalidOperationException($"The value of a failed result can't be accessed: {Error.Code}.");
     } = value;
 
     public static implicit operator Result<TValue>(TValue? value) =>

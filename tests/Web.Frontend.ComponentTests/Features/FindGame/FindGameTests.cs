@@ -37,7 +37,7 @@ public sealed class FindGameTests : MudBunitContext
         FindGameForm.GameFound expectedGameFound = new(Guid.NewGuid());
 
         _api.GetGameByJoinCodeAsync("123456", Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Success(new GameLookupResponse(expectedGameFound.GameId)));
+            .Returns(ApiResult.Success(new GameLookupResponse(expectedGameFound.GameId)));
 
         FindGameForm.GameFound actualGameFound = default;
         IRenderedComponent<FindGameForm> cut = Render<FindGameForm>(parameters => parameters
@@ -60,7 +60,8 @@ public sealed class FindGameTests : MudBunitContext
         // Arrange
         string expectedErrorMessage = "Game not found.";
         _api.GetGameByJoinCodeAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(GameplayResult.Failure<GameLookupResponse>(expectedErrorMessage, GameplayErrorKind.NotFound));
+            .Returns(ApiResult.Failure<GameLookupResponse>(
+                new ApiError("Gameplay.Game.GameNotFound", expectedErrorMessage, ApiErrorKind.NotFound)));
 
         bool callbackCalled = false;
         IRenderedComponent<FindGameForm> cut = Render<FindGameForm>(parameters => parameters

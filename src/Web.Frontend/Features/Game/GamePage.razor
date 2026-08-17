@@ -135,13 +135,13 @@
 
     private async Task<IPageState> LoadStateAsync()
     {
-        GameplayResult<GameStateResponse> gameResult = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
+        ApiResult<GameStateResponse> gameResult = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
         if (!gameResult.IsSuccess)
         {
-            return new Failed(gameResult.Error ?? "Unexpected error.");
+            return new Failed(gameResult.Error.Message);
         }
 
-        Guid? currentHandId = gameResult.Value!.CurrentHandId;
+        Guid? currentHandId = gameResult.Value.CurrentHandId;
         if (currentHandId is null)
         {
             if (_currentHandId is not null)
@@ -153,7 +153,7 @@
             return new Loaded(gameResult.Value, null);
         }
 
-        GameplayResult<GetHandStateResponse> handResult =
+        ApiResult<GetHandStateResponse> handResult =
             await GameplayApi.GetHandStateAsync(currentHandId.Value, _cts.Token);
         if (handResult.IsSuccess)
         {
@@ -171,7 +171,7 @@
             return new Loaded(gameResult.Value, handResult.Value);
         }
 
-        return new Failed(handResult.Error ?? "Unexpected error.");
+        return new Failed(handResult.Error.Message);
     }
 
     private Task StartHandAsync() =>
@@ -191,23 +191,23 @@
 
     private async Task CreateParticipantAsync(string name)
     {
-        GameplayResult<AddParticipantResponse>? result =
+        ApiResult<AddParticipantResponse>? result =
             await RunAsync(ct => GameplayApi.AddParticipantAsync(GameId, new(name), ct));
 
         if (result is { IsSuccess: true })
         {
-            Session.Set(GameId, result.Value!.ParticipantId);
+            Session.Set(GameId, result.Value.ParticipantId);
         }
     }
 
     private Task<TResult?> RunAsParticipantAsync<TResult>(Func<Guid, CancellationToken, Task<TResult>> callApiAsync)
-        where TResult : GameplayResult =>
+        where TResult : ApiResult =>
         Session.ParticipantIdFor(GameId) is { } myId
             ? RunAsync(ct => callApiAsync(myId, ct))
             : Task.FromResult<TResult?>(null);
 
     private async Task<TResult?> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> callApiAsync)
-        where TResult : GameplayResult
+        where TResult : ApiResult
     {
         if (_isBusy)
         {
@@ -221,7 +221,7 @@
 
             if (!result.IsSuccess)
             {
-                Snackbar.Add(result.Error ?? "Unexpected error.", Severity.Error);
+                Snackbar.Add(result.Error.Message, Severity.Error);
             }
 
             return result;
