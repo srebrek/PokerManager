@@ -120,6 +120,7 @@
         try
         {
             _state = await LoadStateAsync();
+            await ReconcileHandSubscriptionAsync(_state is Loaded { Hand: { } hand } ? hand.HandId : null);
         }
         finally
         {
@@ -135,37 +136,37 @@
             return new Failed(gameResult.Error.Message);
         }
 
-        Guid? currentHandId = gameResult.Value.CurrentHandId;
-        if (currentHandId is null)
+        if (gameResult.Value.CurrentHandId is not { } currentHandId)
         {
-            if (_currentHandId is not null)
-            {
-                await HubConnection.LeaveHandAsync(_currentHandId.Value, _cts.Token);
-                _currentHandId = null;
-            }
-
             return new Loaded(gameResult.Value, null);
         }
 
         ApiResult<GetHandStateResponse> handResult =
-            await GameplayApi.GetHandStateAsync(currentHandId.Value, _cts.Token);
-        if (handResult.IsSuccess)
+            await GameplayApi.GetHandStateAsync(currentHandId, _cts.Token);
+
+        return handResult.IsSuccess
+            ? new Loaded(gameResult.Value, handResult.Value)
+            : new Failed(handResult.Error.Message);
+    }
+
+    private async Task ReconcileHandSubscriptionAsync(Guid? handId)
+    {
+        if (_currentHandId == handId)
         {
-            if (_currentHandId is null || _currentHandId != currentHandId)
-            {
-                if (_currentHandId is not null)
-                {
-                    await HubConnection.LeaveHandAsync(_currentHandId.Value, _cts.Token);
-                }
-
-                _currentHandId = currentHandId;
-                await HubConnection.JoinHandAsync(_currentHandId.Value, _cts.Token);
-            }
-
-            return new Loaded(gameResult.Value, handResult.Value);
+            return;
         }
 
-        return new Failed(handResult.Error.Message);
+        if (_currentHandId is { } previousHandId)
+        {
+            await HubConnection.LeaveHandAsync(previousHandId, _cts.Token);
+            _currentHandId = null;
+        }
+
+        if (handId is { } currentHandId)
+        {
+            await HubConnection.JoinHandAsync(currentHandId, _cts.Token);
+            _currentHandId = currentHandId;
+        }
     }
 
     private Task StartHandAsync() =>
