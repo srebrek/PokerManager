@@ -22,7 +22,7 @@ public sealed class GameTests
         Game game = result.Value;
         Participant host = game.Participants.ShouldHaveSingleItem();
         host.Name.ShouldBe(hostName);
-        host.Chips.Value.ShouldBe(Game.DefaultStartingStack);
+        host.Chips.Value.ShouldBe(0);
         game.HostParticipantId.ShouldBe(host.Id);
         game.SmallBlind.ShouldBe(smallBlind);
         game.BigBlind.ShouldBe(bigBlind);
@@ -80,7 +80,7 @@ public sealed class GameTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         ParticipantId participantId = result.Value;
-        game.Participants.ShouldAllBe(p => p.Chips.Value == Game.DefaultStartingStack);
+        game.Participants.ShouldAllBe(p => p.Chips.Value == 0);
         game.Participants.Count.ShouldBe(2);
         game.SeatingOrder.ShouldBe([game.HostParticipantId, participantId]);
     }

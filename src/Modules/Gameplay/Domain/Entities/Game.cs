@@ -6,7 +6,6 @@ namespace Gameplay.Domain.Entities;
 
 internal sealed class Game : AggregateRoot<GameId>
 {
-    public const int DefaultStartingStack = 1000;
     public const int MinimumParticipantsToStartAHand = 3;
 
     public JoinCode JoinCode { get; }
@@ -48,7 +47,7 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.BigBlindLessThanSmallBlind;
         }
 
-        if (!Participant.Create(hostName, (ChipsStack)DefaultStartingStack)
+        if (!Participant.Create(hostName)
                 .TryGetValue(out Participant? host, out Error? error))
         {
             return error;
@@ -63,7 +62,7 @@ internal sealed class Game : AggregateRoot<GameId>
 
     public Result<ParticipantId> AddParticipant(string participantName)
     {
-        if (!Participant.Create(participantName, (ChipsStack)DefaultStartingStack)
+        if (!Participant.Create(participantName)
                 .TryGetValue(out Participant? participant, out Error? error))
         {
             return error;

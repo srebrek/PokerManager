@@ -9,22 +9,22 @@ internal sealed class Participant : Entity<ParticipantId>
     public ChipsStack Chips { get; private set; }
     public ChipsStack TotalBuyIn { get; private set; }
 
-    private Participant(ParticipantId id, string name, ChipsStack chips)
+    private Participant(ParticipantId id, string name)
         : base(id)
     {
         Name = name;
-        Chips = chips;
-        TotalBuyIn = chips;
+        Chips = ChipsStack.Zero;
+        TotalBuyIn = ChipsStack.Zero;
     }
 
-    public static Result<Participant> Create(string name, ChipsStack chips)
+    public static Result<Participant> Create(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return ParticipantErrors.InvalidName;
         }
 
-        return new Participant(ParticipantId.New(), name, chips);
+        return new Participant(ParticipantId.New(), name);
     }
 
     public Result AddChips(int amount)

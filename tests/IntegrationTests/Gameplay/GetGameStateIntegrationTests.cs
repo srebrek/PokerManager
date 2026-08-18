@@ -1,5 +1,4 @@
 using Contracts.Api.Gameplay;
-using Gameplay.Domain.Entities;
 
 namespace IntegrationTests.Gameplay;
 
@@ -31,7 +30,7 @@ public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayI
         GameStateParticipant host = body.Participants.ShouldHaveSingleItem();
         host.Id.ShouldBe(createGameResponse.ParticipantId);
         host.Name.ShouldBe("TestHostName");
-        host.Chips.ShouldBe(Game.DefaultStartingStack);
+        host.Chips.ShouldBe(0);
         host.IsHost.ShouldBeTrue();
     }
 

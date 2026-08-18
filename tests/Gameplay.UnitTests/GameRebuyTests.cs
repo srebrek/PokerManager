@@ -22,8 +22,8 @@ public sealed class GameRebuyTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         Participant participant = game.Participants.Single(p => p.Id == participantId);
-        participant.Chips.Value.ShouldBe(Game.DefaultStartingStack + 500);
-        participant.TotalBuyIn.Value.ShouldBe(Game.DefaultStartingStack + 500);
+        participant.Chips.Value.ShouldBe(500);
+        participant.TotalBuyIn.Value.ShouldBe(500);
         game.Events.OfType<RebuyRecordedDomainEvent>().ShouldHaveSingleItem()
             .ShouldBe(new RebuyRecordedDomainEvent(game.Id.Value, participantId.Value));
     }
@@ -34,6 +34,7 @@ public sealed class GameRebuyTests
         // Arrange
         Game game = CreateGame();
         ParticipantId participantId = game.AddParticipant("TestParticipantName").Value;
+        game.Rebuy(game.HostParticipantId, participantId, 1000);
 
         // Act
         Result result = game.Rebuy(game.HostParticipantId, participantId, -400);
@@ -41,8 +42,8 @@ public sealed class GameRebuyTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         Participant participant = game.Participants.Single(p => p.Id == participantId);
-        participant.Chips.Value.ShouldBe(Game.DefaultStartingStack - 400);
-        participant.TotalBuyIn.Value.ShouldBe(Game.DefaultStartingStack - 400);
+        participant.Chips.Value.ShouldBe(600);
+        participant.TotalBuyIn.Value.ShouldBe(600);
     }
 
     [Fact]
@@ -98,12 +99,12 @@ public sealed class GameRebuyTests
         ParticipantId participantId = game.AddParticipant("TestParticipantName").Value;
 
         // Act
-        Result result = game.Rebuy(game.HostParticipantId, participantId, -(Game.DefaultStartingStack + 1));
+        Result result = game.Rebuy(game.HostParticipantId, participantId, -1);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.ShouldBe(ParticipantErrors.RebuyLeavesNegativeChips);
-        game.Participants.Single(p => p.Id == participantId).Chips.Value.ShouldBe(Game.DefaultStartingStack);
+        game.Participants.Single(p => p.Id == participantId).Chips.Value.ShouldBe(0);
     }
 
     [Fact]
@@ -113,15 +114,15 @@ public sealed class GameRebuyTests
         Game game = CreateGame();
         ParticipantId participantId = game.AddParticipant("TestParticipantName").Value;
         Participant participant = game.Participants.Single(p => p.Id == participantId);
-        participant.AddChips(Game.DefaultStartingStack);
+        participant.AddChips(1000);
 
         // Act
-        Result result = game.Rebuy(game.HostParticipantId, participantId, -(Game.DefaultStartingStack + 1));
+        Result result = game.Rebuy(game.HostParticipantId, participantId, -1);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.ShouldBe(ParticipantErrors.RebuyLeavesNegativeTotalBuyIn);
-        participant.Chips.Value.ShouldBe(2 * Game.DefaultStartingStack);
-        participant.TotalBuyIn.Value.ShouldBe(Game.DefaultStartingStack);
+        participant.Chips.Value.ShouldBe(1000);
+        participant.TotalBuyIn.Value.ShouldBe(0);
     }
 }

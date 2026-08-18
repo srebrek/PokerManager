@@ -23,7 +23,7 @@ public sealed class RebuyIntegrationTests(ApiFactory factory) : GameplayIntegrat
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         GameStateResponse state = await GetGameStateAsync(game.GameId);
-        state.Participants.Single(p => p.Id == participant.ParticipantId).Chips.ShouldBe(1500);
+        state.Participants.Single(p => p.Id == participant.ParticipantId).Chips.ShouldBe(500);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class RebuyIntegrationTests(ApiFactory factory) : GameplayIntegrat
         CreateGameResponse game = await CreateGameAsync("TestHostName");
         AddParticipantResponse participant = await AddParticipantAsync(game.GameId, "TestParticipantName");
 
-        RebuyRequest request = new(game.ParticipantId, -1001);
+        RebuyRequest request = new(game.ParticipantId, -1);
 
         // Act
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
@@ -61,6 +61,6 @@ public sealed class RebuyIntegrationTests(ApiFactory factory) : GameplayIntegrat
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
 
         GameStateResponse state = await GetGameStateAsync(game.GameId);
-        state.Participants.Single(p => p.Id == participant.ParticipantId).Chips.ShouldBe(1000);
+        state.Participants.Single(p => p.Id == participant.ParticipantId).Chips.ShouldBe(0);
     }
 }

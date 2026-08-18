@@ -34,6 +34,10 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
 
         await Expect(host.GetByTestId("participant-row")).ToHaveCountAsync(3);
 
+        await RebuyAsync(host, HostName);
+        await RebuyAsync(host, SmallBlindName);
+        await RebuyAsync(host, BigBlindName);
+
         await ClickAndWaitForResponseAsync(host, "start-hand", GameplayRoutes.GameHandsFor(_gameId).ToString());
         await Expect(
             host.GetByTestId("pot")).ToHaveTextAsync((SmallBlind + BigBlind).ToString(CultureInfo.InvariantCulture));
@@ -101,6 +105,19 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         await ClickAndWaitForResponseAsync(
             page, "join-as-new-player", GameplayRoutes.GameParticipantsFor(_gameId).ToString());
         return page;
+    }
+
+    private static async Task RebuyAsync(IPage host, string participantName)
+    {
+        await host.GetByTestId("participant-row")
+            .Filter(new LocatorFilterOptions { HasText = participantName })
+            .ClickAsync();
+
+        await host.GetByTestId("host-rebuy").ClickAsync();
+        await host.GetByTestId("rebuy-amount").FillAsync(StartingStack.ToString(CultureInfo.InvariantCulture));
+        await ClickAndWaitForResponseAsync(host, "rebuy-confirm", "/rebuy");
+
+        await ExpectChipsAsync(host, participantName, StartingStack);
     }
 
     private static async Task ClickAndWaitForResponseAsync(IPage page, string testId, string urlFragment)
