@@ -104,6 +104,37 @@ internal sealed class Game : AggregateRoot<GameId>
         return Result.Success();
     }
 
+    public Result MoveParticipantDown(ParticipantId actingParticipantId, ParticipantId targetParticipantId)
+    {
+        if (actingParticipantId != HostParticipantId)
+        {
+            return GameErrors.NotHost;
+        }
+
+        if (IsFinished)
+        {
+            return GameErrors.GameFinished;
+        }
+
+        if (CurrentHandId is not null)
+        {
+            return GameErrors.HandIsRunning;
+        }
+
+        int index = _seatingOrder.IndexOf(targetParticipantId);
+        if (index < 0)
+        {
+            return GameErrors.ParticipantNotFound;
+        }
+
+        int below = (index + 1) % _seatingOrder.Count;
+        (_seatingOrder[index], _seatingOrder[below]) = (_seatingOrder[below], _seatingOrder[index]);
+
+        Raise(new SeatingOrderChangedDomainEvent(Id.Value, targetParticipantId.Value));
+
+        return Result.Success();
+    }
+
     public Result<IReadOnlyList<HandSeat>> PrepareNextHand(ParticipantId actingParticipantId)
     {
         if (ValidatePrepareNextHandInput(actingParticipantId).TryGetError(out Error? error))

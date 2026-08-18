@@ -56,7 +56,8 @@
                     MyParticipantId="@Session.ParticipantIdFor(GameId)"
                     OnParticipantCreated="CreateParticipantAsync"
                     OnParticipantClaimed="ClaimParticipant"
-                    OnRebuyRequested="@(participantId => RebuyAsync(loaded.Game, participantId))" />
+                    OnRebuyRequested="@(participantId => RebuyAsync(loaded.Game, participantId))"
+                    OnMoveDownRequested="MoveParticipantDownAsync" />
             }
             else
             {
@@ -143,6 +144,18 @@
             await RunAsParticipantAsync((myId, ct) =>
                 GameplayApi.RebuyAsync(GameId, participantId, new(myId, amount), ct));
         }
+    }
+
+    private Task MoveParticipantDownAsync(Guid? participantId)
+    {
+        if (participantId is null)
+        {
+            Snackbar.Add("No participant is selected.", Severity.Warning);
+            return Task.CompletedTask;
+        }
+
+        return RunAsParticipantAsync((myId, ct) =>
+            GameplayApi.MoveParticipantDownAsync(GameId, participantId.Value, new(myId), ct));
     }
 
     private Task FinishGameAsync() =>

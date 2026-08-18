@@ -66,6 +66,18 @@
                     Rebuy
                 </MudButton>
             </MudItem>
+
+            <MudItem xs="3">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    StartIcon="@Icons.Material.Filled.ArrowDownward"
+                    OnClick="@(() => OnMoveDownRequested.InvokeAsync(_selectedParticipantId))"
+                    data-testid="host-move-down">
+                    Move
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 }
@@ -90,6 +102,10 @@
     [Parameter]
     [EditorRequired]
     public EventCallback<Guid> OnRebuyRequested { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid?> OnMoveDownRequested { get; set; }
 
     private string _name = string.Empty;
     private Guid? _selectedParticipantId;
