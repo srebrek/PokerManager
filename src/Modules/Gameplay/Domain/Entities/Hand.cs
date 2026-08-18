@@ -55,8 +55,6 @@ internal sealed class Hand : AggregateRoot<HandId>
                 bigBlind).Value
         );
 
-        hand.Raise(new HandStartedDomainEvent(gameId.Value, hand.Id.Value));
-
         return hand;
     }
 
@@ -166,8 +164,6 @@ internal sealed class Hand : AggregateRoot<HandId>
             throw new InvalidOperationException("Awards does not sum up to zero.");
         }
 
-        Raise(new HandFinishedDomainEvent(GameId.Value, Id.Value));
-
         return awards;
     }
 
@@ -179,8 +175,6 @@ internal sealed class Hand : AggregateRoot<HandId>
         }
 
         Status = HandStatus.Aborted;
-
-        Raise(new HandAbortedDomainEvent(GameId.Value, Id.Value));
 
         return Result.Success();
     }

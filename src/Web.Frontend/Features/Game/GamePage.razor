@@ -87,13 +87,13 @@
 
         _gameSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
         {
-            await _loader.LoadAsync();
+            await _loader.OnGameUpdatedAsync();
             StateHasChanged();
         }));
 
         _handSubscription = HubConnection.OnHandActionEffectReceived(effect => InvokeAsync(async () =>
         {
-            await _loader.ApplyAsync(effect);
+            await _loader.OnHandActionEffectAsync(effect);
             StateHasChanged();
         }));
 

@@ -11,6 +11,7 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
     private Guid? _currentHandId;
     private bool _isLoading;
     private bool _reloadRequested;
+    private bool _forceHandReload;
 
     public IPageState State { get; private set; } = new Loading();
 
@@ -29,7 +30,7 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
         return LoadAsync();
     }
 
-    public async Task ApplyAsync(HandActionEffect effect)
+    public async Task OnHandActionEffectAsync(HandActionEffect effect)
     {
         if (State is Loaded { Hand: { } hand } loaded && effect.ActionNumber == hand.LastActionNumber + 1)
         {
@@ -40,7 +41,15 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
         await LoadAsync();
     }
 
-    public async Task LoadAsync()
+    public Task LoadAsync()
+    {
+        _forceHandReload = true;
+        return LoadCoreAsync();
+    }
+
+    public Task OnGameUpdatedAsync() => LoadCoreAsync();
+
+    private async Task LoadCoreAsync()
     {
         if (_isLoading)
         {
@@ -54,8 +63,11 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
             do
             {
                 _reloadRequested = false;
+                bool forceHandReload = _forceHandReload;
+                _forceHandReload = false;
+
                 await ReconcileGameSubscriptionAsync(_gameId, _cts.Token);
-                State = await LoadStateAsync();
+                State = await LoadStateAsync(forceHandReload);
                 await ReconcileHandSubscriptionAsync(
                     State is Loaded { Hand: { } hand } ? hand.HandId : null, _cts.Token);
             }
@@ -67,7 +79,7 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
         }
     }
 
-    private async Task<IPageState> LoadStateAsync()
+    private async Task<IPageState> LoadStateAsync(bool forceHandReload)
     {
         ApiResult<GameStateResponse> gameResult = await api.GetGameStateAsync(_gameId, _cts.Token);
         if (!gameResult.IsSuccess)
@@ -78,6 +90,11 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
         if (gameResult.Value.CurrentHandId is not { } currentHandId)
         {
             return new Loaded(gameResult.Value, null);
+        }
+
+        if (!forceHandReload && State is Loaded { Hand: { } loadedHand } && loadedHand.HandId == currentHandId)
+        {
+            return new Loaded(gameResult.Value, loadedHand);
         }
 
         ApiResult<GetHandStateResponse> handResult = await api.GetHandStateAsync(currentHandId, _cts.Token);
