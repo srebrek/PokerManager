@@ -38,7 +38,7 @@ public sealed class RecordActionEffectPushEventHandler(IHubContext<GameHub> hubC
                 new HandActionEffect(
                     e.ActionNumber,
                     e.PotDelta,
-                    e.Street is { } street ? (Street)street : null,
-                    new(e.Seat.ParticipantId, e.Seat.ChipsDelta, e.Seat.NewState is { } state ? (SeatState)state : null)),
+                    e.NewStreet,
+                    new(e.Seat.ParticipantId, e.Seat.ChipsDelta, e.Seat.NewState)),
                 ct);
 }

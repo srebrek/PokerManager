@@ -85,10 +85,9 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
             return HandErrors.HandNotFound;
         }
 
-        // TODO: consider better enum mapping
         Result recordActionResult = hand.RecordAction(
             ParticipantId.From(command.ActingParticipantId),
-            (Domain.ValueObjects.HandActionType)command.Type,
+            command.Type.ToDomain(),
             command.AmountTo is not null ? (ChipsStack)command.AmountTo.Value : null);
 
         if (recordActionResult.TryGetError(out Error? error))

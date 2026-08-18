@@ -107,11 +107,11 @@ internal sealed class Hand : AggregateRoot<HandId>
             Id.Value,
             handAction.SequenceNumber,
             effect.PotDelta,
-            (int?)effect.NewStreet,
+            effect.NewStreet?.ToContract(),
             new HandActionSeatEffect(
                 effect.SeatEffect.ParticipantId.Value,
                 effect.SeatEffect.ChipsDelta,
-                (int?)effect.SeatEffect.NewState)));
+                effect.SeatEffect.NewState?.ToContract())));
 
         return Result.Success();
     }
