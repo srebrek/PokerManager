@@ -66,13 +66,13 @@ internal sealed class FinishHandCommandHandler(IDbContextOutbox<GameplayDbContex
 
         if (hand is null)
         {
-            return Result.Failure(HandErrors.HandNotFound);
+            return HandErrors.HandNotFound;
         }
 
-        Result<List<HandAward>> finishResult = hand.Finish(ParticipantId.From(command.WinnerParticipantId));
-        if (finishResult.IsFailure)
+        if (!hand.Finish(ParticipantId.From(command.WinnerParticipantId))
+                .TryGetValue(out List<HandAward>? awards, out Error? error))
         {
-            return Result.Failure(finishResult.Error);
+            return error;
         }
 
         Game? game = await outbox.DbContext.Games
@@ -80,14 +80,13 @@ internal sealed class FinishHandCommandHandler(IDbContextOutbox<GameplayDbContex
             .SingleOrDefaultAsync(g => g.Id == hand.GameId, ct);
         if (game is null)
         {
-            return Result.Failure(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
-        Result applyAwardsResult =
-            game.ApplyHandAwards(finishResult.Value, ParticipantId.From(command.ActingParticipantId), hand.Id);
-        if (applyAwardsResult.IsFailure)
+        if (game.ApplyHandAwards(awards, ParticipantId.From(command.ActingParticipantId), hand.Id)
+                .TryGetError(out error))
         {
-            return applyAwardsResult;
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);

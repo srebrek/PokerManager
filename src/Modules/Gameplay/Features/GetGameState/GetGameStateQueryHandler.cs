@@ -29,7 +29,7 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
 
         if (game is null)
         {
-            return Result.Failure<GameStateResponse>(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
         Dictionary<ParticipantId, Participant> participantsById = game.Participants.ToDictionary(p => p.Id);

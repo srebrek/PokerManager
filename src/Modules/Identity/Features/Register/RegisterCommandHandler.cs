@@ -15,12 +15,12 @@ internal sealed class RegisterCommandHandler(
         await outbox.DbContext.Database.BeginTransactionAsync(ct);
 
         Result<Guid> result = await userAccountService.RegisterAsync(command.Email, command.Password);
-        if (result.IsFailure)
+        if (!result.TryGetValue(out Guid userId, out Error? error))
         {
-            return Result.Failure(result.Error);
+            return error;
         }
 
-        await outbox.PublishAsync(new UserRegisteredIntegrationEvent(result.Value, command.Email));
+        await outbox.PublishAsync(new UserRegisteredIntegrationEvent(userId, command.Email));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
 

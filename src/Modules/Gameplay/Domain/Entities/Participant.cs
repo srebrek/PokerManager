@@ -19,7 +19,7 @@ internal sealed class Participant : Entity<ParticipantId>
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Failure<Participant>(ParticipantErrors.InvalidName);
+            return ParticipantErrors.InvalidName;
         }
 
         return new Participant(ParticipantId.New(), name, chips);
@@ -27,13 +27,12 @@ internal sealed class Participant : Entity<ParticipantId>
 
     public Result AddChips(int amount)
     {
-        Result<ChipsStack> result = ChipsStack.Create(Chips + amount);
-        if (result.IsFailure)
+        if (!ChipsStack.Create(Chips + amount).TryGetValue(out ChipsStack chips, out Error? error))
         {
-            return Result.Failure(result.Error);
+            return error;
         }
 
-        Chips = result.Value;
+        Chips = chips;
         return Result.Success();
     }
 }

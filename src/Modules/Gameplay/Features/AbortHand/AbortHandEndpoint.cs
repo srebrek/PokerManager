@@ -59,25 +59,23 @@ internal sealed class AbortHandCommandHandler(IDbContextOutbox<GameplayDbContext
         Hand? hand = await outbox.DbContext.Hands.SingleOrDefaultAsync(h => h.Id == HandId.From(command.HandId), ct);
         if (hand is null)
         {
-            return Result.Failure(HandErrors.HandNotFound);
+            return HandErrors.HandNotFound;
         }
 
-        Result abortResult = hand.Abort();
-        if (abortResult.IsFailure)
+        if (hand.Abort().TryGetError(out Error? error))
         {
-            return abortResult;
+            return error;
         }
 
         Game? game = await outbox.DbContext.Games.SingleOrDefaultAsync(g => g.Id == hand.GameId, ct);
         if (game is null)
         {
-            return Result.Failure(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
-        Result detachResult = game.DetachHand(ParticipantId.From(command.ActingParticipantId), hand.Id);
-        if (detachResult.IsFailure)
+        if (game.DetachHand(ParticipantId.From(command.ActingParticipantId), hand.Id).TryGetError(out error))
         {
-            return detachResult;
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);

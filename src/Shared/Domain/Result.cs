@@ -4,7 +4,7 @@ namespace Shared.Domain;
 
 public class Result
 {
-    public Result(bool isSuccess, Error error)
+    private protected Result(bool isSuccess, Error error)
     {
         if ((isSuccess && error != Error.None) || (!isSuccess && error == Error.None))
         {
@@ -21,6 +21,12 @@ public class Result
 
     public Error Error { get; }
 
+    public bool TryGetError([NotNullWhen(true)] out Error? error)
+    {
+        error = IsSuccess ? null : Error;
+        return IsFailure;
+    }
+
     public static Result Success() => new(true, Error.None);
 
     public static Result<TValue> Success<TValue>(TValue value) => new(value, true, Error.None);
@@ -28,20 +34,31 @@ public class Result
     public static Result Failure(Error error) => new(false, error);
 
     public static Result<TValue> Failure<TValue>(Error error) => new(default, false, error);
+
+    public static implicit operator Result(Error error) => Failure(error);
 }
 
-public sealed class Result<TValue>(TValue? value, bool isSuccess, Error error) : Result(isSuccess, error)
+public sealed class Result<TValue> : Result
 {
+    private readonly TValue? _value;
+
+    internal Result(TValue? value, bool isSuccess, Error error)
+        : base(isSuccess, error) => _value = value;
+
     [NotNull]
-    public TValue Value
+    public TValue Value => IsSuccess
+        ? _value!
+        : throw new InvalidOperationException($"The value of a failed result can't be accessed: {Error.Code}.");
+
+    public bool TryGetValue([NotNullWhen(true)] out TValue? value, [NotNullWhen(false)] out Error? error)
     {
-        get => IsSuccess
-            ? field!
-            : throw new InvalidOperationException($"The value of a failed result can't be accessed: {Error.Code}.");
-    } = value;
+        value = IsSuccess ? _value : default;
+        error = IsSuccess ? null : Error;
+        return IsSuccess;
+    }
 
     public static implicit operator Result<TValue>(TValue? value) =>
         value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
 
-    public static implicit operator TValue(Result<TValue> result) => result.Value;
+    public static implicit operator Result<TValue>(Error error) => Failure<TValue>(error);
 }

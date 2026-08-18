@@ -174,8 +174,8 @@ internal static class HandStateCalculator
     private static Result<HandState> AdjustErrorType(Error error, bool isLastAction)
     {
         return isLastAction
-            ? Result.Failure<HandState>(Error.Conflict(error.Code, error.Description))
-            : Result.Failure<HandState>(error);
+            ? Error.Conflict(error.Code, error.Description)
+            : error;
     }
 
     public static readonly Error SequenceNumberMismatch =

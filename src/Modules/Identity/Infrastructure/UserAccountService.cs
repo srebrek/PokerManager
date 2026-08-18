@@ -20,7 +20,7 @@ public sealed class UserAccountService(
             Error error = identityError.Code is "DuplicateUserName" or "DuplicateEmail"
                 ? IdentityErrors.DuplicateEmail
                 : IdentityErrors.RegistrationFailed(identityError.Description);
-            return Result.Failure<Guid>(error);
+            return error;
         }
 
         return Result.Success(user.Id);
@@ -36,12 +36,12 @@ public sealed class UserAccountService(
 
         if (result.IsLockedOut)
         {
-            return Result.Failure(IdentityErrors.AccountLockedOut);
+            return IdentityErrors.AccountLockedOut;
         }
 
         if (!result.Succeeded)
         {
-            return Result.Failure(IdentityErrors.InvalidCredentials);
+            return IdentityErrors.InvalidCredentials;
         }
 
         return Result.Success();

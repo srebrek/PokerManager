@@ -26,17 +26,17 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
 
         if (hand is null)
         {
-            return Result.Failure<GetHandStateResponse>(HandErrors.HandNotFound);
+            return HandErrors.HandNotFound;
         }
 
-        Result<HandState> handStateResult = HandStateCalculator.Calculate(hand.Seats, hand.Actions);
-        if (handStateResult.IsFailure)
+        if (!HandStateCalculator.Calculate(hand.Seats, hand.Actions)
+                .TryGetValue(out HandState handState, out Error? error))
         {
-            return Result.Failure<GetHandStateResponse>(handStateResult.Error);
+            return error;
         }
 
         // TODO: consider better enum mapping
-        List<HandStateSeat> handStateSeats = [.. handStateResult.Value.SeatStates.Select(ss => new HandStateSeat(
+        List<HandStateSeat> handStateSeats = [.. handState.SeatStates.Select(ss => new HandStateSeat(
             ss.ParticipantId.Value,
             ss.StreetContribution,
             ss.RemainingStack,
@@ -45,8 +45,8 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
         return new GetHandStateResponse(
             query.HandId,
             (Contracts.Api.Gameplay.HandStatus)hand.Status,
-            (Contracts.Api.Gameplay.Street)handStateResult.Value.Street,
-            handStateResult.Value.Pot.Value,
+            (Contracts.Api.Gameplay.Street)handState.Street,
+            handState.Pot.Value,
             handStateSeats,
             hand.Actions[^1].SequenceNumber);
     }

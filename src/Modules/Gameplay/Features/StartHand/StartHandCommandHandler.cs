@@ -18,36 +18,26 @@ internal sealed class StartHandCommandHandler(IDbContextOutbox<GameplayDbContext
 
         if (game is null)
         {
-            return Result.Failure<StartHandResponse>(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
-        Result<IReadOnlyList<HandSeat>> prepareNextHandResult =
-            game.PrepareNextHand(ParticipantId.From(command.ActingParticipantId));
-
-        if (prepareNextHandResult.IsFailure)
+        if (!game.PrepareNextHand(ParticipantId.From(command.ActingParticipantId))
+                .TryGetValue(out IReadOnlyList<HandSeat>? seats, out Error? error))
         {
-            return Result.Failure<StartHandResponse>(prepareNextHandResult.Error);
+            return error;
         }
 
-        Result<Hand> startHandResult = Hand.Start(
-            GameId.From(command.GameId),
-            prepareNextHandResult.Value,
-            game.SmallBlind,
-            game.BigBlind);
-
-        if (startHandResult.IsFailure)
+        if (!Hand.Start(GameId.From(command.GameId), seats, game.SmallBlind, game.BigBlind)
+                .TryGetValue(out Hand? hand, out error))
         {
-            return Result.Failure<StartHandResponse>(startHandResult.Error);
+            return error;
         }
 
-        Hand hand = startHandResult.Value;
         outbox.DbContext.Hands.Add(hand);
 
-        Result attachHandResult = game.AttachHand(hand.Id);
-
-        if (attachHandResult.IsFailure)
+        if (game.AttachHand(hand.Id).TryGetError(out error))
         {
-            return Result.Failure<StartHandResponse>(attachHandResult.Error);
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);

@@ -45,47 +45,43 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (bigBlind.Value < smallBlind.Value)
         {
-            return Result.Failure<Game>(GameErrors.BigBlindLessThanSmallBlind);
+            return GameErrors.BigBlindLessThanSmallBlind;
         }
 
-        Result<Participant> hostResult = Participant.Create(hostName, ChipsStack.Create(DefaultStartingStack).Value);
-
-        if (hostResult.IsFailure)
+        if (!Participant.Create(hostName, ChipsStack.Create(DefaultStartingStack).Value)
+                .TryGetValue(out Participant? host, out Error? error))
         {
-            return Result.Failure<Game>(hostResult.Error);
+            return error;
         }
 
-        Game game = new(GameId.New(), JoinCode.Generate(), hostResult.Value.Id, smallBlind, bigBlind);
-        game._participants.Add(hostResult.Value);
-        game._seatingOrder.Add(hostResult.Value.Id);
+        Game game = new(GameId.New(), JoinCode.Generate(), host.Id, smallBlind, bigBlind);
+        game._participants.Add(host);
+        game._seatingOrder.Add(host.Id);
 
         return game;
     }
 
     public Result<ParticipantId> AddParticipant(string participantName)
     {
-        Result<Participant> participantResult =
-            Participant.Create(participantName, ChipsStack.Create(DefaultStartingStack).Value);
-
-        if (participantResult.IsFailure)
+        if (!Participant.Create(participantName, ChipsStack.Create(DefaultStartingStack).Value)
+                .TryGetValue(out Participant? participant, out Error? error))
         {
-            return Result.Failure<ParticipantId>(participantResult.Error);
+            return error;
         }
 
-        _participants.Add(participantResult.Value);
-        _seatingOrder.Add(participantResult.Value.Id);
+        _participants.Add(participant);
+        _seatingOrder.Add(participant.Id);
 
-        Raise(new ParticipantAddedDomainEvent(Id.Value, participantResult.Value.Id.Value));
+        Raise(new ParticipantAddedDomainEvent(Id.Value, participant.Id.Value));
 
-        return participantResult.Value.Id;
+        return participant.Id;
     }
 
     public Result<IReadOnlyList<HandSeat>> PrepareNextHand(ParticipantId actingParticipantId)
     {
-        Result validationResult = ValidatePrepareNextHandInput(actingParticipantId);
-        if (validationResult.IsFailure)
+        if (ValidatePrepareNextHandInput(actingParticipantId).TryGetError(out Error? error))
         {
-            return Result.Failure<IReadOnlyList<HandSeat>>(validationResult.Error);
+            return error;
         }
 
         return BuildSeats();
@@ -95,27 +91,27 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (actingParticipantId != HostParticipantId)
         {
-            return Result.Failure(GameErrors.NotHost);
+            return GameErrors.NotHost;
         }
 
         if (IsFinished)
         {
-            return Result.Failure(GameErrors.GameFinished);
+            return GameErrors.GameFinished;
         }
 
         if (CurrentHandId is not null)
         {
-            return Result.Failure(GameErrors.HandIsRunning);
+            return GameErrors.HandIsRunning;
         }
 
         if (_participants.Count < MinimumParticipantsToStartAHand)
         {
-            return Result.Failure(GameErrors.NotEnoughParticipants);
+            return GameErrors.NotEnoughParticipants;
         }
 
         if (_participants.Any(p => p.Chips.Value < BigBlind.Value))
         {
-            return Result.Failure(GameErrors.InsufficientChipsForBigBlind);
+            return GameErrors.InsufficientChipsForBigBlind;
         }
 
         return Result.Success();
@@ -141,7 +137,7 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (CurrentHandId is not null)
         {
-            return Result.Failure(GameErrors.HandIsRunning);
+            return GameErrors.HandIsRunning;
         }
 
         CurrentHandId = handId;
@@ -155,17 +151,17 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (HostParticipantId != actingParticipantId)
         {
-            return Result.Failure(GameErrors.NotHost);
+            return GameErrors.NotHost;
         }
 
         if (CurrentHandId is null)
         {
-            return Result.Failure(GameErrors.NoCurrentHand);
+            return GameErrors.NoCurrentHand;
         }
 
         if (CurrentHandId != handId)
         {
-            return Result.Failure(GameErrors.InvalidHandId);
+            return GameErrors.InvalidHandId;
         }
 
         CurrentHandId = null;
@@ -179,17 +175,17 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (HostParticipantId != actingParticipant)
         {
-            return Result.Failure(GameErrors.NotHost);
+            return GameErrors.NotHost;
         }
 
         if (CurrentHandId is null)
         {
-            return Result.Failure(GameErrors.NoCurrentHand);
+            return GameErrors.NoCurrentHand;
         }
 
         if (CurrentHandId != handId)
         {
-            return Result.Failure(GameErrors.InvalidHandId);
+            return GameErrors.InvalidHandId;
         }
 
         CurrentHandId = null;
@@ -197,10 +193,9 @@ internal sealed class Game : AggregateRoot<GameId>
         foreach (HandAward award in handAwards)
         {
             Participant participant = Participants.Single(p => p.Id == award.ParticipantId);
-            Result result = participant.AddChips(award.Net);
-            if (result.IsFailure)
+            if (participant.AddChips(award.Net).TryGetError(out Error? error))
             {
-                return Result.Failure(result.Error);
+                return error;
             }
         }
 
@@ -213,17 +208,17 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         if (HostParticipantId != actingParticipantId)
         {
-            return Result.Failure(GameErrors.NotHost);
+            return GameErrors.NotHost;
         }
 
         if (IsFinished)
         {
-            return Result.Failure(GameErrors.GameFinished);
+            return GameErrors.GameFinished;
         }
 
         if (CurrentHandId is not null)
         {
-            return Result.Failure(GameErrors.HandIsRunning);
+            return GameErrors.HandIsRunning;
         }
 
         IsFinished = true;

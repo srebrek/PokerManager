@@ -25,12 +25,12 @@ internal sealed class HandAction
     {
         if ((type is HandActionType.Bet or HandActionType.Raise) && !(amountTo is { Value: > 0 }))
         {
-            return Result.Failure<HandAction>(EmptyStackRaiseOrBet);
+            return EmptyStackRaiseOrBet;
         }
 
         if ((type is HandActionType.Check or HandActionType.Call or HandActionType.Fold) && amountTo is not null)
         {
-            return Result.Failure<HandAction>(NotEmptyStackCheckCallOrFold);
+            return NotEmptyStackCheckCallOrFold;
         }
 
         return new HandAction(sequenceNumber, participantId, type, amountTo);

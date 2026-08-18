@@ -17,16 +17,15 @@ internal sealed class AddParticipantCommandHandler(IDbContextOutbox<GameplayDbCo
 
         if (game is null)
         {
-            return Result.Failure<AddParticipantResponse>(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
-        Result<ParticipantId> addParticipantResult = game.AddParticipant(command.Name);
-        if (addParticipantResult.IsFailure)
+        if (!game.AddParticipant(command.Name).TryGetValue(out ParticipantId participantId, out Error? error))
         {
-            return Result.Failure<AddParticipantResponse>(addParticipantResult.Error);
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
-        return new AddParticipantResponse(addParticipantResult.Value.Value);
+        return new AddParticipantResponse(participantId.Value);
     }
 }

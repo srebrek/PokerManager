@@ -32,9 +32,9 @@ internal sealed class Hand : AggregateRoot<HandId>
         ChipsStack smallBlind,
         ChipsStack bigBlind)
     {
-        if (ValidateStartInput(seats, smallBlind, bigBlind) is { IsFailure: true, Error: var error })
+        if (ValidateStartInput(seats, smallBlind, bigBlind).TryGetError(out Error? error))
         {
-            return Result.Failure<Hand>(error);
+            return error;
         }
 
         Hand hand = new(HandId.New(), gameId);
@@ -47,12 +47,12 @@ internal sealed class Hand : AggregateRoot<HandId>
                 0,
                 orderedSeats[0].ParticipantId,
                 HandActionType.PostSmallBlind,
-                ChipsStack.Create(smallBlind.Value).Value),
+                smallBlind).Value,
             HandAction.Create(
                 1,
                 orderedSeats[1].ParticipantId,
                 HandActionType.PostBigBlind,
-                ChipsStack.Create(bigBlind.Value).Value)
+                bigBlind).Value
         );
 
         hand.Raise(new HandStartedDomainEvent(gameId.Value, hand.Id.Value));
@@ -64,17 +64,17 @@ internal sealed class Hand : AggregateRoot<HandId>
     {
         if (seats.Count < 2)
         {
-            return Result.Failure(HandErrors.InsufficientParticipantCount);
+            return HandErrors.InsufficientParticipantCount;
         }
 
         if (seats.DistinctBy(s => s.ParticipantId).Count() != seats.Count)
         {
-            return Result.Failure(HandErrors.DuplicatedParticipants);
+            return HandErrors.DuplicatedParticipants;
         }
 
         if (bigBlind.Value < smallBlind.Value)
         {
-            return Result.Failure(HandErrors.BigBlindLessThanSmallBlind);
+            return HandErrors.BigBlindLessThanSmallBlind;
         }
 
         return Result.Success();
@@ -85,31 +85,27 @@ internal sealed class Hand : AggregateRoot<HandId>
         HandSeat? seat = _seats.SingleOrDefault(s => s.ParticipantId == participantId);
         if (seat is null)
         {
-            return Result.Failure(HandErrors.ParticipantIdNotInSeats);
+            return HandErrors.ParticipantIdNotInSeats;
         }
 
-        Result<HandAction> handActionResult = HandAction.Create(
-            _actions[^1].SequenceNumber + 1,
-            participantId,
-            type,
-            amountTo);
-        if (handActionResult.IsFailure)
+        if (!HandAction.Create(_actions[^1].SequenceNumber + 1, participantId, type, amountTo)
+                .TryGetValue(out HandAction? handAction, out Error? error))
         {
-            return Result.Failure(handActionResult.Error);
+            return error;
         }
 
-        _actions.Add(handActionResult.Value);
-        Result<HandState> handState = HandStateCalculator.Calculate(_seats, _actions);
-        if (handState.IsFailure)
+        _actions.Add(handAction);
+
+        if (!HandStateCalculator.Calculate(_seats, _actions).TryGetValue(out HandState handState, out error))
         {
-            return Result.Failure(handState.Error);
+            return error;
         }
 
-        HandActionEffect effect = handState.Value.LastActionEffect;
+        HandActionEffect effect = handState.LastActionEffect;
 
         Raise(new HandActionRecordedDomainEvent(
             Id.Value,
-            handActionResult.Value.SequenceNumber,
+            handAction.SequenceNumber,
             effect.PotDelta,
             (int?)effect.NewStreet,
             new HandActionSeatEffect(
@@ -124,42 +120,40 @@ internal sealed class Hand : AggregateRoot<HandId>
     {
         if (Status is not HandStatus.InProgress)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.NotInProgressHandFinish);
+            return HandErrors.NotInProgressHandFinish;
         }
 
         Status = HandStatus.Finished;
 
-        Result<HandState> handState = HandStateCalculator.Calculate(_seats, _actions);
-        if (handState.IsFailure)
+        if (!HandStateCalculator.Calculate(_seats, _actions).TryGetValue(out HandState handState, out Error? error))
         {
-            return Result.Failure<List<HandAward>>(handState.Error);
+            return error;
         }
 
-        if (handState.Value.Street is not Street.Finished)
+        if (handState.Street is not Street.Finished)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.NotFinishedStreetFinish);
+            return HandErrors.NotFinishedStreetFinish;
         }
 
-        HandSeatState winner =
-            handState.Value.SeatStates.SingleOrDefault(ss => ss.ParticipantId == winnerParticipantId);
+        HandSeatState winner = handState.SeatStates.SingleOrDefault(ss => ss.ParticipantId == winnerParticipantId);
         if (winner == default)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.ParticipantIdNotInSeats);
+            return HandErrors.ParticipantIdNotInSeats;
         }
 
         if (winner.State is SeatState.Folded)
         {
-            return Result.Failure<List<HandAward>>(HandErrors.FoldedWinner);
+            return HandErrors.FoldedWinner;
         }
 
-        List<HandAward> awards = new(handState.Value.SeatStates.Count);
-        foreach (HandSeatState seatState in handState.Value.SeatStates)
+        List<HandAward> awards = new(handState.SeatStates.Count);
+        foreach (HandSeatState seatState in handState.SeatStates)
         {
             ChipsStack startingStack = _seats.Single(s => s.ParticipantId == seatState.ParticipantId).StartingStack;
             int net = seatState.RemainingStack - startingStack;
             if (seatState.ParticipantId == winnerParticipantId)
             {
-                awards.Add(new(seatState.ParticipantId, handState.Value.Pot + net));
+                awards.Add(new(seatState.ParticipantId, handState.Pot + net));
             }
             else
             {
@@ -181,7 +175,7 @@ internal sealed class Hand : AggregateRoot<HandId>
     {
         if (Status is not HandStatus.InProgress)
         {
-            return Result.Failure(HandErrors.NotInProgressHandAbort);
+            return HandErrors.NotInProgressHandAbort;
         }
 
         Status = HandStatus.Aborted;

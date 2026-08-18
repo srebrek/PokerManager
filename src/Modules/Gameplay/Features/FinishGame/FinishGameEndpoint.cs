@@ -59,13 +59,12 @@ internal sealed class FinishGameCommandHandler(IDbContextOutbox<GameplayDbContex
         Game? game = await outbox.DbContext.Games.SingleOrDefaultAsync(g => g.Id == GameId.From(command.GameId), ct);
         if (game is null)
         {
-            return Result.Failure(GameErrors.GameNotFound);
+            return GameErrors.GameNotFound;
         }
 
-        Result finishResult = game.Finish(ParticipantId.From(command.ActingParticipantId));
-        if (finishResult.IsFailure)
+        if (game.Finish(ParticipantId.From(command.ActingParticipantId)).TryGetError(out Error? error))
         {
-            return finishResult;
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);

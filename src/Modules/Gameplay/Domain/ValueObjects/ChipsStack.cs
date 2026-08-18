@@ -14,7 +14,7 @@ internal readonly record struct ChipsStack
     {
         if (value < 0)
         {
-            return Result.Failure<ChipsStack>(NegativeValueError);
+            return NegativeValueError;
         }
 
         return new ChipsStack(value);

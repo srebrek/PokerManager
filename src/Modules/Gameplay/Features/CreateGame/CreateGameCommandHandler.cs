@@ -16,13 +16,10 @@ internal sealed class CreateGameCommandHandler(IDbContextOutbox<GameplayDbContex
         ChipsStack smallBlind = ChipsStack.Create(5).Value;
         ChipsStack bigBlind = ChipsStack.Create(10).Value;
 
-        Result<Game> createGameResult = Game.Create(command.HostName, smallBlind, bigBlind);
-        if (createGameResult.IsFailure)
+        if (!Game.Create(command.HostName, smallBlind, bigBlind).TryGetValue(out Game? game, out Error? error))
         {
-            return Result.Failure<CreateGameResponse>(createGameResult.Error);
+            return error;
         }
-
-        Game game = createGameResult.Value;
 
         outbox.DbContext.Games.Add(game);
 

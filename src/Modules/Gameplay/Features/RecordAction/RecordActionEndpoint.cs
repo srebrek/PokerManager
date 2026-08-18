@@ -82,7 +82,7 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
 
         if (hand is null)
         {
-            return Result.Failure(HandErrors.HandNotFound);
+            return HandErrors.HandNotFound;
         }
 
         // TODO: consider better enum mapping
@@ -91,13 +91,13 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
             (Domain.ValueObjects.HandActionType)command.Type,
             command.AmountTo is not null ? ChipsStack.Create(command.AmountTo.Value).Value : null);
 
-        if (recordActionResult.IsFailure)
+        if (recordActionResult.TryGetError(out Error? error))
         {
-            return Result.Failure(recordActionResult.Error);
+            return error;
         }
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
 
-        return recordActionResult;
+        return Result.Success();
     }
 }
