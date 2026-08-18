@@ -1,12 +1,18 @@
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-IResourceBuilder<PostgresServerResource> postgres = builder
-    .AddPostgres("db-server", password: builder.AddParameter("password", "password"), port: 5433)
-    .WithImageTag("18")
-    .PublishAsConnectionString();
+IResourceBuilder<IResourceWithConnectionString> database;
 
-IResourceBuilder<PostgresDatabaseResource> database = postgres
-    .AddDatabase("PokerManager-db");
+if (builder.ExecutionContext.IsRunMode)
+{
+    database = builder
+        .AddPostgres("db-server", password: builder.AddParameter("password", "password"), port: 5433)
+        .WithImageTag("18")
+        .AddDatabase("PokerManager-db");
+}
+else
+{
+    database = builder.AddConnectionString("PokerManager-db");
+}
 
 // apiservice is the single browser-facing endpoint: it serves both the API
 // and the Blazor WASM frontend (proxied to webfrontend in dev, static files in prod).
