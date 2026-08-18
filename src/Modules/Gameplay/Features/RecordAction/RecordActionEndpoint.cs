@@ -89,7 +89,7 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
         Result recordActionResult = hand.RecordAction(
             ParticipantId.From(command.ActingParticipantId),
             (Domain.ValueObjects.HandActionType)command.Type,
-            command.AmountTo is not null ? ChipsStack.Create(command.AmountTo.Value).Value : null);
+            command.AmountTo is not null ? (ChipsStack)command.AmountTo.Value : null);
 
         if (recordActionResult.TryGetError(out Error? error))
         {

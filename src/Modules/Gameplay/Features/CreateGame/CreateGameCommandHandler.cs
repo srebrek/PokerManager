@@ -13,8 +13,8 @@ internal sealed class CreateGameCommandHandler(IDbContextOutbox<GameplayDbContex
     {
         // TODO: remove later
         // temporary hardcoded values
-        ChipsStack smallBlind = ChipsStack.Create(5).Value;
-        ChipsStack bigBlind = ChipsStack.Create(10).Value;
+        ChipsStack smallBlind = (ChipsStack)5;
+        ChipsStack bigBlind = (ChipsStack)10;
 
         if (!Game.Create(command.HostName, smallBlind, bigBlind).TryGetValue(out Game? game, out Error? error))
         {

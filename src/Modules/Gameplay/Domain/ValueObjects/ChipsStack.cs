@@ -23,7 +23,6 @@ internal readonly record struct ChipsStack
     public static readonly Error NegativeValueError =
         Error.Problem("Gameplay.ChipsStack.NegativeValue", "Chips stack value cannot be negative.");
 
-    // TODO: check places that can benefit from it
     public static explicit operator ChipsStack(int amount) =>
         Create(amount) is { IsSuccess: true } result
             ? result.Value

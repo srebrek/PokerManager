@@ -11,8 +11,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = "TestHostName";
-        ChipsStack smallBlind = ChipsStack.Create(10).Value;
-        ChipsStack bigBlind = ChipsStack.Create(20).Value;
+        ChipsStack smallBlind = (ChipsStack)10;
+        ChipsStack bigBlind = (ChipsStack)20;
 
         // Act
         Result<Game> result = Game.Create(hostName, smallBlind, bigBlind);
@@ -35,8 +35,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = "TestHostName";
-        ChipsStack smallBlind = ChipsStack.Create(20).Value;
-        ChipsStack bigBlind = ChipsStack.Create(10).Value;
+        ChipsStack smallBlind = (ChipsStack)20;
+        ChipsStack bigBlind = (ChipsStack)10;
 
         // Act
         Result<Game> result = Game.Create(hostName, smallBlind, bigBlind);
@@ -51,8 +51,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = string.Empty;
-        ChipsStack smallBlind = ChipsStack.Create(10).Value;
-        ChipsStack bigBlind = ChipsStack.Create(20).Value;
+        ChipsStack smallBlind = (ChipsStack)10;
+        ChipsStack bigBlind = (ChipsStack)20;
 
         // Act
         Result<Game> result = Game.Create(hostName, smallBlind, bigBlind);
@@ -67,8 +67,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = "TestHostName";
-        ChipsStack smallBlind = ChipsStack.Create(10).Value;
-        ChipsStack bigBlind = ChipsStack.Create(20).Value;
+        ChipsStack smallBlind = (ChipsStack)10;
+        ChipsStack bigBlind = (ChipsStack)20;
 
         Game game = Game.Create(hostName, smallBlind, bigBlind).Value;
 
@@ -90,8 +90,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = "TestHostName";
-        ChipsStack smallBlind = ChipsStack.Create(10).Value;
-        ChipsStack bigBlind = ChipsStack.Create(20).Value;
+        ChipsStack smallBlind = (ChipsStack)10;
+        ChipsStack bigBlind = (ChipsStack)20;
 
         Game game = Game.Create(hostName, smallBlind, bigBlind).Value;
 
@@ -110,8 +110,8 @@ public sealed class GameTests
     {
         // Arrange
         string hostName = "TestHostName";
-        ChipsStack smallBlind = ChipsStack.Create(10).Value;
-        ChipsStack bigBlind = ChipsStack.Create(20).Value;
+        ChipsStack smallBlind = (ChipsStack)10;
+        ChipsStack bigBlind = (ChipsStack)20;
 
         Game game = Game.Create(hostName, smallBlind, bigBlind).Value;
 

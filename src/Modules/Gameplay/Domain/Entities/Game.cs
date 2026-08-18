@@ -48,7 +48,7 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.BigBlindLessThanSmallBlind;
         }
 
-        if (!Participant.Create(hostName, ChipsStack.Create(DefaultStartingStack).Value)
+        if (!Participant.Create(hostName, (ChipsStack)DefaultStartingStack)
                 .TryGetValue(out Participant? host, out Error? error))
         {
             return error;
@@ -63,7 +63,7 @@ internal sealed class Game : AggregateRoot<GameId>
 
     public Result<ParticipantId> AddParticipant(string participantName)
     {
-        if (!Participant.Create(participantName, ChipsStack.Create(DefaultStartingStack).Value)
+        if (!Participant.Create(participantName, (ChipsStack)DefaultStartingStack)
                 .TryGetValue(out Participant? participant, out Error? error))
         {
             return error;
