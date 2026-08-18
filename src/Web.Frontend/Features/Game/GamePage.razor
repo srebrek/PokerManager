@@ -12,62 +12,64 @@
 
 <PageTitle>Game</PageTitle>
 
-<MudContainer>
+<MudStack>
+    <MudButton
+        OnClick="_loader.LoadAsync"
+        Disabled="_loader.IsLoading"
+        Variant="Variant.Filled"
+        Color="Color.Primary"
+        data-testid="refresh">
+        @if (_loader.IsLoading)
+        {
+            <MudProgressCircular
+                Class="ms-n8 me-2"
+                Size="Size.Small"
+                Indeterminate />
+        }
+        Refresh
+    </MudButton>
+
     @switch (_loader.State)
     {
         case Loading:
             <MudSkeleton />
             break;
         case Loaded loaded:
-            <MudStack>
-                <MudButton
-                    OnClick="_loader.LoadAsync"
-                    Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    data-testid="refresh">
-                    Refresh
+            @if (loaded.Hand is null)
+            {
+                <MudPaper Class="pa-8 d-flex justify-center" data-testid="no-hand">
+                    <MudText Typo="Typo.h6">No hand in progress</MudText>
+                </MudPaper>
+
+                <LobbyPanel
+                    Game="loaded.Game"
+                    MyParticipantId="@Session.ParticipantIdFor(GameId)"
+                    OnGameFinished="FinishGameAsync"
+                    OnParticipantCreated="CreateParticipantAsync"/>
+
+                <MudButton OnClick="StartHandAsync" data-testid="start-hand">
+                    Start Hand
                 </MudButton>
+            }
+            else
+            {
+                <HandPanel
+                    Hand="loaded.Hand"
+                    SmallBlind="loaded.Game.SmallBlind"
+                    Participants="loaded.Game.Participants"
+                    OnAction="@(action => RecordActionAsync(loaded.Hand.HandId, action))"
+                    OnFinish="@((Guid winnerId) => FinishHandAsync(loaded.Hand.HandId, winnerId))"
+                    OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
+                    MyParticipantId="@Session.ParticipantIdFor(GameId)" />
+            }
 
-                @if (loaded.Hand is null)
-                {
-                    <MudPaper Class="pa-8 d-flex justify-center" data-testid="no-hand">
-                        <MudText Typo="Typo.h6">No hand in progress</MudText>
-                    </MudPaper>
-
-                    <LobbyPanel
-                        Game="loaded.Game"
-                        MyParticipantId="@Session.ParticipantIdFor(GameId)"
-                        OnGameFinished="FinishGameAsync"
-                        OnParticipantCreated="CreateParticipantAsync"/>
-
-                    <MudButton OnClick="StartHandAsync" data-testid="start-hand">
-                        Start Hand
-                    </MudButton>
-                }
-                else
-                {
-                    <HandPanel
-                        Hand="loaded.Hand"
-                        SmallBlind="loaded.Game.SmallBlind"
-                        Participants="loaded.Game.Participants"
-                        OnAction="@(action => RecordActionAsync(loaded.Hand.HandId, action))"
-                        OnFinish="@((Guid winnerId) => FinishHandAsync(loaded.Hand.HandId, winnerId))"
-                        OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
-                        MyParticipantId="@Session.ParticipantIdFor(GameId)" />
-                }
-
-            </MudStack>
             break;
         case Failed(var message):
-            <MudStack>
-                <MudAlert Severity="Severity.Error">@message</MudAlert>
-                <MudButton OnClick="_loader.LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
-                    Refresh
-                </MudButton>
-            </MudStack>
+            <MudAlert Severity="Severity.Error">@message</MudAlert>
             break;
     }
-</MudContainer>
+</MudStack>
+
 
 @code {
     // TODO: add bunit tests
