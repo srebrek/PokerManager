@@ -32,7 +32,6 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         IPage alice = await JoinGameAsync(joinCode, SmallBlindName);
         IPage bob = await JoinGameAsync(joinCode, BigBlindName);
 
-        await RefreshAsync(host);
         await Expect(host.GetByTestId("participant-row")).ToHaveCountAsync(3);
 
         await ClickAndWaitForResponseAsync(host, "start-hand", GameplayRoutes.GameHandsFor(_gameId).ToString());
@@ -40,8 +39,8 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
             host.GetByTestId("pot")).ToHaveTextAsync((SmallBlind + BigBlind).ToString(CultureInfo.InvariantCulture));
         await Expect(host.GetByTestId("street")).ToHaveTextAsync("PreFlop");
 
-        await RefreshIntoHandAsync(alice);
-        await RefreshIntoHandAsync(bob);
+        await WaitForHandAsync(alice);
+        await WaitForHandAsync(bob);
 
         using HttpClient client = CreateApiClient();
         GameStateResponse? gameState =
@@ -52,7 +51,6 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         await ActAsync(alice, "action-call");
         await ActAsync(bob, "action-call");
 
-        await RefreshAsync(bob);
         await Expect(bob.GetByTestId("pot")).ToHaveTextAsync((3 * BigBlind).ToString(CultureInfo.InvariantCulture));
         await Expect(bob.GetByTestId("street")).ToHaveTextAsync("Flop");
 
@@ -64,8 +62,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
             .ClickAsync();
         await ClickAndWaitForResponseAsync(host, "finish-hand", GameplayRoutes.FinishHandFor(_handId).ToString());
 
-        await RefreshAsync(host);
-        await Expect(host.GetByTestId("no-hand")).ToBeVisibleAsync();
+        await Expect(host.GetByTestId("lobby-panel")).ToBeVisibleAsync();
         await ExpectChipsAsync(host, SmallBlindName, StartingStack + (2 * BigBlind));
         await ExpectChipsAsync(host, BigBlindName, StartingStack - BigBlind);
         await ExpectChipsAsync(host, HostName, StartingStack - BigBlind);
@@ -106,8 +103,6 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         return page;
     }
 
-    private static Task RefreshAsync(IPage page) => page.GetByTestId("refresh").ClickAsync();
-
     private static async Task ClickAndWaitForResponseAsync(IPage page, string testId, string urlFragment)
     {
         IResponse response = await page.RunAndWaitForResponseAsync(
@@ -118,11 +113,8 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         response.Ok.ShouldBeTrue($"{response.Request.Method} {response.Url} returned {response.Status}. {body}");
     }
 
-    private static async Task RefreshIntoHandAsync(IPage page)
-    {
-        await RefreshAsync(page);
-        await Expect(page.GetByTestId("hand-panel")).ToBeVisibleAsync();
-    }
+    private static Task WaitForHandAsync(IPage page) =>
+        Expect(page.GetByTestId("hand-panel")).ToBeVisibleAsync();
 
     private Task ActAsync(IPage page, string actionTestId) =>
         ClickAndWaitForResponseAsync(page, actionTestId, GameplayRoutes.HandActionsFor(_handId).ToString());
@@ -133,7 +125,6 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         await ActAsync(second, "action-check");
         await ActAsync(last, "action-check");
 
-        await RefreshAsync(last);
         await Expect(last.GetByTestId("street")).ToHaveTextAsync(expectedNextStreet);
     }
 

@@ -50,10 +50,6 @@
         case Loaded loaded:
             @if (loaded.Hand is null)
             {
-                <MudPaper Class="pa-8 d-flex justify-center" data-testid="no-hand">
-                    <MudText Typo="Typo.h6">No hand in progress</MudText>
-                </MudPaper>
-
                 <LobbyPanel
                     Game="loaded.Game"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)"
