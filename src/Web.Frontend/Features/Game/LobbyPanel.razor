@@ -1,4 +1,3 @@
-@using System.ComponentModel.DataAnnotations
 @using Contracts.Api.Gameplay
 
 <MudStack data-testid="lobby-panel">
@@ -9,56 +8,39 @@
         </MudPaper>
 
         <MudPaper Class="pa-4">
-            <MudText>Rules</MudText>
+            <MudText Typo="Typo.caption">Rules</MudText>
             <MudText>Big Blind: @Game.BigBlind</MudText>
             <MudText>Small Blind: @Game.SmallBlind</MudText>
         </MudPaper>
     </MudStack>
 
-    <MudList T="Guid" ReadOnly Dense>
-        @foreach (GameStateParticipant participant in Game.Participants)
-        {
-            <MudListItem Value="participant.Id">
-                <MudStack Row AlignItems="AlignItems.Center" data-testid="participant-row">
-                    <MudText
-                        data-testid="participant-name"
-                        Color="@(MyParticipantId == participant.Id
-                        ? Color.Primary
-                        : Color.Inherit)">
-                        @participant.Name
-                    </MudText>
-
-                    <MudChip
-                        T="string"
-                        Variant="Variant.Text"
-                        Class="@(participant.IsHost ? "visible" : "invisible")">
-                        Host
-                    </MudChip>
-
-                    <MudSpacer />
-                    <MudText data-testid="participant-chips">@participant.Chips</MudText>
-                </MudStack>
-            </MudListItem>
-        }
-    </MudList>
+    @foreach (GameStateParticipant participant in Game.Participants)
+    {
+        <ParticipantCard
+            Participant="participant"
+            IsMe="@(MyParticipantId == participant.Id)"
+            IsSelected="@(_selectedParticipantId == participant.Id)"
+            OnClick="SelectParticipant" />
+    }
 
     @if (MyParticipantId is null)
     {
-        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
-            <DataAnnotationsValidator />
+        <MudStack Row AlignItems="AlignItems.Center">
+            <MudTextField
+                @bind-Value="_name"
+                @bind-Value:after="ClearSelectionWhenNamed"
+                Immediate
+                Label="Your Name" />
 
-            <MudStack Row AlignItems="AlignItems.Center">
-                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Your Name" />
-
-                <MudButton
-                    ButtonType="ButtonType.Submit"
-                    Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    data-testid="join-as-new-player">
-                    Join as new player
-                </MudButton>
-            </MudStack>
-        </EditForm>
+            <MudButton
+                OnClick="JoinAsync"
+                Disabled="@(!CanJoin)"
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                data-testid="join-as-new-player">
+                Join
+            </MudButton>
+        </MudStack>
     }
 </MudStack>
 
@@ -75,13 +57,38 @@
     [EditorRequired]
     public EventCallback<string> OnParticipantCreated { get; set; }
 
-    private readonly AddParticipantModel _model = new();
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnParticipantClaimed { get; set; }
 
-    private Task OnValidSubmit() => OnParticipantCreated.InvokeAsync(_model.Name);
+    private string _name = string.Empty;
+    private Guid? _selectedParticipantId;
 
-    internal sealed class AddParticipantModel
+    private bool CanJoin => !string.IsNullOrWhiteSpace(_name) || _selectedParticipantId is not null;
+
+    private void SelectParticipant(Guid participantId)
     {
-        [Required]
-        public string Name { get; set; } = string.Empty;
+        _selectedParticipantId = participantId;
+        _name = string.Empty;
+    }
+
+    private void ClearSelectionWhenNamed()
+    {
+        if (!string.IsNullOrWhiteSpace(_name))
+        {
+            _selectedParticipantId = null;
+        }
+    }
+
+    private Task JoinAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_name))
+        {
+            return OnParticipantCreated.InvokeAsync(_name);
+        }
+
+        return _selectedParticipantId is { } participantId
+            ? OnParticipantClaimed.InvokeAsync(participantId)
+            : Task.CompletedTask;
     }
 }

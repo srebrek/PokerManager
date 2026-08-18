@@ -53,7 +53,8 @@
                 <LobbyPanel
                     Game="loaded.Game"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)"
-                    OnParticipantCreated="CreateParticipantAsync"/>
+                    OnParticipantCreated="CreateParticipantAsync"
+                    OnParticipantClaimed="ClaimParticipant" />
             }
             else
             {
@@ -138,6 +139,8 @@
             Session.Set(GameId, result.Value.ParticipantId);
         }
     }
+
+    private void ClaimParticipant(Guid participantId) => Session.Set(GameId, participantId);
 
     private Task<TResult?> RunAsParticipantAsync<TResult>(Func<Guid, CancellationToken, Task<TResult>> callApiAsync)
         where TResult : ApiResult =>

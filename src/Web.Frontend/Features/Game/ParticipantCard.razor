@@ -1,0 +1,47 @@
+@using Contracts.Api.Gameplay
+
+<MudPaper>
+    <MudButton
+        OnClick="ClickAsync"
+        Variant="Variant.Outlined"
+        Color="@(IsSelected ? Color.Warning : Color.Inherit)"
+        FullWidth
+        data-testid="participant-row">
+        <MudStack Row AlignItems="AlignItems.Center" Class="flex-grow-1">
+            <MudText Color="@(IsMe ? Color.Primary : Color.Inherit)" data-testid="participant-name">
+                @Participant.Name
+            </MudText>
+
+            <MudChip
+                T="string"
+                Variant="Variant.Text"
+                Class="@(Participant.IsHost ? "visible" : "invisible")">
+                Host
+            </MudChip>
+
+            <MudSpacer />
+
+            <MudText data-testid="participant-chips">@Participant.Chips</MudText>
+        </MudStack>
+    </MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required GameStateParticipant Participant { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsMe { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnClick { get; set; }
+
+    private async Task ClickAsync() => await OnClick.InvokeAsync(Participant.Id);
+}
