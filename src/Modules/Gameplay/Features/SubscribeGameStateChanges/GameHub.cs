@@ -6,6 +6,7 @@ namespace Gameplay.Features.SubscribeGameStateChanges;
 public sealed class GameHub : Hub
 {
     public Task JoinGame(Guid gameId) => Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+    public Task LeaveGame(Guid gameId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(gameId));
     internal static string GroupName(Guid gameId) => $"game-{gameId}";
 
     public Task JoinHand(Guid handId) => Groups.AddToGroupAsync(Context.ConnectionId, HandGroupName(handId));

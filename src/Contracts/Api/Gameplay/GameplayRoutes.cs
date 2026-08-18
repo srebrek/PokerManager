@@ -33,6 +33,7 @@ public static class GameplayRoutes
 
     public const string Hub = "gameplay/hub";
     public const string HubJoinGameMethod = "JoinGame";
+    public const string HubLeaveGameMethod = "LeaveGame";
     public const string HubGameUpdatedMethod = "GameUpdated";
     public const string HubJoinHandMethod = "JoinHand";
     public const string HubLeaveHandMethod = "LeaveHand";

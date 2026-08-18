@@ -1,8 +1,9 @@
 @page "/games/{GameId:guid}"
 
 @using Contracts.Api.Gameplay
+@using static Web.Frontend.Features.Game.GameStateLoader
 
-@implements IDisposable
+@implements IAsyncDisposable
 
 @inject IGameplayApi GameplayApi
 @inject ParticipantSession Session
@@ -12,7 +13,7 @@
 <PageTitle>Game</PageTitle>
 
 <MudContainer>
-    @switch (_state)
+    @switch (_loader.State)
     {
         case Loading:
             <MudSkeleton />
@@ -20,7 +21,7 @@
         case Loaded loaded:
             <MudStack>
                 <MudButton
-                    OnClick="LoadAsync"
+                    OnClick="_loader.LoadAsync"
                     Variant="Variant.Filled"
                     Color="Color.Primary"
                     data-testid="refresh">
@@ -60,7 +61,7 @@
         case Failed(var message):
             <MudStack>
                 <MudAlert Severity="Severity.Error">@message</MudAlert>
-                <MudButton OnClick="LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton OnClick="_loader.LoadAsync" Variant="Variant.Filled" Color="Color.Primary">
                     Refresh
                 </MudButton>
             </MudStack>
@@ -73,101 +74,37 @@
     [Parameter]
     public Guid GameId { get; set; }
     private readonly CancellationTokenSource _cts = new();
-    private IPageState _state = new Loading();
     private bool _isBusy;
-    private bool _isLoading;
     private IDisposable? _gameSubscription;
-    private Guid? _currentHandId;
     private IDisposable? _handSubscription;
+    private IDisposable? _reconnectedSubscription;
+
+    private GameStateLoader _loader = null!;
 
     protected override void OnInitialized()
     {
+        _loader = new GameStateLoader(GameplayApi, HubConnection);
+
         _gameSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
         {
-            await LoadAsync();
+            await _loader.LoadAsync();
             StateHasChanged();
         }));
 
         _handSubscription = HubConnection.OnHandActionEffectReceived(effect => InvokeAsync(async () =>
         {
-            if (_state is Loaded { Hand: { } hand } loaded && effect.ActionNumber == hand.LastActionNumber + 1)
-            {
-                _state = loaded with { Hand = HandEffectProjection.Apply(hand, effect) };
-                StateHasChanged();
-            }
-            else
-            {
-                await LoadAsync();
-                StateHasChanged();
-            }
+            await _loader.ApplyAsync(effect);
+            StateHasChanged();
+        }));
+
+        _reconnectedSubscription = HubConnection.OnReconnected(() => InvokeAsync(async () =>
+        {
+            await _loader.ResubscribeAsync();
+            StateHasChanged();
         }));
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await HubConnection.JoinGameAsync(GameId, _cts.Token);
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        _isLoading = true;
-        try
-        {
-            _state = await LoadStateAsync();
-            await ReconcileHandSubscriptionAsync(_state is Loaded { Hand: { } hand } ? hand.HandId : null);
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task<IPageState> LoadStateAsync()
-    {
-        ApiResult<GameStateResponse> gameResult = await GameplayApi.GetGameStateAsync(GameId, _cts.Token);
-        if (!gameResult.IsSuccess)
-        {
-            return new Failed(gameResult.Error.Message);
-        }
-
-        if (gameResult.Value.CurrentHandId is not { } currentHandId)
-        {
-            return new Loaded(gameResult.Value, null);
-        }
-
-        ApiResult<GetHandStateResponse> handResult =
-            await GameplayApi.GetHandStateAsync(currentHandId, _cts.Token);
-
-        return handResult.IsSuccess
-            ? new Loaded(gameResult.Value, handResult.Value)
-            : new Failed(handResult.Error.Message);
-    }
-
-    private async Task ReconcileHandSubscriptionAsync(Guid? handId)
-    {
-        if (_currentHandId == handId)
-        {
-            return;
-        }
-
-        if (_currentHandId is { } previousHandId)
-        {
-            await HubConnection.LeaveHandAsync(previousHandId, _cts.Token);
-            _currentHandId = null;
-        }
-
-        if (handId is { } currentHandId)
-        {
-            await HubConnection.JoinHandAsync(currentHandId, _cts.Token);
-            _currentHandId = currentHandId;
-        }
-    }
+    protected override Task OnParametersSetAsync() => _loader.EnterGameAsync(GameId);
 
     private Task StartHandAsync() =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), ct));
@@ -228,19 +165,15 @@
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         _gameSubscription?.Dispose();
         _handSubscription?.Dispose();
-        _cts.Cancel();
+        _reconnectedSubscription?.Dispose();
+
+        await _loader.DisposeAsync();
+
+        await _cts.CancelAsync();
         _cts.Dispose();
     }
-
-    private interface IPageState;
-
-    private sealed record Loading : IPageState;
-
-    private sealed record Loaded(GameStateResponse Game, GetHandStateResponse? Hand) : IPageState;
-
-    private sealed record Failed(string Message) : IPageState;
 }
