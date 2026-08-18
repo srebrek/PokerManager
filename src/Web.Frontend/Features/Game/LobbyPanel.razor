@@ -3,10 +3,6 @@
 
 <MudStack>
     <MudStack StretchItems="StretchItems.All" Row>
-        <MudButton OnClick="OnGameFinished" data-testid="finish-game">
-            Finish Game
-        </MudButton>
-
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Join Code</MudText>
             <MudText Typo="Typo.h5" data-testid="join-code">@Game.JoinCode</MudText>
@@ -74,10 +70,6 @@
     [Parameter]
     [EditorRequired]
     public Guid? MyParticipantId { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public EventCallback OnGameFinished { get; set; }
 
     [Parameter]
     [EditorRequired]

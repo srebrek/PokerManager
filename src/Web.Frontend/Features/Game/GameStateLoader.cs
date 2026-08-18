@@ -9,12 +9,11 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
     private Guid _gameId;
     private Guid? _currentGameId;
     private Guid? _currentHandId;
+    private bool _isLoading;
     private bool _reloadRequested;
     private bool _forceHandReload;
 
     public IPageState State { get; private set; } = new Loading();
-
-    public bool IsLoading { get; private set; }
 
     public Task EnterGameAsync(Guid gameId)
     {
@@ -52,13 +51,13 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
 
     private async Task LoadCoreAsync()
     {
-        if (IsLoading)
+        if (_isLoading)
         {
             _reloadRequested = true;
             return;
         }
 
-        IsLoading = true;
+        _isLoading = true;
         try
         {
             do
@@ -76,7 +75,7 @@ internal sealed class GameStateLoader(IGameplayApi api, GameHubConnection hub) :
         }
         finally
         {
-            IsLoading = false;
+            _isLoading = false;
         }
     }
 

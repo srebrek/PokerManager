@@ -13,21 +13,34 @@
 <PageTitle>Game</PageTitle>
 
 <MudStack>
-    <MudButton
-        OnClick="_loader.LoadAsync"
-        Disabled="_loader.IsLoading"
-        Variant="Variant.Filled"
-        Color="Color.Primary"
-        data-testid="refresh">
-        @if (_loader.IsLoading)
-        {
-            <MudProgressCircular
-                Class="ms-n8 me-2"
-                Size="Size.Small"
-                Indeterminate />
-        }
-        Refresh
-    </MudButton>
+    <MudStack Row>
+        <MudButton
+            OnClick="FinishGameAsync"
+            Variant="Variant.Filled"
+            Color="Color.Secondary"
+            FullWidth
+            data-testid="finish-game">
+            Finish Game
+        </MudButton>
+
+        <MudButton
+            OnClick="StartHandAsync"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            FullWidth
+            data-testid="start-hand">
+            Start Hand
+        </MudButton>
+
+        <MudButton
+            OnClick="_loader.LoadAsync"
+            Variant="Variant.Outlined"
+            Color="Color.Primary"
+            FullWidth
+            data-testid="refresh">
+            Refresh
+        </MudButton>
+    </MudStack>
 
     @switch (_loader.State)
     {
@@ -44,12 +57,7 @@
                 <LobbyPanel
                     Game="loaded.Game"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)"
-                    OnGameFinished="FinishGameAsync"
                     OnParticipantCreated="CreateParticipantAsync"/>
-
-                <MudButton OnClick="StartHandAsync" data-testid="start-hand">
-                    Start Hand
-                </MudButton>
             }
             else
             {
