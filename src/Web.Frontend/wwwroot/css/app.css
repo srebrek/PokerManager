@@ -2,6 +2,17 @@ html, body {
     font-family: 'Roboto', Helvetica, Arial, sans-serif;
 }
 
+.app-scroll-area {
+    height: calc(100dvh - var(--mud-appbar-height));
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+    .app-scroll-area::-webkit-scrollbar {
+        display: none;
+    }
+
 #blazor-error-ui {
     color-scheme: light;
     background: rgba(30, 30, 45, 0.95);

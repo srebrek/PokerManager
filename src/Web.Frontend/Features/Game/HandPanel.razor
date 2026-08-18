@@ -1,7 +1,8 @@
 @using Contracts.Api.Gameplay
 @using static Web.Frontend.Features.Game.SeatCard
 
-<MudStack data-testid="hand-panel">
+@* padding for the action bar: 8px + two 36px rows + 8px gutter + 8px *@
+<MudStack data-testid="hand-panel" Style="padding-bottom: 96px">
     <MudButton OnClick="@(() => OnFinish.InvokeAsync(_selectedWinnerId))" data-testid="finish-hand">
         Finish Hand
     </MudButton>
@@ -32,70 +33,92 @@
             </SeatCard>
         }
     </MudStack>
-
-    <MudStack Row>
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled data-testid="action-all-in">
-            All-in
-        </MudButton>
-
-        <MudButton
-            Variant="Variant.Filled"
-            Color="Color.Secondary"
-            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Fold)))"
-            data-testid="action-fold">
-            Fold
-        </MudButton>
-
-        <MudButton
-            Variant="Variant.Filled"
-            Color="Color.Warning"
-            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Check)))"
-            data-testid="action-check">
-            Check
-        </MudButton>
-
-        <MudButton
-            Variant="Variant.Filled"
-            Color="Color.Warning"
-            OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Call)))"
-            data-testid="action-call">
-            Call
-        </MudButton>
-    </MudStack>
-
-    <MudStack Row>
-        <MudPaper>
-            <MudText data-testid="selected-amount">
-                @_selectedAmount
-            </MudText>
-        </MudPaper>
-
-        <MudButton
-            Variant="Variant.Outlined"
-            Color="Color.Primary"
-            OnClick="@(() => IncrementSelectedAmount(SmallBlind))"
-            data-testid="amount-increment">
-            +@SmallBlind
-        </MudButton>
-
-        <MudButton
-            Variant="Variant.Outlined"
-            Color="Color.Primary"
-            OnClick="@(() => IncrementSelectedAmount(-SmallBlind))"
-            data-testid="amount-decrement">
-            -@SmallBlind
-        </MudButton>
-
-        <MudButton
-            Variant="Variant.Filled"
-            Color="Color.Primary"
-            OnClick="@(() =>
-                OnAction.InvokeAsync(new(_isBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount)))"
-            data-testid="action-bet-raise">
-            @(_isBet ? "Bet" : "Raise")
-        </MudButton>
-    </MudStack>
 </MudStack>
+
+<MudPaper
+    Outlined
+    Style="position: fixed;
+           inset: auto 0 0 0;
+           padding: 8px 8px calc(var(--mud-appbar-height) + 8px);
+           z-index: var(--mud-zindex-appbar);"
+    data-testid="hand-action-bar">
+    <MudGrid Spacing="2">
+        <MudItem xs="3">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth Disabled data-testid="action-all-in">
+                All-in
+            </MudButton>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Secondary"
+                FullWidth
+                OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Fold)))"
+                data-testid="action-fold">
+                Fold
+            </MudButton>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Warning"
+                FullWidth
+                OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Check)))"
+                data-testid="action-check">
+                Check
+            </MudButton>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Warning"
+                FullWidth
+                OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Call)))"
+                data-testid="action-call">
+                Call
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="3">
+            <MudPaper Height="100%" Width="100%" Outlined Class="align-content-center">
+                <MudText Align="Align.Center" data-testid="selected-amount">
+                    @_selectedAmount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Outlined"
+                Color="Color.Primary"
+                FullWidth
+                OnClick="@(() => IncrementSelectedAmount(SmallBlind))"
+                data-testid="amount-increment">
+                +@SmallBlind
+            </MudButton>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Outlined"
+                Color="Color.Primary"
+                FullWidth
+                OnClick="@(() => IncrementSelectedAmount(-SmallBlind))"
+                data-testid="amount-decrement">
+                -@SmallBlind
+            </MudButton>
+        </MudItem>
+        <MudItem xs="3">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                FullWidth
+                OnClick="@(() =>
+                    OnAction.InvokeAsync(new(_isBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount)))"
+                data-testid="action-bet-raise">
+                @(_isBet ? "Bet" : "Raise")
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
 
 @code {
     [Parameter]
