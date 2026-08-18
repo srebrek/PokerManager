@@ -35,7 +35,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         await RefreshAsync(host);
         await Expect(host.GetByTestId("participant-row")).ToHaveCountAsync(3);
 
-        await ClickAndWaitForResponseAsync(host, "start-hand", GameplayRoutes.StartHandFor(_gameId).ToString());
+        await ClickAndWaitForResponseAsync(host, "start-hand", GameplayRoutes.GameHandsFor(_gameId).ToString());
         await Expect(
             host.GetByTestId("pot")).ToHaveTextAsync((SmallBlind + BigBlind).ToString(CultureInfo.InvariantCulture));
         await Expect(host.GetByTestId("street")).ToHaveTextAsync("PreFlop");
@@ -45,7 +45,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
 
         using HttpClient client = CreateApiClient();
         GameStateResponse? gameState =
-            await client.GetFromJsonAsync<GameStateResponse>(GameplayRoutes.GameStateFor(_gameId), ct);
+            await client.GetFromJsonAsync<GameStateResponse>(GameplayRoutes.GameFor(_gameId), ct);
         _handId = gameState?.CurrentHandId ?? throw new InvalidOperationException("Hand did not start.");
 
         await ActAsync(host, "action-call");
@@ -74,7 +74,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
 
         // TODO: add FE assert when finished is displayed
         GameStateResponse? state = await client.GetFromJsonAsync<GameStateResponse>(
-            GameplayRoutes.GameStateFor(_gameId), ct);
+            GameplayRoutes.GameFor(_gameId), ct);
 
         state.ShouldNotBeNull();
         state.IsFinished.ShouldBeTrue();
@@ -84,7 +84,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
     {
         await page.GotoAsync(FrontendBaseUri.ToString() + "games/setup");
         await page.GetByLabel("Your Name").FillAsync(HostName);
-        await ClickAndWaitForResponseAsync(page, "create-game-submit", GameplayRoutes.CreateGame);
+        await ClickAndWaitForResponseAsync(page, "create-game-submit", GameplayRoutes.Games);
 
         ILocator joinCode = page.GetByTestId("join-code");
         await Expect(joinCode).ToBeVisibleAsync();
@@ -98,11 +98,11 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         IPage page = await NewPageAsync();
         await page.GotoAsync(FrontendBaseUri.ToString());
         await page.GetByLabel("Join Code").FillAsync(joinCode);
-        await ClickAndWaitForResponseAsync(page, "find-game-submit", GameplayRoutes.GetGameByJoinCode);
+        await ClickAndWaitForResponseAsync(page, "find-game-submit", GameplayRoutes.Games);
         await Expect(page.GetByTestId("join-code")).ToBeVisibleAsync();
         await page.GetByLabel("Your Name").FillAsync(playerName);
         await ClickAndWaitForResponseAsync(
-            page, "join-as-new-player", GameplayRoutes.AddParticipantFor(_gameId).ToString());
+            page, "join-as-new-player", GameplayRoutes.GameParticipantsFor(_gameId).ToString());
         return page;
     }
 
@@ -125,7 +125,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
     }
 
     private Task ActAsync(IPage page, string actionTestId) =>
-        ClickAndWaitForResponseAsync(page, actionTestId, GameplayRoutes.RecordActionFor(_handId).ToString());
+        ClickAndWaitForResponseAsync(page, actionTestId, GameplayRoutes.HandActionsFor(_handId).ToString());
 
     private async Task CheckAroundAsync(IPage first, IPage second, IPage last, string expectedNextStreet)
     {

@@ -15,7 +15,7 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : GameplayInt
 
         // Act
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.CreateGame,
+            GameplayRoutes.Games,
             request,
             CancellationToken);
 
@@ -46,7 +46,7 @@ public sealed class CreateGameIntegrationTests(ApiFactory factory) : GameplayInt
 
         // Act
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.CreateGame,
+            GameplayRoutes.Games,
             request,
             CancellationToken);
 

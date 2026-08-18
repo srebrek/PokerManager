@@ -16,7 +16,7 @@ internal sealed class GetGameByJoinCodeEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            GameplayRoutes.GetGameByJoinCode,
+            GameplayRoutes.Games,
             async (
                 string joinCode,
                 GetGameByJoinCodeQueryHandler handler,

@@ -16,7 +16,7 @@ internal sealed class CreateGameEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            GameplayRoutes.CreateGame,
+            GameplayRoutes.Games,
             async (
                 CreateGameRequest request,
                 CreateGameCommandHandler handler,
@@ -28,7 +28,7 @@ internal sealed class CreateGameEndpoint : IEndpoint
                     await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(
                     value => Results.CreatedAtRoute(
-                        GameplayRoutes.GameStateEndpointName,
+                        GameplayRoutes.GameRouteName,
                         new { gameId = value.GameId },
                         value),
                     CustomResults.Problem);

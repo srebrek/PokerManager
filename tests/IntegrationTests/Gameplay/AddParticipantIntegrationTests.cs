@@ -56,7 +56,7 @@ public sealed class AddParticipantIntegrationTests(ApiFactory factory) : Gamepla
 
         // Act
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.AddParticipantFor(Guid.NewGuid()),
+            GameplayRoutes.GameParticipantsFor(Guid.NewGuid()),
             request,
             CancellationToken);
 

@@ -8,7 +8,7 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
     {
         CreateGameRequest request = new(hostName);
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.CreateGame,
+            GameplayRoutes.Games,
             request,
             CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -22,7 +22,7 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
     {
         AddParticipantRequest request = new(participantName);
         using HttpResponseMessage response = await Client.PostAsJsonAsync(
-            GameplayRoutes.AddParticipantFor(gameId),
+            GameplayRoutes.GameParticipantsFor(gameId),
             request,
             CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -38,7 +38,7 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
     protected async Task<GameStateResponse> GetGameStateAsync(Guid gameId)
     {
         using HttpResponseMessage response = await Client.GetAsync(
-            GameplayRoutes.GameStateFor(gameId),
+            GameplayRoutes.GameFor(gameId),
             CancellationToken);
         response.EnsureSuccessStatusCode();
 

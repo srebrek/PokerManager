@@ -21,7 +21,7 @@ internal sealed class RecordActionEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            GameplayRoutes.RecordAction,
+            GameplayRoutes.HandActions,
             async (
                 Guid handId,
                 RecordActionRequest request,

@@ -16,7 +16,7 @@ internal sealed class GetHandStateEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            GameplayRoutes.HandState,
+            GameplayRoutes.Hand,
             async (
                 Guid handId,
                 GetHandStateQueryHandler handler,
@@ -28,7 +28,7 @@ internal sealed class GetHandStateEndpoint : IEndpoint
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)
-            .WithName(GameplayRoutes.HandStateEndpointName)
+            .WithName(GameplayRoutes.HandRouteName)
             .AllowAnonymous();
     }
 }

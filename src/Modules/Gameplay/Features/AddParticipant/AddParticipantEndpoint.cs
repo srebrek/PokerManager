@@ -16,7 +16,7 @@ internal sealed class AddParticipantEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            GameplayRoutes.AddParticipant,
+            GameplayRoutes.GameParticipants,
             async (
                 Guid gameId,
                 AddParticipantRequest request,

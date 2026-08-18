@@ -16,7 +16,7 @@ internal sealed class StartHandEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            GameplayRoutes.StartHand,
+            GameplayRoutes.GameHands,
             async (
                 Guid gameId,
                 StartHandRequest request,
@@ -29,7 +29,7 @@ internal sealed class StartHandEndpoint : IEndpoint
                     await validators.HandleValidatedAsync(command, handler.Handle, ct);
                 return result.Match(
                     value => Results.CreatedAtRoute(
-                        GameplayRoutes.HandStateEndpointName,
+                        GameplayRoutes.HandRouteName,
                         new { handId = value.HandId },
                         value),
                     CustomResults.Problem);

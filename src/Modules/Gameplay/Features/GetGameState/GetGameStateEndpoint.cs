@@ -16,7 +16,7 @@ internal sealed class GetGameStateEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            GameplayRoutes.GameState,
+            GameplayRoutes.Game,
             async (
                 Guid gameId,
                 GetGameStateQueryHandler handler,
@@ -28,7 +28,7 @@ internal sealed class GetGameStateEndpoint : IEndpoint
                 return result.Match(Results.Ok, CustomResults.Problem);
             })
             .WithTags(GameplayRoutes.Tag)
-            .WithName(GameplayRoutes.GameStateEndpointName)
+            .WithName(GameplayRoutes.GameRouteName)
             .AllowAnonymous();
     }
 }
