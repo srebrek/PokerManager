@@ -1,6 +1,7 @@
 @using Contracts.Api.Gameplay
 
-<MudStack data-testid="lobby-panel">
+@* padding for the host action bar: 8px + one 36px row + 8px *@
+<MudStack data-testid="lobby-panel" Style="@(_isHost ? "padding-bottom: 52px" : null)">
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Join Code</MudText>
@@ -44,6 +45,31 @@
     }
 </MudStack>
 
+@if (_isHost)
+{
+    <MudPaper
+        Outlined
+        Style="position: fixed;
+               inset: auto 0 0 0;
+               padding: 8px 8px calc(var(--mud-appbar-height) + 8px);
+               z-index: var(--mud-zindex-appbar);"
+        data-testid="host-action-bar">
+        <MudGrid Spacing="2">
+            <MudItem xs="3">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    Disabled="@(_selectedParticipantId is null)"
+                    OnClick="@(() => OnRebuyRequested.InvokeAsync(_selectedParticipantId!.Value))"
+                    data-testid="host-rebuy">
+                    Rebuy
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
 @code {
     [Parameter]
     [EditorRequired]
@@ -61,14 +87,22 @@
     [EditorRequired]
     public EventCallback<Guid> OnParticipantClaimed { get; set; }
 
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnRebuyRequested { get; set; }
+
     private string _name = string.Empty;
     private Guid? _selectedParticipantId;
+    private bool _isHost;
+
+    protected override void OnParametersSet() =>
+        _isHost = Game.Participants.Any(p => p.Id == MyParticipantId && p.IsHost);
 
     private bool CanJoin => !string.IsNullOrWhiteSpace(_name) || _selectedParticipantId is not null;
 
     private void SelectParticipant(Guid participantId)
     {
-        _selectedParticipantId = participantId;
+        _selectedParticipantId = _selectedParticipantId != participantId ? participantId : null;
         _name = string.Empty;
     }
 

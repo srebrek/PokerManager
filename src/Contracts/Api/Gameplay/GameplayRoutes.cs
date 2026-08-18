@@ -12,6 +12,9 @@ public static class GameplayRoutes
     public const string GameRouteName = "Game";
     public const string GameParticipants = $"{Game}/participants";
     public static Uri GameParticipantsFor(Guid gameId) => new($"{Games}/{gameId}/participants", UriKind.Relative);
+    public const string Rebuy = $"{GameParticipants}/{{participantId:guid}}/rebuy";
+    public static Uri RebuyFor(Guid gameId, Guid participantId) =>
+        new($"{Games}/{gameId}/participants/{participantId}/rebuy", UriKind.Relative);
     public const string GameHands = $"{Game}/hands";
     public static Uri GameHandsFor(Guid gameId) => new($"{Games}/{gameId}/hands", UriKind.Relative);
     public const string FinishGame = $"{Game}/finish";

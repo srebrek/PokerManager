@@ -1,0 +1,43 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Rebuy: @ParticipantName</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudNumericField
+            @bind-Value="_amount"
+            Label="Amount"
+            HelperText="Negative amount takes chips back."
+            Immediate
+            HideSpinButtons
+            data-testid="rebuy-amount" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="rebuy-cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton
+            OnClick="Submit"
+            Disabled="@(_amount == 0)"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            data-testid="rebuy-confirm">
+            Rebuy
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public required string ParticipantName { get; set; }
+
+    private int _amount;
+
+    private void Submit() => Dialog.Close(DialogResult.Ok(_amount));
+
+    private void Cancel() => Dialog.Cancel();
+}

@@ -18,6 +18,8 @@ internal interface IGameplayApi
     Task<ApiResult> FinishHandAsync(Guid handId, FinishHandRequest request, CancellationToken ct = default);
     Task<ApiResult> AbortHandAsync(Guid handId, AbortHandRequest request, CancellationToken ct = default);
     Task<ApiResult> FinishGameAsync(Guid gameId, FinishGameRequest request, CancellationToken ct = default);
+    Task<ApiResult> RebuyAsync(
+      Guid gameId, Guid participantId, RebuyRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
@@ -96,6 +98,15 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         CancellationToken ct = default) =>
         ExecuteAsync(
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.FinishGameFor(gameId), request, ct),
+            ct);
+
+    public Task<ApiResult> RebuyAsync(
+        Guid gameId,
+        Guid participantId,
+        RebuyRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.RebuyFor(gameId, participantId), request, ct),
             ct);
 
     private async Task<ApiResult> ExecuteAsync(

@@ -10,6 +10,9 @@ internal static class GameErrors
     public static readonly Error GameNotFound =
         Error.NotFound("Gameplay.Game.GameNotFound", "Game not found.");
 
+    public static readonly Error ParticipantNotFound =
+        Error.NotFound("Gameplay.Game.ParticipantNotFound", "Participant not found in this game.");
+
     public static readonly Error NotHost =
         Error.Conflict("Gameplay.Game.NotHost", "Participant is not a host.");
 

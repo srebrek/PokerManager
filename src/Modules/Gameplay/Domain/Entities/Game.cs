@@ -77,6 +77,34 @@ internal sealed class Game : AggregateRoot<GameId>
         return participant.Id;
     }
 
+    public Result Rebuy(ParticipantId actingParticipantId, ParticipantId targetParticipantId, int amount)
+    {
+        if (actingParticipantId != HostParticipantId)
+        {
+            return GameErrors.NotHost;
+        }
+
+        if (IsFinished)
+        {
+            return GameErrors.GameFinished;
+        }
+
+        Participant? participant = _participants.SingleOrDefault(p => p.Id == targetParticipantId);
+        if (participant is null)
+        {
+            return GameErrors.ParticipantNotFound;
+        }
+
+        if (participant.Rebuy(amount).TryGetError(out Error? error))
+        {
+            return error;
+        }
+
+        Raise(new RebuyRecordedDomainEvent(Id.Value, targetParticipantId.Value));
+
+        return Result.Success();
+    }
+
     public Result<IReadOnlyList<HandSeat>> PrepareNextHand(ParticipantId actingParticipantId)
     {
         if (ValidatePrepareNextHandInput(actingParticipantId).TryGetError(out Error? error))

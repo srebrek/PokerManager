@@ -33,6 +33,7 @@ internal sealed class ParticipantConfiguration : IEntityTypeConfiguration<Partic
 
         builder.Property(p => p.Id).HasConversion(new StronglyTypedIdValueConverter<ParticipantId>());
         builder.Property(p => p.Chips).HasConversion(new ChipsStackValueConverter());
+        builder.Property(p => p.TotalBuyIn).HasConversion(new ChipsStackValueConverter());
         builder.Property<GameId>("GameId").HasConversion(new StronglyTypedIdValueConverter<GameId>());
     }
 }

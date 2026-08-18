@@ -9,6 +9,7 @@
 @inject ParticipantSession Session
 @inject ISnackbar Snackbar
 @inject GameHubConnection HubConnection
+@inject IDialogService DialogService
 
 <PageTitle>Game</PageTitle>
 
@@ -54,7 +55,8 @@
                     Game="loaded.Game"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)"
                     OnParticipantCreated="CreateParticipantAsync"
-                    OnParticipantClaimed="ClaimParticipant" />
+                    OnParticipantClaimed="ClaimParticipant"
+                    OnRebuyRequested="@(participantId => RebuyAsync(loaded.Game, participantId))" />
             }
             else
             {
@@ -125,6 +127,23 @@
 
     private Task AbortHandAsync(Guid handId) =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.AbortHandAsync(handId, new(myId), ct));
+
+    private async Task RebuyAsync(GameStateResponse game, Guid participantId)
+    {
+        DialogParameters<RebuyDialog> parameters = new()
+        {
+            { d => d.ParticipantName, game.Participants.Single(p => p.Id == participantId).Name }
+        };
+
+        IDialogReference dialog = await DialogService.ShowAsync<RebuyDialog>("Rebuy", parameters);
+        DialogResult? result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: int amount })
+        {
+            await RunAsParticipantAsync((myId, ct) =>
+                GameplayApi.RebuyAsync(GameId, participantId, new(myId, amount), ct));
+        }
+    }
 
     private Task FinishGameAsync() =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.FinishGameAsync(GameId, new(myId), ct));
