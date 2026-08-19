@@ -78,6 +78,18 @@
                     Move
                 </MudButton>
             </MudItem>
+
+            <MudItem xs="3">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    Disabled="@(_selectedParticipantId is null)"
+                    OnClick="ToggleSittingOutAsync"
+                    data-testid="host-sitting-out">
+                    @(SelectedSitsOut ? "Sit-In" : "Sit-Out")
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 }
@@ -107,6 +119,12 @@
     [EditorRequired]
     public EventCallback<Guid?> OnMoveDownRequested { get; set; }
 
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<SittingOutRequested> OnSittingOutRequested { get; set; }
+
+    public readonly record struct SittingOutRequested(Guid ParticipantId, bool IsSittingOut);
+
     private string _name = string.Empty;
     private Guid? _selectedParticipantId;
     private bool _isHost;
@@ -115,6 +133,16 @@
         _isHost = Game.Participants.Any(p => p.Id == MyParticipantId && p.IsHost);
 
     private bool CanJoin => !string.IsNullOrWhiteSpace(_name) || _selectedParticipantId is not null;
+
+    private GameStateParticipant? SelectedParticipant =>
+        Game.Participants.FirstOrDefault(p => p.Id == _selectedParticipantId);
+
+    private bool SelectedSitsOut => SelectedParticipant?.IsSittingOut is true;
+
+    private Task ToggleSittingOutAsync() =>
+        SelectedParticipant is { } participant
+            ? OnSittingOutRequested.InvokeAsync(new(participant.Id, !participant.IsSittingOut))
+            : Task.CompletedTask;
 
     private void SelectParticipant(Guid participantId)
     {

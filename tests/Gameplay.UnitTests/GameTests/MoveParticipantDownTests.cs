@@ -3,9 +3,9 @@ using Gameplay.Domain.Events;
 using Gameplay.Domain.ValueObjects;
 using Shared.Domain;
 
-namespace Gameplay.UnitTests;
+namespace Gameplay.UnitTests.GameTests;
 
-public sealed class GameMoveParticipantDownTests
+public sealed class MoveParticipantDownTests
 {
     private static Game CreateGame() => Game.Create("TestHostName", (ChipsStack)10, (ChipsStack)20).Value;
 

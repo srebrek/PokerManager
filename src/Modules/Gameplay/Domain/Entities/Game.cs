@@ -135,6 +135,42 @@ internal sealed class Game : AggregateRoot<GameId>
         return Result.Success();
     }
 
+    public Result SetParticipantSittingOut(
+        ParticipantId actingParticipantId,
+        ParticipantId targetParticipantId,
+        bool isSittingOut)
+    {
+        if (actingParticipantId != HostParticipantId)
+        {
+            return GameErrors.NotHost;
+        }
+
+        if (IsFinished)
+        {
+            return GameErrors.GameFinished;
+        }
+
+        if (CurrentHandId is not null)
+        {
+            return GameErrors.HandIsRunning;
+        }
+
+        Participant? participant = _participants.SingleOrDefault(p => p.Id == targetParticipantId);
+        if (participant is null)
+        {
+            return GameErrors.ParticipantNotFound;
+        }
+
+        if (participant.SetSittingOut(isSittingOut).TryGetError(out Error? error))
+        {
+            return error;
+        }
+
+        Raise(new ParticipantSittingOutChangedDomainEvent(Id.Value, targetParticipantId.Value));
+
+        return Result.Success();
+    }
+
     public Result<IReadOnlyList<HandSeat>> PrepareNextHand(ParticipantId actingParticipantId)
     {
         if (ValidatePrepareNextHandInput(actingParticipantId).TryGetError(out Error? error))
@@ -162,12 +198,12 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.HandIsRunning;
         }
 
-        if (_participants.Count < MinimumParticipantsToStartAHand)
+        if (_participants.Count(p => !p.IsSittingOut) < MinimumParticipantsToStartAHand)
         {
             return GameErrors.NotEnoughParticipants;
         }
 
-        if (_participants.Any(p => p.Chips.Value < BigBlind.Value))
+        if (_participants.Any(p => !p.IsSittingOut && p.Chips.Value < BigBlind.Value))
         {
             return GameErrors.InsufficientChipsForBigBlind;
         }
@@ -178,13 +214,15 @@ internal sealed class Game : AggregateRoot<GameId>
     private List<HandSeat> BuildSeats()
     {
         Dictionary<ParticipantId, Participant> participantsById = _participants.ToDictionary(p => p.Id);
-        int count = _seatingOrder.Count;
+        List<Participant> seated = [.. _seatingOrder
+            .Select(id => participantsById[id])
+            .Where(p => !p.IsSittingOut)];
+        int count = seated.Count;
 
         List<HandSeat> seats = new(count);
         for (int offset = 0; offset < count; offset++)
         {
-            ParticipantId participantId = _seatingOrder[(DealerSeatIndex + 1 + offset) % count];
-            Participant participant = participantsById[participantId];
+            Participant participant = seated[(DealerSeatIndex + 1 + offset) % count];
             seats.Add(new HandSeat(participant.Id, participant.Chips, offset));
         }
 

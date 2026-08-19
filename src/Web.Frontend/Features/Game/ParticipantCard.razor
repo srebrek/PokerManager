@@ -7,17 +7,33 @@
         Color="@(IsSelected ? Color.Warning : Color.Inherit)"
         FullWidth
         data-testid="participant-row">
-        <MudStack Row AlignItems="AlignItems.Center" Class="flex-grow-1">
+        <MudStack
+            Row
+            AlignItems="AlignItems.Center"
+            Spacing="2"
+            Class="flex-grow-1">
             <MudText Color="@(IsMe ? Color.Primary : Color.Inherit)" data-testid="participant-name">
                 @Participant.Name
             </MudText>
 
-            <MudChip
-                T="string"
-                Variant="Variant.Text"
-                Class="@(Participant.IsHost ? "visible" : "invisible")">
-                Host
-            </MudChip>
+            @if (Participant.IsHost)
+            {
+                <MudChip
+                    T="string"
+                    Variant="Variant.Text">
+                    Host
+                </MudChip>
+            }
+
+            @if (Participant.IsSittingOut)
+            {
+                <MudChip
+                    T="string"
+                    Variant="Variant.Text"
+                    data-testid="participant-sitting-out">
+                    Sitting Out
+                </MudChip>
+            }
 
             <MudSpacer />
 

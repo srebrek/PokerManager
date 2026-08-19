@@ -16,4 +16,10 @@ internal static class ParticipantErrors
         Error.Conflict(
             "Gameplay.Participant.RebuyLeavesNegativeTotalBuyIn",
             "Rebuy would take back more chips than the participant ever bought in for.");
+
+    public static readonly Error AlreadySittingOut =
+        Error.Conflict("Gameplay.Participant.AlreadySittingOut", "Participant is already sitting out.");
+
+    public static readonly Error AlreadySittingIn =
+        Error.Conflict("Gameplay.Participant.AlreadySittingIn", "Participant is already sitting in.");
 }

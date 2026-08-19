@@ -12,7 +12,7 @@ Backfill the three test types this template expects for every slice. Read the ta
 
 1. **Locate the slice.** Find the command/query, handler, validator, and endpoint for the target use case. List every distinct outcome (each behavioral branch)
 2. **Check what already exists (in `tests/{Module}.UnitTests/` and `tests/IntegrationTests/{Module}/`)** - extend existing classes, don't duplicate.
-3. **Write domain unit tests (in `tests/{Module}.UnitTests/`)** - test for every branch.
+3. **Write domain unit tests (in `tests/{Module}.UnitTests/`)** - test for every branch in the domain.
 4. **Write validator tests (in `tests/IntegrationTests/{Module}/`)**
 5. **Write integration tests (in `tests/IntegrationTests/{Module}/`)**
 6. **Run** `dotnet test --filter-not-namespace E2ETests --ignore-exit-code 8` integration tests use testcontainers, so Docker/Podman must be running. Fix failures before finishing.
@@ -23,9 +23,8 @@ Backfill the three test types this template expects for every slice. Read the ta
 - **Integration Tests:**
     - Global usings already cover `Xunit`, `Shouldly`, `System.Net` and `System.Net.Http.Json`.
     - each test starts with a clean database (Respawn)
-    - test for every failing branch with state asserted via a database check (unless there is no need to)
+    - test for every failing branch and happy path with state asserted via a follow-up GET (if GET is not present assert via a database check and if GET is planned leave "TODO: replace with GET assertion")
     - if a call in the handler may return multiple error types but the handler handles them the same way e.g. `if (joinGameResult.IsFailure)return Result.Failure<JoinGameResponse>(joinGameResult.Error);` then this is only one behavioral branch
-    - happy path with state asserted via a follow-up GET (if GET is not present assert via a database check and if GET is planned leave "TODO: replace with GET assertion")
     - all tests over real HTTP
     - see `BaseIntegrationTest` for utility functions
     - naming:
@@ -38,4 +37,8 @@ Backfill the three test types this template expects for every slice. Read the ta
     - naming:
         - file `{Module}/{ValidatorName}Tests.cs`
         - methods `{ValidatorName}_InvalidInput_Fails` or `{ValidatorName}_ValidInput_Succeeds`
+- **Domain Unit Tests**
+    - naming:
+        - file: `{Class}Tests/{Method}Tests.cs`
+        - method: `{Method}_State_ExpectedOutcome`
 - **Structure:** `// Arrange` / `// Act` / `// Assert` comments in every test.

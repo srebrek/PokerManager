@@ -41,7 +41,8 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
                 id.Value,
                 participant.Name,
                 participant.Chips.Value,
-                id == game.HostParticipantId);
+                id == game.HostParticipantId,
+                participant.IsSittingOut);
         })];
 
         return new GameStateResponse(

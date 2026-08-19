@@ -22,6 +22,8 @@ internal interface IGameplayApi
       Guid gameId, Guid participantId, RebuyRequest request, CancellationToken ct = default);
     Task<ApiResult> MoveParticipantDownAsync(
       Guid gameId, Guid participantId, MoveParticipantDownRequest request, CancellationToken ct = default);
+    Task<ApiResult> SetParticipantSittingOutAsync(
+      Guid gameId, Guid participantId, SetParticipantSittingOutRequest request, CancellationToken ct = default);
 }
 
 internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
@@ -119,6 +121,16 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         ExecuteAsync(
             ct => httpClient.PostAsJsonAsync(
                 GameplayRoutes.MoveParticipantDownFor(gameId, participantId), request, ct),
+            ct);
+
+    public Task<ApiResult> SetParticipantSittingOutAsync(
+        Guid gameId,
+        Guid participantId,
+        SetParticipantSittingOutRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync(
+            ct => httpClient.PostAsJsonAsync(
+                GameplayRoutes.SetParticipantSittingOutFor(gameId, participantId), request, ct),
             ct);
 
     private async Task<ApiResult> ExecuteAsync(

@@ -8,6 +8,7 @@ internal sealed class Participant : Entity<ParticipantId>
     public string Name { get; private set; }
     public ChipsStack Chips { get; private set; }
     public ChipsStack TotalBuyIn { get; private set; }
+    public bool IsSittingOut { get; private set; }
 
     private Participant(ParticipantId id, string name)
         : base(id)
@@ -15,6 +16,7 @@ internal sealed class Participant : Entity<ParticipantId>
         Name = name;
         Chips = ChipsStack.Zero;
         TotalBuyIn = ChipsStack.Zero;
+        IsSittingOut = false;
     }
 
     public static Result<Participant> Create(string name)
@@ -25,6 +27,17 @@ internal sealed class Participant : Entity<ParticipantId>
         }
 
         return new Participant(ParticipantId.New(), name);
+    }
+
+    public Result SetSittingOut(bool isSittingOut)
+    {
+        if (IsSittingOut == isSittingOut)
+        {
+            return isSittingOut ? ParticipantErrors.AlreadySittingOut : ParticipantErrors.AlreadySittingIn;
+        }
+
+        IsSittingOut = isSittingOut;
+        return Result.Success();
     }
 
     public Result AddChips(int amount)

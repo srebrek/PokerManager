@@ -33,18 +33,21 @@ public sealed class AddParticipantIntegrationTests(ApiFactory factory) : Gamepla
             createGameResponse.ParticipantId,
             "TestHostName",
             0,
-            true));
+            true,
+            false));
 
         participant1.ShouldBe(new GameStateParticipant(
             participant1Response.ParticipantId,
             "TestParticipant1Name",
             0,
+            false,
             false));
 
         participant2.ShouldBe(new GameStateParticipant(
             participant2Response.ParticipantId,
             "TestParticipant2Name",
             0,
+            false,
             false));
     }
 
