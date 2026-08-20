@@ -28,6 +28,7 @@ public sealed class CreateTests
         game.BigBlind.ShouldBe(bigBlind);
         game.IsFinished.ShouldBeFalse();
         game.SeatingOrder.ShouldBe([host.Id]);
+        game.DealerButtonParticipantId.ShouldBe(host.Id);
     }
 
     [Fact]

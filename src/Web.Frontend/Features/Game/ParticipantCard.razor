@@ -25,6 +25,16 @@
                 </MudChip>
             }
 
+            @if (Participant.IsDealer)
+            {
+                <MudChip
+                    T="string"
+                    Variant="Variant.Text"
+                    data-testid="participant-dealer">
+                    Dealer
+                </MudChip>
+            }
+
             @if (Participant.IsSittingOut)
             {
                 <MudChip

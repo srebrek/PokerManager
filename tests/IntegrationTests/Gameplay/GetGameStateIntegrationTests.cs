@@ -32,6 +32,7 @@ public sealed class GetGameStateIntegrationTests(ApiFactory factory) : GameplayI
         host.Name.ShouldBe("TestHostName");
         host.Chips.ShouldBe(0);
         host.IsHost.ShouldBeTrue();
+        host.IsDealer.ShouldBeTrue();
     }
 
     [Fact]

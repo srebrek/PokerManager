@@ -30,6 +30,25 @@ public sealed class PrepareNextHandTests
     }
 
     [Fact]
+    public void PrepareNextHand_DealerButtonMoved_StartsTheSeatsAfterTheNewDealer()
+    {
+        // Arrange
+        Game game = CreateStartableGame(out ParticipantId second, out ParticipantId third);
+        HandId handId = HandId.New();
+        game.AttachHand(handId);
+        game.ApplyHandAwards([], game.HostParticipantId, handId);
+
+        // Act
+        Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(game.HostParticipantId);
+
+        // Assert
+        game.DealerButtonParticipantId.ShouldBe(second);
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Select(s => s.ParticipantId).ShouldBe([third, game.HostParticipantId, second]);
+        result.Value.Select(s => s.Position).ShouldBe([0, 1, 2]);
+    }
+
+    [Fact]
     public void PrepareNextHand_ParticipantSittingOut_ExcludesItFromTheSeatsAndKeepsTheOrder()
     {
         // Arrange

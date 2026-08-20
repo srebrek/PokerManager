@@ -10,6 +10,7 @@ internal sealed class Game : AggregateRoot<GameId>
 
     public JoinCode JoinCode { get; }
     public ParticipantId HostParticipantId { get; }
+    public ParticipantId DealerButtonParticipantId { get; private set; }
     public ChipsStack SmallBlind { get; }
     public ChipsStack BigBlind { get; }
     public bool IsFinished { get; private set; }
@@ -21,7 +22,6 @@ internal sealed class Game : AggregateRoot<GameId>
 
     private readonly List<ParticipantId> _seatingOrder;
     private readonly List<Participant> _participants;
-    private const int DealerSeatIndex = 0;
 
     private Game(
         GameId id,
@@ -33,6 +33,7 @@ internal sealed class Game : AggregateRoot<GameId>
     {
         JoinCode = joinCode;
         HostParticipantId = hostParticipantId;
+        DealerButtonParticipantId = hostParticipantId;
         SmallBlind = smallBlind;
         BigBlind = bigBlind;
         IsFinished = false;
@@ -161,6 +162,11 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.ParticipantNotFound;
         }
 
+        if (isSittingOut && targetParticipantId == DealerButtonParticipantId)
+        {
+            return GameErrors.DealerCannotSitOut;
+        }
+
         if (participant.SetSittingOut(isSittingOut).TryGetError(out Error? error))
         {
             return error;
@@ -218,11 +224,12 @@ internal sealed class Game : AggregateRoot<GameId>
             .Select(id => participantsById[id])
             .Where(p => !p.IsSittingOut)];
         int count = seated.Count;
+        int dealerIndex = seated.FindIndex(p => p.Id == DealerButtonParticipantId);
 
         List<HandSeat> seats = new(count);
         for (int offset = 0; offset < count; offset++)
         {
-            Participant participant = seated[(DealerSeatIndex + 1 + offset) % count];
+            Participant participant = seated[(dealerIndex + 1 + offset) % count];
             seats.Add(new HandSeat(participant.Id, participant.Chips, offset));
         }
 
@@ -295,9 +302,26 @@ internal sealed class Game : AggregateRoot<GameId>
             }
         }
 
+        AdvanceDealerButton();
+
         Raise(new HandAwardsAppliedDomainEvent(Id.Value, handId.Value));
 
         return Result.Success();
+    }
+
+    private void AdvanceDealerButton()
+    {
+        int dealerIndex = _seatingOrder.IndexOf(DealerButtonParticipantId);
+
+        for (int offset = 1; offset < _seatingOrder.Count; offset++)
+        {
+            ParticipantId candidate = _seatingOrder[(dealerIndex + offset) % _seatingOrder.Count];
+            if (!_participants.Single(p => p.Id == candidate).IsSittingOut)
+            {
+                DealerButtonParticipantId = candidate;
+                return;
+            }
+        }
     }
 
     public Result Finish(ParticipantId actingParticipantId)

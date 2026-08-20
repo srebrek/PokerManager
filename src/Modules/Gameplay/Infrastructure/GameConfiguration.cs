@@ -14,6 +14,8 @@ internal sealed class GameConfiguration : IEntityTypeConfiguration<Game>
 
         builder.Property(g => g.Id).HasConversion(new StronglyTypedIdValueConverter<GameId>());
         builder.Property(g => g.HostParticipantId).HasConversion(new StronglyTypedIdValueConverter<ParticipantId>());
+        builder.Property(g => g.DealerButtonParticipantId)
+            .HasConversion(new StronglyTypedIdValueConverter<ParticipantId>());
         builder.Property(g => g.JoinCode).HasConversion(code => code.Value, value => JoinCode.From(value));
         builder.Property(g => g.SmallBlind).HasConversion(new ChipsStackValueConverter());
         builder.Property(g => g.BigBlind).HasConversion(new ChipsStackValueConverter());

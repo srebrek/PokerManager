@@ -20,6 +20,7 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
                 g.SmallBlind,
                 g.BigBlind,
                 g.HostParticipantId,
+                g.DealerButtonParticipantId,
                 g.Participants,
                 g.SeatingOrder,
                 g.CurrentHandId
@@ -42,7 +43,8 @@ internal sealed class GetGameStateQueryHandler(GameplayDbContext db)
                 participant.Name,
                 participant.Chips.Value,
                 id == game.HostParticipantId,
-                participant.IsSittingOut);
+                participant.IsSittingOut,
+                id == game.DealerButtonParticipantId);
         })];
 
         return new GameStateResponse(

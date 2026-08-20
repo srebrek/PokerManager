@@ -76,6 +76,25 @@ public sealed class SetParticipantSittingOutTests
     }
 
     [Fact]
+    public void SetParticipantSittingOut_TargetHoldsTheDealerButton_ReturnsDealerCannotSitOutFailure()
+    {
+        // Arrange
+        Game game = CreateGame();
+        game.AddParticipant("TestParticipantName");
+
+        // Act
+        Result result = game.SetParticipantSittingOut(
+            game.HostParticipantId,
+            game.DealerButtonParticipantId,
+            true);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(GameErrors.DealerCannotSitOut);
+        game.Participants.Single(p => p.Id == game.DealerButtonParticipantId).IsSittingOut.ShouldBeFalse();
+    }
+
+    [Fact]
     public void SetParticipantSittingOut_ActingParticipantIsNotHost_ReturnsNotHostFailure()
     {
         // Arrange

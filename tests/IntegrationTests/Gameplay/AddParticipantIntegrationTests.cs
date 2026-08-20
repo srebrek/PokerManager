@@ -34,12 +34,14 @@ public sealed class AddParticipantIntegrationTests(ApiFactory factory) : Gamepla
             "TestHostName",
             0,
             true,
-            false));
+            false,
+            true));
 
         participant1.ShouldBe(new GameStateParticipant(
             participant1Response.ParticipantId,
             "TestParticipant1Name",
             0,
+            false,
             false,
             false));
 
@@ -47,6 +49,7 @@ public sealed class AddParticipantIntegrationTests(ApiFactory factory) : Gamepla
             participant2Response.ParticipantId,
             "TestParticipant2Name",
             0,
+            false,
             false,
             false));
     }

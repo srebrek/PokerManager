@@ -32,6 +32,10 @@ internal static class GameErrors
     public static readonly Error InvalidHandId =
         Error.Conflict("Gameplay.Game.InvalidHandId", "Hand id is invalid.");
 
+    public static readonly Error DealerCannotSitOut =
+        Error.Conflict("Gameplay.Game.DealerCannotSitOut",
+        "Participant holding the dealer button can not sit out.");
+
     public static readonly Error NoCurrentHand =
         Error.Conflict("Gameplay.Game.NoCurrentHand", "There is no active hand.");
 }
