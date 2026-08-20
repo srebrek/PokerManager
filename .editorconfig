@@ -327,6 +327,9 @@ dotnet_naming_style.camel_case_style.required_suffix =
 dotnet_naming_style.camel_case_style.word_separator =
 dotnet_naming_style.camel_case_style.capitalization = camel_case
 
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = warning
+
 # Remove unnecessary using directives
 dotnet_diagnostic.IDE0005.severity = warning
 
