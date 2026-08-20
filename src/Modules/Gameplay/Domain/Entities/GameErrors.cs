@@ -36,6 +36,9 @@ internal static class GameErrors
         Error.Conflict("Gameplay.Game.DealerCannotSitOut",
         "Participant holding the dealer button can not sit out.");
 
+    public static readonly Error AlreadyDealer =
+        Error.Conflict("Gameplay.Game.AlreadyDealer", "Participant already holds the dealer button.");
+
     public static readonly Error NoCurrentHand =
         Error.Conflict("Gameplay.Game.NoCurrentHand", "There is no active hand.");
 }

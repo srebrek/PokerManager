@@ -21,6 +21,8 @@ public static class GameplayRoutes
     public const string SetParticipantSittingOut = $"{GameParticipants}/{{participantId:guid}}/sitting-out";
     public static Uri SetParticipantSittingOutFor(Guid gameId, Guid participantId) =>
         new($"{Games}/{gameId}/participants/{participantId}/sitting-out", UriKind.Relative);
+    public const string DealerButton = $"{Game}/dealer-button";
+    public static Uri DealerButtonFor(Guid gameId) => new($"{Games}/{gameId}/dealer-button", UriKind.Relative);
     public const string GameHands = $"{Game}/hands";
     public static Uri GameHandsFor(Guid gameId) => new($"{Games}/{gameId}/hands", UriKind.Relative);
     public const string FinishGame = $"{Game}/finish";

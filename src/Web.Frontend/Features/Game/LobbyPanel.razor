@@ -90,6 +90,19 @@
                     @(SelectedSitsOut ? "Sit-In" : "Sit-Out")
                 </MudButton>
             </MudItem>
+
+            <MudItem xs="3">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    StartIcon="@Icons.Material.Filled.Album"
+                    Disabled="@(!CanMoveDealerButton)"
+                    OnClick="@(() => OnDealerButtonRequested.InvokeAsync(_selectedParticipantId!.Value))"
+                    data-testid="host-dealer-button">
+                    Dealer
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 }
@@ -123,6 +136,10 @@
     [EditorRequired]
     public EventCallback<SittingOutRequested> OnSittingOutRequested { get; set; }
 
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnDealerButtonRequested { get; set; }
+
     public readonly record struct SittingOutRequested(Guid ParticipantId, bool IsSittingOut);
 
     private string _name = string.Empty;
@@ -138,6 +155,8 @@
         Game.Participants.FirstOrDefault(p => p.Id == _selectedParticipantId);
 
     private bool SelectedSitsOut => SelectedParticipant?.IsSittingOut is true;
+
+    private bool CanMoveDealerButton => SelectedParticipant is { IsDealer: false, IsSittingOut: false };
 
     private Task ToggleSittingOutAsync() =>
         SelectedParticipant is { } participant

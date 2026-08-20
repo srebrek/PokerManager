@@ -58,7 +58,8 @@
                     OnParticipantClaimed="ClaimParticipant"
                     OnRebuyRequested="@(participantId => RebuyAsync(loaded.Game, participantId))"
                     OnMoveDownRequested="MoveParticipantDownAsync"
-                    OnSittingOutRequested="SetParticipantSittingOutAsync" />
+                    OnSittingOutRequested="SetParticipantSittingOutAsync"
+                    OnDealerButtonRequested="MoveDealerButtonAsync" />
             }
             else
             {
@@ -162,6 +163,10 @@
     private Task SetParticipantSittingOutAsync(LobbyPanel.SittingOutRequested request) =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.SetParticipantSittingOutAsync(
             GameId, request.ParticipantId, new(myId, request.IsSittingOut), ct));
+
+    private Task MoveDealerButtonAsync(Guid participantId) =>
+        RunAsParticipantAsync((myId, ct) =>
+            GameplayApi.MoveDealerButtonAsync(GameId, new(myId, participantId), ct));
 
     private Task FinishGameAsync() =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.FinishGameAsync(GameId, new(myId), ct));

@@ -136,6 +136,46 @@ internal sealed class Game : AggregateRoot<GameId>
         return Result.Success();
     }
 
+    public Result MoveDealerButton(ParticipantId actingParticipantId, ParticipantId targetParticipantId)
+    {
+        if (actingParticipantId != HostParticipantId)
+        {
+            return GameErrors.NotHost;
+        }
+
+        if (IsFinished)
+        {
+            return GameErrors.GameFinished;
+        }
+
+        if (CurrentHandId is not null)
+        {
+            return GameErrors.HandIsRunning;
+        }
+
+        Participant? participant = _participants.SingleOrDefault(p => p.Id == targetParticipantId);
+        if (participant is null)
+        {
+            return GameErrors.ParticipantNotFound;
+        }
+
+        if (targetParticipantId == DealerButtonParticipantId)
+        {
+            return GameErrors.AlreadyDealer;
+        }
+
+        if (participant.IsSittingOut)
+        {
+            return GameErrors.DealerCannotSitOut;
+        }
+
+        DealerButtonParticipantId = targetParticipantId;
+
+        Raise(new DealerButtonMovedDomainEvent(Id.Value, targetParticipantId.Value));
+
+        return Result.Success();
+    }
+
     public Result SetParticipantSittingOut(
         ParticipantId actingParticipantId,
         ParticipantId targetParticipantId,
