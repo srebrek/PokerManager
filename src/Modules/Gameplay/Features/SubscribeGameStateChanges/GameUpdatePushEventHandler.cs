@@ -22,6 +22,8 @@ public sealed class GameUpdatePushEventHandler(IHubContext<GameHub> hubContext)
 
     public Task Handle(DealerButtonMovedDomainEvent e, CancellationToken ct) => PushAsync(e, ct);
 
+    public Task Handle(GameRulesChangedDomainEvent e, CancellationToken ct) => PushAsync(e, ct);
+
     public Task Handle(GameFinishedDomainEvent e, CancellationToken ct) => PushAsync(e, ct);
 
     private Task PushAsync(IGameActivityDomainEvent domainEvent, CancellationToken ct) =>

@@ -59,7 +59,8 @@
                     OnRebuyRequested="@(participantId => RebuyAsync(loaded.Game, participantId))"
                     OnMoveDownRequested="MoveParticipantDownAsync"
                     OnSittingOutRequested="SetParticipantSittingOutAsync"
-                    OnDealerButtonRequested="MoveDealerButtonAsync" />
+                    OnDealerButtonRequested="MoveDealerButtonAsync"
+                    OnRulesRequested="@(() => ChangeRulesAsync(loaded.Game))" />
             }
             else
             {
@@ -145,6 +146,24 @@
         {
             await RunAsParticipantAsync((myId, ct) =>
                 GameplayApi.RebuyAsync(GameId, participantId, new(myId, amount), ct));
+        }
+    }
+
+    private async Task ChangeRulesAsync(GameStateResponse game)
+    {
+        DialogParameters<RulesDialog> parameters = new()
+        {
+            { d => d.SmallBlind, game.SmallBlind },
+            { d => d.BigBlind, game.BigBlind }
+        };
+
+        IDialogReference dialog = await DialogService.ShowAsync<RulesDialog>("Rules", parameters);
+        DialogResult? result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: RulesDialog.Rules rules })
+        {
+            await RunAsParticipantAsync((myId, ct) => GameplayApi.ChangeGameRulesAsync(
+                GameId, new(myId, rules.SmallBlind, rules.BigBlind), ct));
         }
     }
 

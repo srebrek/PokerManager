@@ -11,8 +11,8 @@ internal sealed class Game : AggregateRoot<GameId>
     public JoinCode JoinCode { get; }
     public ParticipantId HostParticipantId { get; }
     public ParticipantId DealerButtonParticipantId { get; private set; }
-    public ChipsStack SmallBlind { get; }
-    public ChipsStack BigBlind { get; }
+    public ChipsStack SmallBlind { get; private set; }
+    public ChipsStack BigBlind { get; private set; }
     public bool IsFinished { get; private set; }
     public IReadOnlyList<ParticipantId> SeatingOrder => _seatingOrder.AsReadOnly();
     public HandId? CurrentHandId { get; private set; }
@@ -213,6 +213,46 @@ internal sealed class Game : AggregateRoot<GameId>
         }
 
         Raise(new ParticipantSittingOutChangedDomainEvent(Id.Value, targetParticipantId.Value));
+
+        return Result.Success();
+    }
+
+    public Result ChangeRules(ParticipantId actingParticipantId, int smallBlind, int bigBlind)
+    {
+        if (actingParticipantId != HostParticipantId)
+        {
+            return GameErrors.NotHost;
+        }
+
+        if (IsFinished)
+        {
+            return GameErrors.GameFinished;
+        }
+
+        if (CurrentHandId is not null)
+        {
+            return GameErrors.HandIsRunning;
+        }
+
+        if (!ChipsStack.Create(smallBlind).TryGetValue(out ChipsStack newSmallBlind, out Error? error))
+        {
+            return error;
+        }
+
+        if (!ChipsStack.Create(bigBlind).TryGetValue(out ChipsStack newBigBlind, out error))
+        {
+            return error;
+        }
+
+        if (newBigBlind.Value < newSmallBlind.Value)
+        {
+            return GameErrors.BigBlindLessThanSmallBlind;
+        }
+
+        SmallBlind = newSmallBlind;
+        BigBlind = newBigBlind;
+
+        Raise(new GameRulesChangedDomainEvent(Id.Value));
 
         return Result.Success();
     }

@@ -1,0 +1,70 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Rules</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudNumericField
+            @bind-Value="_smallBlind"
+            Label="Small Blind"
+            Min="0"
+            Immediate
+            HideSpinButtons
+            data-testid="rules-small-blind" />
+
+        <MudNumericField
+            @bind-Value="_bigBlind"
+            Label="Big Blind"
+            Min="0"
+            Immediate
+            HideSpinButtons
+            HelperText="Big blind can not be less than small blind."
+            data-testid="rules-big-blind" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" data-testid="rules-cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton
+            OnClick="Submit"
+            Disabled="@(!CanSubmit)"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            data-testid="rules-confirm">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public int SmallBlind { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int BigBlind { get; set; }
+
+    public readonly record struct Rules(int SmallBlind, int BigBlind);
+
+    private int _smallBlind;
+    private int _bigBlind;
+
+    protected override void OnInitialized()
+    {
+        _smallBlind = SmallBlind;
+        _bigBlind = BigBlind;
+    }
+
+    private bool CanSubmit =>
+        _smallBlind >= 0
+        && _bigBlind >= _smallBlind
+        && (_smallBlind != SmallBlind || _bigBlind != BigBlind);
+
+    private void Submit() => Dialog.Close(DialogResult.Ok(new Rules(_smallBlind, _bigBlind)));
+
+    private void Cancel() => Dialog.Cancel();
+}

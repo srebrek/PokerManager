@@ -1,7 +1,7 @@
 @using Contracts.Api.Gameplay
 
-@* padding for the host action bar: 8px + one 36px row + 8px *@
-<MudStack data-testid="lobby-panel" Style="@(_isHost ? "padding-bottom: 52px" : null)">
+@* padding for the host action bar: 8px + two 36px rows + 16px gutter + 8px *@
+<MudStack data-testid="lobby-panel" Style="@(_isHost ? "padding-bottom: 104px" : null)">
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper Class="pa-4 align-content-center">
             <MudText Typo="Typo.caption">Join Code</MudText>
@@ -103,6 +103,17 @@
                     Dealer
                 </MudButton>
             </MudItem>
+
+            <MudItem xs="3">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    OnClick="@(() => OnRulesRequested.InvokeAsync())"
+                    data-testid="host-rules">
+                    Rules
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 }
@@ -139,6 +150,10 @@
     [Parameter]
     [EditorRequired]
     public EventCallback<Guid> OnDealerButtonRequested { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnRulesRequested { get; set; }
 
     public readonly record struct SittingOutRequested(Guid ParticipantId, bool IsSittingOut);
 

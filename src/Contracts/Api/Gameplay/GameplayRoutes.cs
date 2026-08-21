@@ -23,6 +23,8 @@ public static class GameplayRoutes
         new($"{Games}/{gameId}/participants/{participantId}/sitting-out", UriKind.Relative);
     public const string DealerButton = $"{Game}/dealer-button";
     public static Uri DealerButtonFor(Guid gameId) => new($"{Games}/{gameId}/dealer-button", UriKind.Relative);
+    public const string Rules = $"{Game}/rules";
+    public static Uri RulesFor(Guid gameId) => new($"{Games}/{gameId}/rules", UriKind.Relative);
     public const string GameHands = $"{Game}/hands";
     public static Uri GameHandsFor(Guid gameId) => new($"{Games}/{gameId}/hands", UriKind.Relative);
     public const string FinishGame = $"{Game}/finish";
