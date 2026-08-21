@@ -7,11 +7,13 @@
         Color="@(IsSelected ? Color.Warning : Color.Inherit)"
         FullWidth
         data-testid="participant-row">
+        @* min-height keeps rows equal whether or not a chip is rendered: 32px chip + 4px margin top and bottom *@
         <MudStack
             Row
             AlignItems="AlignItems.Center"
             Spacing="2"
-            Class="flex-grow-1">
+            Class="flex-grow-1"
+            Style="min-height: 40px">
             <MudText Color="@(IsMe ? Color.Primary : Color.Inherit)" data-testid="participant-name">
                 @Participant.Name
             </MudText>
