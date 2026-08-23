@@ -2,7 +2,7 @@ namespace Contracts.Api.Gameplay;
 
 public sealed record HandActionEffect(
     int ActionNumber,
-    int PotDelta,
+    IReadOnlyList<HandPotState> Pots,
     Street? NewStreet,
     HandActionSeatEffect Seat);
 

@@ -62,6 +62,16 @@
                     OnDealerButtonRequested="MoveDealerButtonAsync"
                     OnRulesRequested="@(() => ChangeRulesAsync(loaded.Game))" />
             }
+            else if (loaded.Hand.Street is Street.Finished)
+            {
+                <HandSummaryPanel
+                    Hand="loaded.Hand"
+                    Participants="loaded.Game.Participants"
+                    OnWinnersDeclared="@(winners => DeclareWinnersAsync(loaded.Hand.HandId, winners))"
+                    OnFinish="@(() => FinishHandAsync(loaded.Hand.HandId))"
+                    OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
+                    MyParticipantId="@Session.ParticipantIdFor(GameId)" />
+            }
             else
             {
                 <HandPanel
@@ -69,7 +79,7 @@
                     SmallBlind="loaded.Game.SmallBlind"
                     Participants="loaded.Game.Participants"
                     OnAction="@(action => RecordActionAsync(loaded.Hand.HandId, action))"
-                    OnFinish="@((Guid winnerId) => FinishHandAsync(loaded.Hand.HandId, winnerId))"
+                    OnPotsRequested="@(() => ShowPotsAsync(loaded.Game, loaded.Hand))"
                     OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)" />
             }
@@ -90,6 +100,7 @@
     private bool _isBusy;
     private IDisposable? _gameSubscription;
     private IDisposable? _handSubscription;
+    private IDisposable? _handUpdatedSubscription;
     private IDisposable? _reconnectedSubscription;
 
     private GameStateLoader _loader = null!;
@@ -110,6 +121,12 @@
             StateHasChanged();
         }));
 
+        _handUpdatedSubscription = HubConnection.OnHandUpdated(_ => InvokeAsync(async () =>
+        {
+            await _loader.LoadAsync();
+            StateHasChanged();
+        }));
+
         _reconnectedSubscription = HubConnection.OnReconnected(() => InvokeAsync(async () =>
         {
             await _loader.ResubscribeAsync();
@@ -126,8 +143,22 @@
         RunAsParticipantAsync((myId, ct) =>
             GameplayApi.RecordActionAsync(handId, new(myId, action.Type, action.AmountTo), ct));
 
-    private Task FinishHandAsync(Guid handId, Guid winnerId) =>
-        RunAsParticipantAsync((myId, ct) => GameplayApi.FinishHandAsync(handId, new(myId, winnerId), ct));
+    private async Task ShowPotsAsync(GameStateResponse game, GetHandStateResponse hand)
+    {
+        DialogParameters<PotsDialog> parameters = new()
+        {
+            { d => d.Pots, hand.Pots },
+            { d => d.Participants, game.Participants }
+        };
+
+        await DialogService.ShowAsync<PotsDialog>("Pots", parameters);
+    }
+
+    private Task DeclareWinnersAsync(Guid handId, IReadOnlyList<PotWinner> winners) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.DeclareWinnersAsync(handId, new(myId, winners), ct));
+
+    private Task FinishHandAsync(Guid handId) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.FinishHandAsync(handId, new(myId), ct));
 
     private Task AbortHandAsync(Guid handId) =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.AbortHandAsync(handId, new(myId), ct));
@@ -239,6 +270,7 @@
     {
         _gameSubscription?.Dispose();
         _handSubscription?.Dispose();
+        _handUpdatedSubscription?.Dispose();
         _reconnectedSubscription?.Dispose();
 
         await _loader.DisposeAsync();

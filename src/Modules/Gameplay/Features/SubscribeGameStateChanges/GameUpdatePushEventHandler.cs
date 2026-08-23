@@ -32,6 +32,15 @@ public sealed class GameUpdatePushEventHandler(IHubContext<GameHub> hubContext)
             .SendAsync(GameplayRoutes.HubGameUpdatedMethod, domainEvent.GameId, ct);
 }
 
+// TODO: move to the separate files
+public sealed class HandUpdatePushEventHandler(IHubContext<GameHub> hubContext)
+{
+    public Task Handle(HandWinnersDeclaredDomainEvent e, CancellationToken ct) =>
+        hubContext.Clients
+            .Group(GameHub.HandGroupName(e.HandId))
+            .SendAsync(GameplayRoutes.HubHandUpdatedMethod, e.HandId, ct);
+}
+
 public sealed class RecordActionEffectPushEventHandler(IHubContext<GameHub> hubContext)
 {
     public Task Handle(HandActionRecordedDomainEvent e, CancellationToken ct) =>
@@ -41,7 +50,7 @@ public sealed class RecordActionEffectPushEventHandler(IHubContext<GameHub> hubC
                 GameplayRoutes.HubApplyHandActionEffectMethod,
                 new HandActionEffect(
                     e.ActionNumber,
-                    e.PotDelta,
+                    e.Pots,
                     e.NewStreet,
                     new(e.Seat.ParticipantId, e.Seat.ChipsDelta, e.Seat.NewState)),
                 ct);

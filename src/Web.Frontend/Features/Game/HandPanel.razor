@@ -3,18 +3,17 @@
 
 @* padding for the action bar: 8px + two 36px rows + 8px gutter + 8px *@
 <MudStack data-testid="hand-panel" Style="padding-bottom: 96px">
-    <MudButton OnClick="@(() => OnFinish.InvokeAsync(_selectedWinnerId))" data-testid="finish-hand">
-        Finish Hand
-    </MudButton>
-
     <MudButton OnClick="OnAbort" data-testid="abort-hand">
         Abort Hand
     </MudButton>
 
     <MudStack StretchItems="StretchItems.All" Row>
-        <MudPaper Class="pa-4 align-content-center">
+        <MudPaper
+            Class="pa-4 align-content-center"
+            @onclick="@(() => OnPotsRequested.InvokeAsync())"
+            data-testid="pot-tile">
             <MudText Typo="Typo.caption">Pot</MudText>
-            <MudText Typo="Typo.h5" data-testid="pot">@Hand.Pot</MudText>
+            <MudText Typo="Typo.h5" data-testid="pot">@Hand.Pots.Sum(p => p.Amount)</MudText>
         </MudPaper>
 
         <MudPaper Class="pa-4">
@@ -26,11 +25,7 @@
     <MudStack>
         @foreach (SeatCardModel seatCardInput in _seats)
         {
-            <SeatCard
-                Model="seatCardInput"
-                OnClick="SetWinnerId"
-                IsSelected="@(seatCardInput.ParticipantId == _selectedWinnerId)">
-            </SeatCard>
+            <SeatCard Model="seatCardInput" />
         }
     </MudStack>
 </MudStack>
@@ -44,7 +39,12 @@
     data-testid="hand-action-bar">
     <MudGrid Spacing="2">
         <MudItem xs="3">
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth Disabled data-testid="action-all-in">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Secondary"
+                FullWidth
+                OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.AllIn)))"
+                data-testid="action-all-in">
                 All-in
             </MudButton>
         </MudItem>
@@ -139,7 +139,7 @@
 
     [Parameter]
     [EditorRequired]
-    public EventCallback<Guid> OnFinish { get; set; }
+    public EventCallback OnPotsRequested { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -153,12 +153,10 @@
     private int? _amountToCall;
     private int _selectedAmount = 0;
     private bool _isBet;
-    private Guid _selectedWinnerId;
 
     protected override void OnParametersSet()
     {
         _seats = Hand.Seats.Select(s => new SeatCardModel(
-            s.ParticipantId,
             Participants.Single(p => p.Id == s.ParticipantId).Name,
             s.RemainingStack,
             s.StreetContribution,
@@ -176,9 +174,6 @@
     }
 
     private void IncrementSelectedAmount(int value) => _selectedAmount += value;
-
-    private void SetWinnerId(Guid winnerId) =>
-        _selectedWinnerId = _selectedWinnerId != winnerId ? winnerId : Guid.Empty;
 
     public readonly record struct HandActionSelected(HandActionType Type, int? AmountTo = null);
 }

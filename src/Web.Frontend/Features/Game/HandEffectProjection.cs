@@ -10,7 +10,7 @@ internal static class HandEffectProjection
 
         return hand with
         {
-            Pot = hand.Pot + effect.PotDelta,
+            Pots = effect.Pots,
             Street = effect.NewStreet ?? hand.Street,
             LastActionNumber = effect.ActionNumber,
             Seats = [.. hand.Seats.Select(seat => ApplyToSeat(seat, effect, streetRolledOver))],

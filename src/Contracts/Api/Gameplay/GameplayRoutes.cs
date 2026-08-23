@@ -36,6 +36,8 @@ public static class GameplayRoutes
     public const string HandRouteName = "Hand";
     public const string HandActions = $"{Hand}/actions";
     public static Uri HandActionsFor(Guid handId) => new($"{Hands}/{handId}/actions", UriKind.Relative);
+    public const string HandWinners = $"{Hand}/winners";
+    public static Uri HandWinnersFor(Guid handId) => new($"{Hands}/{handId}/winners", UriKind.Relative);
     public const string FinishHand = $"{Hand}/finish";
     public static Uri FinishHandFor(Guid handId) => new($"{Hands}/{handId}/finish", UriKind.Relative);
     public const string AbortHand = $"{Hand}/abort";
@@ -48,4 +50,5 @@ public static class GameplayRoutes
     public const string HubJoinHandMethod = "JoinHand";
     public const string HubLeaveHandMethod = "LeaveHand";
     public const string HubApplyHandActionEffectMethod = "ApplyHandActionEffect";
+    public const string HubHandUpdatedMethod = "HandUpdated";
 }

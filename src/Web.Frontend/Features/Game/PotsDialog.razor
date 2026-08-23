@@ -1,0 +1,45 @@
+@using Contracts.Api.Gameplay
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Pots</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack data-testid="pots-dialog">
+            @foreach (HandPotState pot in Pots)
+            {
+                <MudPaper Class="pa-2" Outlined data-testid="pot-row">
+                    <MudText Typo="Typo.subtitle2">@PotName(pot.Index): @pot.Amount</MudText>
+
+                    <MudText Typo="Typo.body2" data-testid="pot-eligible">
+                        @string.Join(", ", pot.EligibleParticipantIds.Select(NameOf))
+                    </MudText>
+                </MudPaper>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" data-testid="pots-close">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<HandPotState> Pots { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
+
+    private static string PotName(int index) => index is 0 ? "Main pot" : $"Side pot {index}";
+
+    private string NameOf(Guid participantId) => Participants.Single(p => p.Id == participantId).Name;
+
+    private void Close() => Dialog.Cancel();
+}

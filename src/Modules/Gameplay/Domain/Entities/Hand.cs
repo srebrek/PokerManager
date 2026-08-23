@@ -16,8 +16,12 @@ internal sealed class Hand : AggregateRoot<HandId>
     // Navigation Property
     public IReadOnlyList<HandAction> Actions => _actions.AsReadOnly();
 
+    // Navigation Property
+    public IReadOnlyList<HandPotWinner> PotWinners => _potWinners.AsReadOnly();
+
     private readonly List<HandSeat> _seats;
     private readonly List<HandAction> _actions = [];
+    private readonly List<HandPotWinner> _potWinners = [];
 
     private Hand(HandId id, GameId gameId) : base(id)
     {
@@ -104,7 +108,7 @@ internal sealed class Hand : AggregateRoot<HandId>
         Raise(new HandActionRecordedDomainEvent(
             Id.Value,
             handAction.SequenceNumber,
-            effect.PotDelta,
+            [.. handState.Pots.Select(pot => pot.ToContract([]))],
             effect.NewStreet?.ToContract(),
             new HandActionSeatEffect(
                 effect.SeatEffect.ParticipantId.Value,
@@ -114,14 +118,42 @@ internal sealed class Hand : AggregateRoot<HandId>
         return Result.Success();
     }
 
-    public Result<List<HandAward>> Finish(ParticipantId winnerParticipantId)
+    public Result DeclareWinners(IReadOnlyList<HandPotWinner> potWinners)
+    {
+        if (Status is not HandStatus.InProgress)
+        {
+            return HandErrors.NotInProgressWinnersDeclaration;
+        }
+
+        if (!HandStateCalculator.Calculate(_seats, _actions).TryGetValue(out HandState handState, out Error? error))
+        {
+            return error;
+        }
+
+        if (handState.Street is not Street.Finished)
+        {
+            return HandErrors.NotFinishedStreetWinnersDeclaration;
+        }
+
+        if (ValidatePotWinners(handState.Pots, potWinners).TryGetError(out error))
+        {
+            return error;
+        }
+
+        _potWinners.Clear();
+        _potWinners.AddRange(potWinners);
+
+        Raise(new HandWinnersDeclaredDomainEvent(Id.Value));
+
+        return Result.Success();
+    }
+
+    public Result<List<HandAward>> Finish()
     {
         if (Status is not HandStatus.InProgress)
         {
             return HandErrors.NotInProgressHandFinish;
         }
-
-        Status = HandStatus.Finished;
 
         if (!HandStateCalculator.Calculate(_seats, _actions).TryGetValue(out HandState handState, out Error? error))
         {
@@ -133,31 +165,35 @@ internal sealed class Hand : AggregateRoot<HandId>
             return HandErrors.NotFinishedStreetFinish;
         }
 
-        HandSeatState winner = handState.SeatStates.SingleOrDefault(ss => ss.ParticipantId == winnerParticipantId);
-        if (winner == default)
+        if (ValidatePotWinners(handState.Pots, _potWinners).TryGetError(out error))
         {
-            return HandErrors.ParticipantIdNotInSeats;
+            return error;
         }
 
-        if (winner.State is SeatState.Folded)
+        Status = HandStatus.Finished;
+
+        Dictionary<ParticipantId, int> winningsByParticipantId =
+            handState.SeatStates.ToDictionary(ss => ss.ParticipantId, _ => 0);
+
+        foreach (HandPot pot in handState.Pots)
         {
-            return HandErrors.FoldedWinner;
+            List<ParticipantId> claimed = [.. _potWinners
+                .Where(pw => pw.PotIndex == pot.Index)
+                .Select(pw => pw.ParticipantId)];
+
+            List<ParticipantId> ordered = [.. _seats.Select(s => s.ParticipantId).Where(claimed.Contains)];
+            int share = pot.Amount / ordered.Count;
+            int oddChips = pot.Amount % ordered.Count;
+
+            foreach ((int position, ParticipantId winner) in ordered.Index())
+            {
+                winningsByParticipantId[winner] += share + (position < oddChips ? 1 : 0);
+            }
         }
 
-        List<HandAward> awards = new(handState.SeatStates.Count);
-        foreach (HandSeatState seatState in handState.SeatStates)
-        {
-            ChipsStack startingStack = _seats.Single(s => s.ParticipantId == seatState.ParticipantId).StartingStack;
-            int net = seatState.RemainingStack - startingStack;
-            if (seatState.ParticipantId == winnerParticipantId)
-            {
-                awards.Add(new(seatState.ParticipantId, handState.Pot + net));
-            }
-            else
-            {
-                awards.Add(new(seatState.ParticipantId, net));
-            }
-        }
+        List<HandAward> awards = [.. handState.SeatStates.Select(ss => new HandAward(
+            ss.ParticipantId,
+            winningsByParticipantId[ss.ParticipantId] - ss.TotalContribution))];
 
         if (awards.Sum(a => a.Net) is not 0)
         {
@@ -165,6 +201,35 @@ internal sealed class Hand : AggregateRoot<HandId>
         }
 
         return awards;
+    }
+
+    private static Result ValidatePotWinners(
+        IReadOnlyList<HandPot> pots,
+        IReadOnlyList<HandPotWinner> potWinners)
+    {
+        if (potWinners.Count is 0)
+        {
+            return HandErrors.WinnersNotDeclared;
+        }
+
+        if (potWinners.Distinct().Count() != potWinners.Count)
+        {
+            return HandErrors.DuplicatedPotWinners;
+        }
+
+        HashSet<int> claimedPotIndexes = [.. potWinners.Select(pw => pw.PotIndex)];
+        if (claimedPotIndexes.Count != pots.Count
+            || claimedPotIndexes.Any(index => index < 0 || index >= pots.Count))
+        {
+            return HandErrors.PotWinnersMismatch;
+        }
+
+        if (potWinners.Any(pw => !pots[pw.PotIndex].EligibleParticipantIds.Contains(pw.ParticipantId)))
+        {
+            return HandErrors.IneligibleWinner;
+        }
+
+        return Result.Success();
     }
 
     public Result Abort()

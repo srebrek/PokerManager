@@ -33,6 +33,19 @@ internal sealed class HandConfiguration : IEntityTypeConfiguration<Hand>
             seat.HasOne<Participant>().WithMany().OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.OwnsMany(h => h.PotWinners, winner =>
+        {
+            winner.ToTable("hand_pot_winners");
+
+            winner.Property<HandId>("HandId").HasConversion(new StronglyTypedIdValueConverter<HandId>());
+            winner.HasKey("HandId", nameof(HandPotWinner.PotIndex), nameof(HandPotWinner.ParticipantId));
+            winner.WithOwner().HasForeignKey("HandId");
+
+            winner.Property(w => w.ParticipantId).HasConversion(new StronglyTypedIdValueConverter<ParticipantId>());
+
+            winner.HasOne<Participant>().WithMany().OnDelete(DeleteBehavior.Restrict);
+        });
+
         builder.OwnsMany(h => h.Actions, action =>
         {
             action.ToTable("hand_actions");

@@ -1,0 +1,129 @@
+@using Contracts.Api.Gameplay
+
+@* padding for the host action bar: 8px + 36px row + 8px *@
+<MudStack data-testid="hand-summary-panel" Style="@(_isHost ? "padding-bottom: 60px" : null)">
+    <MudStack StretchItems="StretchItems.All" Row>
+        <MudPaper Class="pa-4 align-content-center">
+            <MudText Typo="Typo.caption">Pot</MudText>
+            <MudText Typo="Typo.h5" data-testid="pot">@Hand.Pots.Sum(p => p.Amount)</MudText>
+        </MudPaper>
+
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.caption">Street</MudText>
+            <MudText Typo="Typo.h5" data-testid="street">@Hand.Street.ToString()</MudText>
+        </MudPaper>
+    </MudStack>
+
+    @foreach (HandPotState pot in Hand.Pots)
+    {
+        <PotCard
+            Pot="pot"
+            Participants="Participants"
+            WinnerIds="_winnerIdsByPotIndex[pot.Index]"
+            IsSelectable="_isHost"
+            OnWinnerToggled="@(participantId => ToggleWinner(pot.Index, participantId))" />
+    }
+</MudStack>
+
+@if (_isHost)
+{
+    <MudPaper
+        Outlined
+        Style="position: fixed;
+               inset: auto 0 0 0;
+               padding: 8px 8px calc(var(--mud-appbar-height) + 8px);
+               z-index: var(--mud-zindex-appbar);"
+        data-testid="hand-summary-action-bar">
+        <MudGrid Spacing="2">
+            <MudItem xs="4">
+                <MudButton
+                    Variant="Variant.Outlined"
+                    Color="Color.Secondary"
+                    FullWidth
+                    OnClick="OnAbort"
+                    data-testid="abort-hand">
+                    Abort
+                </MudButton>
+            </MudItem>
+            <MudItem xs="4">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Warning"
+                    FullWidth
+                    Disabled="@(!CanDeclare)"
+                    OnClick="DeclareWinnersAsync"
+                    data-testid="confirm-winners">
+                    Confirm
+                </MudButton>
+            </MudItem>
+            <MudItem xs="4">
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    FullWidth
+                    Disabled="@(!CanFinish)"
+                    OnClick="OnFinish"
+                    data-testid="finish-hand">
+                    Finish
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required GetHandStateResponse Hand { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<IReadOnlyList<PotWinner>> OnWinnersDeclared { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnFinish { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnAbort { get; set; }
+
+    [Parameter]
+    public Guid? MyParticipantId { get; set; }
+
+    private Dictionary<int, HashSet<Guid>> _winnerIdsByPotIndex = [];
+    private bool _isHost;
+
+    protected override void OnParametersSet()
+    {
+        _isHost = Participants.Any(p => p.Id == MyParticipantId && p.IsHost);
+        _winnerIdsByPotIndex = Hand.Pots.ToDictionary(
+            pot => pot.Index, pot => (HashSet<Guid>)[.. pot.WinnerParticipantIds]);
+    }
+
+    private void ToggleWinner(int potIndex, Guid participantId)
+    {
+        if (!_winnerIdsByPotIndex[potIndex].Add(participantId))
+        {
+            _winnerIdsByPotIndex[potIndex].Remove(participantId);
+        }
+    }
+
+    private bool EveryPotHasAWinner =>
+        Hand.Pots.Count > 0 && Hand.Pots.All(pot => _winnerIdsByPotIndex[pot.Index].Count > 0);
+
+    private bool SelectionIsDeclared =>
+        Hand.Pots.All(pot => _winnerIdsByPotIndex[pot.Index].SetEquals(pot.WinnerParticipantIds));
+
+    private bool CanDeclare => EveryPotHasAWinner && !SelectionIsDeclared;
+
+    private bool CanFinish => EveryPotHasAWinner && SelectionIsDeclared;
+
+    private Task DeclareWinnersAsync() =>
+        OnWinnersDeclared.InvokeAsync(
+            [.. _winnerIdsByPotIndex.SelectMany(pot => pot.Value.Select(id => new PotWinner(pot.Key, id)))]);
+}

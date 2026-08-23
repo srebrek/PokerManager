@@ -22,11 +22,30 @@ internal static class HandErrors
     public static readonly Error NotInProgressHandFinish =
         Error.Conflict("Gameplay.Hand.NotInProgressHandFinish", "Can not finish hand that is not in progress.");
 
-    public static readonly Error FoldedWinner =
-        Error.Conflict("Gameplay.Hand.FoldedWinner", "Winner can not be folded.");
+    public static readonly Error PotWinnersMismatch =
+        Error.Conflict("Gameplay.Hand.PotWinnersMismatch", "Exactly one winner list per pot is required.");
+
+    public static readonly Error DuplicatedPotWinners =
+        Error.Conflict("Gameplay.Hand.DuplicatedPotWinners", "Pot winners must be unique.");
+
+    public static readonly Error IneligibleWinner =
+        Error.Conflict("Gameplay.Hand.IneligibleWinner", "Winner must be eligible for the pot.");
 
     public static readonly Error NotFinishedStreetFinish =
         Error.Conflict("Gameplay.Hand.NotFinishedStreetFinish", "Can not finish hand that is still in play.");
+
+    public static readonly Error WinnersNotDeclared =
+        Error.Conflict("Gameplay.Hand.WinnersNotDeclared", "Pot winners have to be declared first.");
+
+    public static readonly Error NotInProgressWinnersDeclaration =
+        Error.Conflict(
+            "Gameplay.Hand.NotInProgressWinnersDeclaration",
+            "Can not declare winners of a hand that is not in progress.");
+
+    public static readonly Error NotFinishedStreetWinnersDeclaration =
+        Error.Conflict(
+            "Gameplay.Hand.NotFinishedStreetWinnersDeclaration",
+            "Can not declare winners of a hand that is still in play.");
 
     public static readonly Error NotInProgressHandAbort =
         Error.Conflict("Gameplay.Hand.NotInProgressHandAbort", "Can not abort hand that is not in play.");

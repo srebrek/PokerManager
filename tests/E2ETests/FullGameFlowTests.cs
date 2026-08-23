@@ -58,12 +58,19 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
         await Expect(bob.GetByTestId("pot")).ToHaveTextAsync((3 * BigBlind).ToString(CultureInfo.InvariantCulture));
         await Expect(bob.GetByTestId("street")).ToHaveTextAsync("Flop");
 
+        await host.GetByTestId("pot-tile").ClickAsync();
+        await Expect(host.GetByTestId("pot-eligible")).ToBeVisibleAsync();
+        await host.GetByTestId("pots-close").ClickAsync();
+
         await CheckAroundAsync(alice, bob, host, "Turn");
         await CheckAroundAsync(alice, bob, host, "River");
         await CheckAroundAsync(alice, bob, host, "Finished");
 
-        await host.GetByTestId("seat-card").Filter(new LocatorFilterOptions { HasText = SmallBlindName })
+        await Expect(host.GetByTestId("hand-summary-panel")).ToBeVisibleAsync();
+        await host.GetByTestId("pot-winner").Filter(new LocatorFilterOptions { HasText = SmallBlindName })
             .ClickAsync();
+        await ClickAndWaitForResponseAsync(
+            host, "confirm-winners", GameplayRoutes.HandWinnersFor(_handId).ToString());
         await ClickAndWaitForResponseAsync(host, "finish-hand", GameplayRoutes.FinishHandFor(_handId).ToString());
 
         await Expect(host.GetByTestId("lobby-panel")).ToBeVisibleAsync();

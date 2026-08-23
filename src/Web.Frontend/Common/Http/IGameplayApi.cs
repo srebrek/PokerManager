@@ -15,6 +15,8 @@ internal interface IGameplayApi
     Task<ApiResult<StartHandResponse>> StartHandAsync(
       Guid gameId, StartHandRequest request, CancellationToken ct = default);
     Task<ApiResult> RecordActionAsync(Guid handId, RecordActionRequest request, CancellationToken ct = default);
+    Task<ApiResult> DeclareWinnersAsync(
+      Guid handId, DeclareWinnersRequest request, CancellationToken ct = default);
     Task<ApiResult> FinishHandAsync(Guid handId, FinishHandRequest request, CancellationToken ct = default);
     Task<ApiResult> AbortHandAsync(Guid handId, AbortHandRequest request, CancellationToken ct = default);
     Task<ApiResult> FinishGameAsync(Guid gameId, FinishGameRequest request, CancellationToken ct = default);
@@ -82,6 +84,14 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         CancellationToken ct = default) =>
         ExecuteAsync(
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.HandActionsFor(handId), request, ct),
+            ct);
+
+    public Task<ApiResult> DeclareWinnersAsync(
+        Guid handId,
+        DeclareWinnersRequest request,
+        CancellationToken ct = default) =>
+        ExecuteAsync(
+            ct => httpClient.PostAsJsonAsync(GameplayRoutes.HandWinnersFor(handId), request, ct),
             ct);
 
     public Task<ApiResult> FinishHandAsync(

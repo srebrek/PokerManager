@@ -6,6 +6,7 @@ internal enum SeatState
 {
     Active,
     Folded,
+    AllIn,
 }
 
 internal static class SeatStateMappings
@@ -14,6 +15,7 @@ internal static class SeatStateMappings
     {
         SeatState.Active => Api.SeatState.Active,
         SeatState.Folded => Api.SeatState.Folded,
+        SeatState.AllIn => Api.SeatState.AllIn,
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
     };
 }

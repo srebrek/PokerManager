@@ -4,7 +4,7 @@ public sealed record GetHandStateResponse(
     Guid HandId,
     HandStatus Status,
     Street Street,
-    int Pot,
+    IReadOnlyList<HandPotState> Pots,
     IReadOnlyList<HandStateSeat> Seats,
     int LastActionNumber);
 
@@ -24,6 +24,12 @@ public enum Street
     Finished,
 }
 
+public sealed record HandPotState(
+    int Index,
+    int Amount,
+    IReadOnlyList<Guid> EligibleParticipantIds,
+    IReadOnlyList<Guid> WinnerParticipantIds);
+
 public sealed record HandStateSeat(
     Guid ParticipantId,
     int StreetContribution,
@@ -34,4 +40,5 @@ public enum SeatState
 {
     Active,
     Folded,
+    AllIn,
 }

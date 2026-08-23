@@ -9,4 +9,5 @@ public enum HandActionType
     Bet,
     Raise,
     Fold,
+    AllIn,
 }

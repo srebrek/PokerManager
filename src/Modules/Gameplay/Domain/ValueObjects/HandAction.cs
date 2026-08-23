@@ -28,9 +28,13 @@ internal sealed class HandAction
             return EmptyStackRaiseOrBet;
         }
 
-        if ((type is HandActionType.Check or HandActionType.Call or HandActionType.Fold) && amountTo is not null)
+        if ((type is HandActionType.Check
+                or HandActionType.Call
+                or HandActionType.Fold
+                or HandActionType.AllIn)
+            && amountTo is not null)
         {
-            return NotEmptyStackCheckCallOrFold;
+            return AmountNotAllowed;
         }
 
         return new HandAction(sequenceNumber, participantId, type, amountTo);
@@ -39,8 +43,8 @@ internal sealed class HandAction
     public static readonly Error EmptyStackRaiseOrBet =
         Error.Conflict("Gameplay.HandAction.EmptyStackRaiseOrBet", "Cannot raise or bet with empty stack.");
 
-    public static readonly Error NotEmptyStackCheckCallOrFold =
+    public static readonly Error AmountNotAllowed =
         Error.Conflict(
-            "Gameplay.HandAction.NotEmptyStackCheckCallOrFold",
-            "Cannot check, call or fold without empty stack.");
+            "Gameplay.HandAction.AmountNotAllowed",
+            "Only bet and raise carry an amount.");
 }

@@ -19,6 +19,7 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
             {
                 h.Seats,
                 Actions = h.Actions.OrderBy(a => a.SequenceNumber).ToList(),
+                h.PotWinners,
                 h.Status,
             })
             .AsNoTracking()
@@ -35,6 +36,9 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
             return error;
         }
 
+        List<HandPotState> pots = [.. handState.Pots.Select(pot => pot.ToContract(
+            [.. hand.PotWinners.Where(pw => pw.PotIndex == pot.Index).Select(pw => pw.ParticipantId)]))];
+
         List<HandStateSeat> handStateSeats = [.. handState.SeatStates.Select(ss => new HandStateSeat(
             ss.ParticipantId.Value,
             ss.StreetContribution,
@@ -45,7 +49,7 @@ internal sealed class GetHandStateQueryHandler(GameplayDbContext db)
             query.HandId,
             hand.Status.ToContract(),
             handState.Street.ToContract(),
-            handState.Pot.Value,
+            pots,
             handStateSeats,
             hand.Actions[^1].SequenceNumber);
     }

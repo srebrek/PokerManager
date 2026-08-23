@@ -68,6 +68,9 @@ internal sealed partial class GameHubConnection : IAsyncDisposable
     public IDisposable OnHandActionEffectReceived(Func<HandActionEffect, Task> onHandActionEffectReceived) =>
         _connection.On(GameplayRoutes.HubApplyHandActionEffectMethod, onHandActionEffectReceived);
 
+    public IDisposable OnHandUpdated(Func<Guid, Task> onHandUpdated) =>
+        _connection.On(GameplayRoutes.HubHandUpdatedMethod, onHandUpdated);
+
     public async ValueTask DisposeAsync() => await _connection.DisposeAsync();
 
     private Task LogConnectionClosedAsync(Exception? exception)

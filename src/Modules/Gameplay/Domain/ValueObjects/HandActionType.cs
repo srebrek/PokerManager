@@ -9,6 +9,7 @@ internal enum HandActionType
     Bet,
     Raise,
     Fold,
+    AllIn,
     PostSmallBlind,
     PostBigBlind,
 }
@@ -22,6 +23,7 @@ internal static class HandActionTypeMappings
         Api.HandActionType.Bet => HandActionType.Bet,
         Api.HandActionType.Raise => HandActionType.Raise,
         Api.HandActionType.Fold => HandActionType.Fold,
+        Api.HandActionType.AllIn => HandActionType.AllIn,
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
     };
 }

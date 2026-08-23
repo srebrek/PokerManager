@@ -1,0 +1,58 @@
+@using Contracts.Api.Gameplay
+
+<MudPaper Class="pa-2" Outlined data-testid="pot-card">
+    <MudStack Spacing="2">
+        <MudStack Row AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.subtitle1" data-testid="pot-name">@Name</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.h6" data-testid="pot-amount">@Pot.Amount</MudText>
+        </MudStack>
+
+        @foreach (Guid participantId in Pot.EligibleParticipantIds)
+        {
+            <MudButton
+                Variant="@(IsWinner(participantId) ? Variant.Filled : Variant.Outlined)"
+                Color="@(IsWinner(participantId) ? Color.Warning : Color.Inherit)"
+                Disabled="@(!IsSelectable)"
+                OnClick="@(() => OnWinnerToggled.InvokeAsync(participantId))"
+                FullWidth
+                data-testid="pot-winner">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText data-testid="pot-winner-name">@NameOf(participantId)</MudText>
+                    <MudSpacer />
+                    @if (IsWinner(participantId))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" />
+                    }
+                </MudStack>
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required HandPotState Pot { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyCollection<Guid> WinnerIds { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsSelectable { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnWinnerToggled { get; set; }
+
+    private string Name => Pot.Index is 0 ? "Main pot" : $"Side pot {Pot.Index}";
+
+    private bool IsWinner(Guid participantId) => WinnerIds.Contains(participantId);
+
+    private string NameOf(Guid participantId) => Participants.Single(p => p.Id == participantId).Name;
+}

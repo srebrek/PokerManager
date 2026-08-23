@@ -6,7 +6,7 @@ namespace Gameplay.Domain.Events;
 public sealed record HandActionRecordedDomainEvent(
     Guid HandId,
     int ActionNumber,
-    int PotDelta,
+    IReadOnlyList<HandPotState> Pots,
     Street? NewStreet,
     HandActionSeatEffect Seat) : IDomainEvent;
 

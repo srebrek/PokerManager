@@ -3,6 +3,7 @@ using System;
 using Gameplay.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gameplay.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(GameplayDbContext))]
-    partial class GameplayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821203151_DeclaredPotWinners")]
+    partial class DeclaredPotWinners
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
