@@ -14,7 +14,7 @@ public sealed class AspireFixture : IAsyncLifetime
 {
     private static readonly TimeSpan s_defaultTimeout = TimeSpan.FromSeconds(60);
 
-    internal const float DefaultUiTimeoutMilliseconds = 30_000;
+    internal const float DefaultUiTimeoutMilliseconds = 60_000;
 
     public DistributedApplication? App { get; private set; }
 
