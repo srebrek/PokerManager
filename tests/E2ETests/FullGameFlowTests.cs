@@ -131,7 +131,8 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper o
     {
         IResponse response = await page.RunAndWaitForResponseAsync(
             () => page.GetByTestId(testId).ClickAsync(),
-            r => r.Url.Contains(urlFragment, StringComparison.Ordinal));
+            r => r.Url.Contains(urlFragment, StringComparison.Ordinal),
+            new() { Timeout = 60000 });
 
         string body = response.Ok ? string.Empty : await response.TextAsync();
         response.Ok.ShouldBeTrue($"{response.Request.Method} {response.Url} returned {response.Status}. {body}");

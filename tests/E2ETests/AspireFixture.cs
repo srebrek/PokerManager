@@ -40,7 +40,7 @@ public sealed class AspireFixture : IAsyncLifetime
             throw new InvalidOperationException($"Playwright browser install failed with exit code {installExitCode}.");
         }
 
-        _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        _playwright = await Playwright.CreateAsync();
         _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions());
 
         Assertions.SetDefaultExpectTimeout(DefaultUiTimeoutMilliseconds);
