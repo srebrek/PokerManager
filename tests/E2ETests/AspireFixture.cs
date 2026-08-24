@@ -45,8 +45,11 @@ public sealed class AspireFixture : IAsyncLifetime
 
         Assertions.SetDefaultExpectTimeout(DefaultUiTimeoutMilliseconds);
 
+        string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        string[] appHostArgs = string.IsNullOrEmpty(environment) ? [] : ["--environment", environment];
+
         IDistributedApplicationTestingBuilder appHost = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.Aspire_AppHost>(ct);
+            .CreateAsync<Projects.Aspire_AppHost>(appHostArgs, ct);
 
         appHost.Services.AddSingleton<ITestOutputHelperAccessor>(OutputAccessor);
         appHost.Services.AddLogging(logging =>

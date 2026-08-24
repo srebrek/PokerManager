@@ -6,7 +6,13 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 string[] assemblyFilters = ["-*Tests", "-Aspire.*"];
-string[] fileFilters = ["-**/obj/**", "-**/Migrations/**", "-**/*DbContextFactory.cs"];
+string[] fileFilters =
+[
+    "-**/obj/**",
+    "-**/Migrations/**",
+    "-**/*DbContextFactory.cs",
+    "-**/Internal/Generated/**",
+];
 
 string root = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ScriptPath())!, ".."));
 string results = Path.Combine(root, "TestResults");

@@ -25,7 +25,7 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
     {
         builder.UseSetting("ConnectionStrings:PokerManager-db", _connectionString);
 
-        builder.UseEnvironment("Testing");
+        builder.UseEnvironment(TestEnvironment.Name);
     }
 
     public async ValueTask InitializeAsync()

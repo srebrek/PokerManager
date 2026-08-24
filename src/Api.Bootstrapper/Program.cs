@@ -19,6 +19,10 @@ using Wolverine.Postgresql;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Loads the static web assets manifest outside Development too - without it a Production run from
+// build output (E2E) serves no Blazor files. No-op in a published app, which has no manifest.
+builder.WebHost.UseStaticWebAssets();
+
 string databaseConnectionString = builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName)
     ?? throw new InvalidOperationException(
         $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
@@ -68,15 +72,6 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-
-    await app.Services.ApplyIdentityMigrationsAsync();
-    await app.Services.ApplyGameplayMigrationsAsync();
-}
-
-if (app.Environment.IsProduction())
-{
-    app.UseBlazorFrameworkFiles();
-    app.UseStaticFiles();
 }
 
 app.UseAntiCsrf();
@@ -89,17 +84,15 @@ RouteGroupBuilder apiGroup = app.MapGroup("api");
 apiGroup.AddEndpointFilter<TelemetryFilter>();
 app.MapEndpoints(apiGroup);
 
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
-    if (app.Environment.IsDevelopment())
-    {
-        // YARP so hotreload and dotnet watch work in dev
-        app.MapForwarder("/{**catch-all}", "http://webfrontend");
-    }
-    else
-    {
-        app.MapFallbackToFile("index.html");
-    }
+    // YARP so hotreload and dotnet watch work in dev
+    app.MapForwarder("/{**catch-all}", "http://webfrontend");
+}
+else
+{
+    app.MapStaticAssets();
+    app.MapFallbackToFile("index.html");
 }
 
 // For codegen
