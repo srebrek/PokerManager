@@ -1,4 +1,4 @@
-using Azure.Provisioning.AppContainers;
+﻿using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.ContainerRegistry;
 using Microsoft.Extensions.Hosting;
 
@@ -48,9 +48,25 @@ IResourceBuilder<IResource> migrations;
 
 if (builder.ExecutionContext.IsRunMode)
 {
+    string configuration;
+#if DEBUG
+    configuration = "Debug";
+#elif RELEASE
+    configuration = "Release";
+#endif
     // debug reason
     migrations = builder
-        .AddExecutable("migrations", "dotnet", "../../Api.Bootstrapper", "run", "--no-launch-profile", "--", "migrate")
+        .AddExecutable(
+            "migrations",
+            "dotnet",
+            "../../Api.Bootstrapper",
+            "run",
+            "--no-launch-profile",
+            "--no-build",
+            "--configuration",
+            configuration,
+            "--",
+            "migrate")
         .WithReference(database)
         .WaitFor(database);
 }
