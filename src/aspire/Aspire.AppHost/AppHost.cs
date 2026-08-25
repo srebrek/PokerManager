@@ -1,28 +1,68 @@
+using Azure.Provisioning.AppContainers;
+using Azure.Provisioning.ContainerRegistry;
 using Microsoft.Extensions.Hosting;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
 bool production = !builder.Environment.IsDevelopment();
 
-IResourceBuilder<IResourceWithConnectionString> database;
+IResourceBuilder<Aspire.Hosting.Azure.AzureContainerRegistryResource> containerRegistry = builder
+    .AddAzureContainerRegistry("acr")
+    .ConfigureInfrastructure(infrastructure =>
+    {
+        ContainerRegistryService registry = infrastructure
+            .GetProvisionableResources()
+            .OfType<ContainerRegistryService>()
+            .Single();
+
+        registry.Sku = new ContainerRegistrySku { Name = ContainerRegistrySkuName.Standard };
+    });
+
+builder.AddAzureContainerAppEnvironment("aca-env")
+    .WithAzureContainerRegistry(containerRegistry);
+
+IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("db-username", "pokeradmin");
+
+IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter(
+    "db-password",
+    new GenerateParameterDefault
+    {
+        MinLength = 24,
+        Lower = true,
+        Upper = true,
+        Numeric = true,
+        Special = false,
+    },
+    secret: true,
+    persist: true);
+
+IResourceBuilder<IResourceWithConnectionString> database = builder
+    .AddAzurePostgresFlexibleServer("db-server")
+    .WithPasswordAuthentication(databaseUsername, databasePassword)
+    .RunAsContainer(container => container
+        .WithImageTag("16")
+        .WithHostPort(5433))
+    .AddDatabase("PokerManager-db", databaseName: "pokermanager");
+
+IResourceBuilder<IResource> migrations;
 
 if (builder.ExecutionContext.IsRunMode)
 {
-    database = builder
-        .AddPostgres("db-server", password: builder.AddParameter("password", "password"), port: 5433)
-        .WithImageTag("18")
-        .AddDatabase("PokerManager-db");
+    // debug reason
+    migrations = builder
+        .AddExecutable("migrations", "dotnet", "../../Api.Bootstrapper", "run", "--no-launch-profile", "--", "migrate")
+        .WithReference(database)
+        .WaitFor(database);
 }
 else
 {
-    database = builder.AddConnectionString("PokerManager-db");
+    migrations = builder
+        .AddProject<Projects.Api_Bootstrapper>("migrations", launchProfileName: null)
+        .WithArgs("migrate")
+        .WithReference(database)
+        .WaitFor(database)
+        .PublishAsAzureContainerAppJob();
 }
-
-IResourceBuilder<ProjectResource> migrations = builder
-    .AddProject<Projects.Api_Bootstrapper>("migrations", launchProfileName: null)
-    .WithArgs("migrate")
-    .WithReference(database)
-    .WaitFor(database);
 
 // apiservice is the single browser-facing endpoint: it serves both the API
 // and the Blazor WASM frontend (proxied to webfrontend in dev, static files in prod).
@@ -33,7 +73,18 @@ IResourceBuilder<ProjectResource> apiService = builder
     .WaitForCompletion(migrations)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health", endpointName: "http")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", production ? "Production" : "Development");
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", production ? "Production" : "Development")
+    .PublishAsAzureContainerApp((_, containerApp) =>
+    {
+        containerApp.Template.Scale = new ContainerAppScale
+        {
+            MinReplicas = 0,
+            MaxReplicas = 1,
+        };
+
+        containerApp.Template.Containers[0].Value!.Resources.Cpu = 0.25;
+        containerApp.Template.Containers[0].Value!.Resources.Memory = "0.5Gi";
+    });
 
 // The standalone WASM dev server exists only during development (hot reload, debug).
 // In publish mode the API serves the published WASM static assets itself.

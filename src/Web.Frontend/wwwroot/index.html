@@ -8,13 +8,11 @@
     <meta name="theme-color" content="#7e6fff" />
     <title>PokerManager</title>
     <base href="/" />
-    <link rel="preload" id="webassembly" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <script type="importmap"></script>
 </head>
 
 <body>
@@ -32,7 +30,8 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <!-- Unfingerprinted, no import map, no preload: dotnet/runtime#121993. -->
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>
