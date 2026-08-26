@@ -12,7 +12,7 @@
             data-testid="rebuy-amount" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel" data-testid="rebuy-cancel">
+        <MudButton OnClick="Cancel">
             Cancel
         </MudButton>
 
@@ -31,8 +31,7 @@
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = null!;
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required string ParticipantName { get; set; }
 
     private int _amount;

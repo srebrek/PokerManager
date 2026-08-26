@@ -4,11 +4,11 @@
 @* padding for the action bar: 8px + two 36px rows + 8px gutter + 8px, and the chip bar: 8px + 36px + 8px *@
 <MudStack data-testid="hand-panel" Style="padding-bottom: 148px">
     <MudStack Row>
-        <MudButton OnClick="OnAbort" FullWidth data-testid="abort-hand">
+        <MudButton OnClick="OnAbort" FullWidth>
             Abort Hand
         </MudButton>
 
-        <MudButton OnClick="OnUndo" FullWidth data-testid="undo-action">
+        <MudButton OnClick="OnUndo" FullWidth>
             Undo
         </MudButton>
     </MudStack>
@@ -45,15 +45,14 @@
     inset: auto 0 0 0;
     padding-bottom: var(--mud-appbar-height);
     z-index: var(--mud-zindex-appbar);">
-    <MudPaper Square Class="pa-2" data-testid="hand-action-bar">
+    <MudPaper Square Class="pa-2">
         <MudGrid Spacing="2">
             <MudItem xs="3">
                 <MudButton
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
                     FullWidth
-                    OnClick="@(() => SubmitAsync(HandActionType.AllIn))"
-                    data-testid="action-all-in">
+                    OnClick="@(() => SubmitAsync(HandActionType.AllIn))">
                     All-in
                 </MudButton>
             </MudItem>
@@ -62,8 +61,7 @@
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
                     FullWidth
-                    OnClick="@(() => SubmitAsync(HandActionType.Fold))"
-                    data-testid="action-fold">
+                    OnClick="@(() => SubmitAsync(HandActionType.Fold))">
                     Fold
                 </MudButton>
             </MudItem>
@@ -90,7 +88,7 @@
 
             <MudItem xs="3">
                 <MudPaper Height="100%" Width="100%" Outlined Class="align-content-center">
-                    <MudText Align="Align.Center" data-testid="selected-amount">
+                    <MudText Align="Align.Center">
                         @_selectedAmount
                     </MudText>
                 </MudPaper>
@@ -100,8 +98,7 @@
                     Variant="Variant.Outlined"
                     Color="Color.Primary"
                     FullWidth
-                    OnClick="@(() => IncrementSelectedAmount(SmallBlind))"
-                    data-testid="amount-increment">
+                    OnClick="@(() => IncrementSelectedAmount(SmallBlind))">
                     +@SmallBlind
                 </MudButton>
             </MudItem>
@@ -110,8 +107,7 @@
                     Variant="Variant.Outlined"
                     Color="Color.Primary"
                     FullWidth
-                    OnClick="@(() => IncrementSelectedAmount(-SmallBlind))"
-                    data-testid="amount-decrement">
+                    OnClick="@(() => IncrementSelectedAmount(-SmallBlind))">
                     -@SmallBlind
                 </MudButton>
             </MudItem>
@@ -120,54 +116,48 @@
                     Variant="Variant.Filled"
                     Color="Color.Primary"
                     FullWidth
-                    OnClick="@(() => SubmitAsync(IsBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount))"
-                    data-testid="action-bet-raise">
+                    OnClick="@(() => SubmitAsync(IsBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount))">
                     @(IsBet ? "Bet" : "Raise")
                 </MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
 
-    <MudPaper Square Class="pa-2" data-testid="chip-bar">
+    <MudPaper Square Class="pa-2">
         <MudStack Row Spacing="2">
             <MudButton
                 Variant="Variant.Filled"
                 Class="flex-1"
                 Style="background-color: #1a1a1a; color: #ffffff;"
-                OnClick="@(() => IncrementSelectedAmount(500))"
-                data-testid="chip-500">
+                OnClick="@(() => IncrementSelectedAmount(500))">
                 500
             </MudButton>
             <MudButton
                 Variant="Variant.Filled"
                 Class="flex-1"
                 Style="background-color: #1f7a3d; color: #ffffff;"
-                OnClick="@(() => IncrementSelectedAmount(200))"
-                data-testid="chip-200">
+                OnClick="@(() => IncrementSelectedAmount(200))">
                 200
             </MudButton>
             <MudButton
                 Variant="Variant.Filled"
                 Class="flex-1"
                 Style="background-color: #1c4f9c; color: #ffffff;"
-                OnClick="@(() => IncrementSelectedAmount(100))"
-                data-testid="chip-100">
+                OnClick="@(() => IncrementSelectedAmount(100))">
                 100
             </MudButton>
             <MudButton
                 Variant="Variant.Filled"
                 Class="flex-1"
                 Style="background-color: #c62828; color: #ffffff;"
-                OnClick="@(() => IncrementSelectedAmount(50))"
-                data-testid="chip-50">
+                OnClick="@(() => IncrementSelectedAmount(50))">
                 50
             </MudButton>
             <MudButton
                 Variant="Variant.Filled"
                 Class="flex-1"
                 Style="background-color: #f5f5f5; color: #1a1a1a;"
-                OnClick="@(() => IncrementSelectedAmount(25))"
-                data-testid="chip-25">
+                OnClick="@(() => IncrementSelectedAmount(25))">
                 25
             </MudButton>
         </MudStack>
@@ -175,32 +165,25 @@
 </div>
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required GetHandStateResponse Hand { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public int SmallBlind { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback<HandActionSelected> OnAction { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnPotsRequested { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnAbort { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnUndo { get; set; }
 
     [Parameter]

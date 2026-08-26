@@ -32,16 +32,14 @@
         Style="position: fixed;
                inset: auto 0 0 0;
                padding: 8px 8px calc(var(--mud-appbar-height) + 8px);
-               z-index: var(--mud-zindex-appbar);"
-        data-testid="hand-summary-action-bar">
+               z-index: var(--mud-zindex-appbar);">
         <MudGrid Spacing="2">
             <MudItem xs="3">
                 <MudButton
                     Variant="Variant.Outlined"
                     Color="Color.Secondary"
                     FullWidth
-                    OnClick="OnAbort"
-                    data-testid="abort-hand">
+                    OnClick="OnAbort">
                     Abort
                 </MudButton>
             </MudItem>
@@ -50,8 +48,7 @@
                     Variant="Variant.Outlined"
                     Color="Color.Primary"
                     FullWidth
-                    OnClick="OnUndo"
-                    data-testid="undo-action">
+                    OnClick="OnUndo">
                     Undo
                 </MudButton>
             </MudItem>
@@ -82,28 +79,22 @@
 }
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required GetHandStateResponse Hand { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback<IReadOnlyList<PotWinner>> OnWinnersDeclared { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnFinish { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnAbort { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback OnUndo { get; set; }
 
     [Parameter]

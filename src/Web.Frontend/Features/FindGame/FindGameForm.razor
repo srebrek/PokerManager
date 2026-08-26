@@ -29,8 +29,7 @@
 </EditForm>
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback<GameFound> OnFound { get; set; }
     private readonly FindGameModel _model = new();
     private bool _submitting;

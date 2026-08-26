@@ -8,8 +8,7 @@
             Label="Small Blind"
             Min="0"
             Immediate
-            HideSpinButtons
-            data-testid="rules-small-blind" />
+            HideSpinButtons />
 
         <MudNumericField
             @bind-Value="_bigBlind"
@@ -17,11 +16,10 @@
             Min="0"
             Immediate
             HideSpinButtons
-            HelperText="Big blind can not be less than small blind."
-            data-testid="rules-big-blind" />
+            HelperText="Big blind can not be less than small blind." />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel" data-testid="rules-cancel">
+        <MudButton OnClick="Cancel">
             Cancel
         </MudButton>
 
@@ -29,8 +27,7 @@
             OnClick="Submit"
             Disabled="@(!CanSubmit)"
             Variant="Variant.Filled"
-            Color="Color.Primary"
-            data-testid="rules-confirm">
+            Color="Color.Primary">
             Save
         </MudButton>
     </DialogActions>
@@ -40,12 +37,10 @@
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = null!;
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public int SmallBlind { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public int BigBlind { get; set; }
 
     public readonly record struct Rules(int SmallBlind, int BigBlind);

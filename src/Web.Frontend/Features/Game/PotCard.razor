@@ -1,11 +1,11 @@
 @using Contracts.Api.Gameplay
 
-<MudPaper Class="pa-2" Outlined data-testid="pot-card">
+<MudPaper Class="pa-2" Outlined>
     <MudStack Spacing="2">
         <MudStack Row AlignItems="AlignItems.Center">
-            <MudText Typo="Typo.subtitle1" data-testid="pot-name">@Name</MudText>
+            <MudText Typo="Typo.subtitle1">@Name</MudText>
             <MudSpacer />
-            <MudText Typo="Typo.h6" data-testid="pot-amount">@Pot.Amount</MudText>
+            <MudText Typo="Typo.h6">@Pot.Amount</MudText>
         </MudStack>
 
         @foreach (Guid participantId in Pot.EligibleParticipantIds)
@@ -18,7 +18,7 @@
                 FullWidth
                 data-testid="pot-winner">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                    <MudText data-testid="pot-winner-name">@NameOf(participantId)</MudText>
+                    <MudText>@NameOf(participantId)</MudText>
                     <MudSpacer />
                     @if (IsWinner(participantId))
                     {
@@ -31,20 +31,16 @@
 </MudPaper>
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required HandPotState Pot { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyCollection<Guid> WinnerIds { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public bool IsSelectable { get; set; }
 
     [Parameter]

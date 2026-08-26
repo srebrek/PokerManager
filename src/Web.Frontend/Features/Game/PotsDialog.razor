@@ -5,10 +5,10 @@
         <MudText Typo="Typo.h6">Pots</MudText>
     </TitleContent>
     <DialogContent>
-        <MudStack data-testid="pots-dialog">
+        <MudStack>
             @foreach (HandPotState pot in Pots)
             {
-                <MudPaper Class="pa-2" Outlined data-testid="pot-row">
+                <MudPaper Class="pa-2" Outlined>
                     <MudText Typo="Typo.subtitle2">@PotName(pot.Index): @pot.Amount</MudText>
 
                     <MudText Typo="Typo.body2" data-testid="pot-eligible">
@@ -29,12 +29,10 @@
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = null!;
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyList<HandPotState> Pots { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required IReadOnlyList<GameStateParticipant> Participants { get; set; }
 
     private static string PotName(int index) => index is 0 ? "Main pot" : $"Side pot {index}";

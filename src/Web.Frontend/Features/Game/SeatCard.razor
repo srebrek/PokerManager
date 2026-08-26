@@ -6,8 +6,7 @@
         Variant="Variant.Outlined"
         Color="@(IsSelected ? Color.Warning : Color.Inherit)"
         FullWidth
-        Disabled="@(!IsSelectable)"
-        data-testid="seat-card">
+        Disabled="@(!IsSelectable)">
         @* min-height keeps rows equal whether or not a chip is rendered: 32px chip + 4px margin top and bottom *@
         <MudStack
             Row
@@ -15,7 +14,7 @@
             Spacing="2"
             Class="flex-grow-1"
             Style="min-height: 40px">
-            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)" data-testid="seat-name">
+            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)">
                 @Model.Name
             </MudText>
 
@@ -23,34 +22,29 @@
             {
                 <MudChip
                     T="string"
-                    Variant="Variant.Text"
-                    data-testid="seat-state">
+                    Variant="Variant.Text">
                     @(Model.State is SeatState.AllIn ? "All-in" : "Folded")
                 </MudChip>
             }
 
             <MudSpacer />
 
-            <MudText data-testid="seat-bet-stack">@Model.Contribution/@Model.RemainingStack</MudText>
+            <MudText>@Model.Contribution/@Model.RemainingStack</MudText>
         </MudStack>
     </MudButton>
 </MudPaper>
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required SeatCardModel Model { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public bool IsSelected { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public bool IsSelectable { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback<Guid> OnClick { get; set; }
 
     private async Task ClickAsync() => await OnClick.InvokeAsync(Model.ParticipantId);

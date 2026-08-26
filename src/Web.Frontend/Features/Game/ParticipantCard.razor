@@ -14,7 +14,7 @@
             Spacing="2"
             Class="flex-grow-1"
             Style="min-height: 40px">
-            <MudText Color="@(IsMe ? Color.Primary : Color.Inherit)" data-testid="participant-name">
+            <MudText Color="@(IsMe ? Color.Primary : Color.Inherit)">
                 @Participant.Name
             </MudText>
 
@@ -31,8 +31,7 @@
             {
                 <MudChip
                     T="string"
-                    Variant="Variant.Text"
-                    data-testid="participant-dealer">
+                    Variant="Variant.Text">
                     Dealer
                 </MudChip>
             }
@@ -41,8 +40,7 @@
             {
                 <MudChip
                     T="string"
-                    Variant="Variant.Text"
-                    data-testid="participant-sitting-out">
+                    Variant="Variant.Text">
                     Sitting Out
                 </MudChip>
             }
@@ -55,20 +53,16 @@
 </MudPaper>
 
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public required GameStateParticipant Participant { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public bool IsMe { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public bool IsSelected { get; set; }
 
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public EventCallback<Guid> OnClick { get; set; }
 
     private async Task ClickAsync() => await OnClick.InvokeAsync(Participant.Id);
