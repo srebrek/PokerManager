@@ -1,4 +1,4 @@
-﻿using Azure.Provisioning.AppContainers;
+using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.ContainerRegistry;
 using Microsoft.Extensions.Hosting;
 

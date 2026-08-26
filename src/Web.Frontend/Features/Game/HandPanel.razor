@@ -25,7 +25,11 @@
     <MudStack>
         @foreach (SeatCardModel seatCardInput in _seats)
         {
-            <SeatCard Model="seatCardInput" />
+            <SeatCard
+                Model="seatCardInput"
+                IsSelected="@(_selectedParticipantId == seatCardInput.ParticipantId)"
+                IsSelectable="@(seatCardInput.State is SeatState.Active)"
+                OnClick="SelectSeat" />
         }
     </MudStack>
 </MudStack>
@@ -42,7 +46,7 @@
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
                     FullWidth
-                    OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.AllIn)))"
+                    OnClick="@(() => SubmitAsync(HandActionType.AllIn))"
                     data-testid="action-all-in">
                     All-in
                 </MudButton>
@@ -52,7 +56,7 @@
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
                     FullWidth
-                    OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Fold)))"
+                    OnClick="@(() => SubmitAsync(HandActionType.Fold))"
                     data-testid="action-fold">
                     Fold
                 </MudButton>
@@ -62,7 +66,7 @@
                     Variant="Variant.Filled"
                     Color="Color.Warning"
                     FullWidth
-                    OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Check)))"
+                    OnClick="@(() => SubmitAsync(HandActionType.Check))"
                     data-testid="action-check">
                     Check
                 </MudButton>
@@ -72,7 +76,7 @@
                     Variant="Variant.Filled"
                     Color="Color.Warning"
                     FullWidth
-                    OnClick="@(() => OnAction.InvokeAsync(new(HandActionType.Call)))"
+                    OnClick="@(() => SubmitAsync(HandActionType.Call))"
                     data-testid="action-call">
                     Call
                 </MudButton>
@@ -110,10 +114,9 @@
                     Variant="Variant.Filled"
                     Color="Color.Primary"
                     FullWidth
-                    OnClick="@(() =>
-                        OnAction.InvokeAsync(new(_isBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount)))"
+                    OnClick="@(() => SubmitAsync(IsBet ? HandActionType.Bet : HandActionType.Raise, _selectedAmount))"
                     data-testid="action-bet-raise">
-                    @(_isBet ? "Bet" : "Raise")
+                    @(IsBet ? "Bet" : "Raise")
                 </MudButton>
             </MudItem>
         </MudGrid>
@@ -194,14 +197,21 @@
     public Guid? MyParticipantId { get; set; }
 
     private List<SeatCardModel> _seats = [];
-    private HandStateSeat? _mySeat;
-    private int? _amountToCall;
+    private Guid? _selectedParticipantId;
+    private Guid _handId;
+    private bool _isHost;
     private int _selectedAmount = 0;
-    private bool _isBet;
 
     protected override void OnParametersSet()
     {
+        if (_handId != Hand.HandId)
+        {
+            _handId = Hand.HandId;
+            _selectedParticipantId = null;
+        }
+
         _seats = Hand.Seats.Select(s => new SeatCardModel(
+            s.ParticipantId,
             Participants.Single(p => p.Id == s.ParticipantId).Name,
             s.RemainingStack,
             s.StreetContribution,
@@ -209,16 +219,44 @@
             s.ParticipantId == MyParticipantId))
             .ToList();
 
-        _mySeat = Hand.Seats.SingleOrDefault(s => s.ParticipantId == MyParticipantId);
-        if (_mySeat is not null)
+        _isHost = Participants.Any(p => p.Id == MyParticipantId && p.IsHost);
+    }
+
+    private Guid? ActingParticipantId => _selectedParticipantId ?? MyParticipantId;
+
+    private HandStateSeat? ActingSeat =>
+        Hand.Seats.SingleOrDefault(s => s.ParticipantId == ActingParticipantId);
+
+    private int? AmountToCall => ActingSeat is { } actingSeat
+        ? Hand.Seats.Max(s => s.StreetContribution - actingSeat.StreetContribution)
+        : null;
+
+    private bool IsBet => AmountToCall is 0;
+
+    private void SelectSeat(Guid participantId)
+    {
+        if (!_isHost)
         {
-            _amountToCall = Hand.Seats.Max(s => s.StreetContribution - _mySeat.StreetContribution);
+            return;
         }
 
-        _isBet = _amountToCall is 0;
+        _selectedParticipantId = _selectedParticipantId != participantId ? participantId : null;
+    }
+
+    private Task SubmitAsync(HandActionType type, int? amountTo = null)
+    {
+        if (ActingParticipantId is not { } actingParticipantId)
+        {
+            return Task.CompletedTask;
+        }
+
+        _selectedParticipantId = null;
+
+        return OnAction.InvokeAsync(new(actingParticipantId, type, amountTo));
     }
 
     private void IncrementSelectedAmount(int value) => _selectedAmount += value;
 
-    public readonly record struct HandActionSelected(HandActionType Type, int? AmountTo = null);
+    public readonly record struct HandActionSelected(
+        Guid ActingParticipantId, HandActionType Type, int? AmountTo = null);
 }

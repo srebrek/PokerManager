@@ -1,25 +1,39 @@
 @using Contracts.Api.Gameplay
 
-<MudPaper data-testid="seat-card">
-    <MudStack Row>
-        <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)" data-testid="seat-name">
-            @Model.Name
-        </MudText>
+<MudPaper>
+    <MudButton
+        OnClick="ClickAsync"
+        Variant="Variant.Outlined"
+        Color="@(IsSelected ? Color.Warning : Color.Inherit)"
+        FullWidth
+        Disabled="@(!IsSelectable)"
+        data-testid="seat-card">
+        @* min-height keeps rows equal whether or not a chip is rendered: 32px chip + 4px margin top and bottom *@
+        <MudStack
+            Row
+            AlignItems="AlignItems.Center"
+            Spacing="2"
+            Class="flex-grow-1"
+            Style="min-height: 40px">
+            <MudText Color="@(Model.IsMe ? Color.Primary : Color.Inherit)" data-testid="seat-name">
+                @Model.Name
+            </MudText>
 
-        <MudText data-testid="seat-state">
-            State: @Model.State
-        </MudText>
+            @if (Model.State is not SeatState.Active)
+            {
+                <MudChip
+                    T="string"
+                    Variant="Variant.Text"
+                    data-testid="seat-state">
+                    @(Model.State is SeatState.AllIn ? "All-in" : "Folded")
+                </MudChip>
+            }
 
-        <MudText data-testid="seat-chips">
-            Chips: @Model.RemainingStack
-        </MudText>
+            <MudSpacer />
 
-        <MudSpacer />
-
-        <MudText data-testid="seat-bet">
-            Bet: @Model.Contribution
-        </MudText>
-    </MudStack>
+            <MudText data-testid="seat-bet-stack">@Model.Contribution/@Model.RemainingStack</MudText>
+        </MudStack>
+    </MudButton>
 </MudPaper>
 
 @code {
@@ -27,7 +41,22 @@
     [EditorRequired]
     public required SeatCardModel Model { get; set; }
 
+    [Parameter]
+    [EditorRequired]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsSelectable { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<Guid> OnClick { get; set; }
+
+    private async Task ClickAsync() => await OnClick.InvokeAsync(Model.ParticipantId);
+
     public sealed record SeatCardModel(
+        Guid ParticipantId,
         string Name,
         int RemainingStack,
         int Contribution,

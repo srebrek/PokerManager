@@ -140,8 +140,8 @@
         RunAsParticipantAsync((myId, ct) => GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), ct));
 
     private Task RecordActionAsync(Guid handId, HandPanel.HandActionSelected action) =>
-        RunAsParticipantAsync((myId, ct) =>
-            GameplayApi.RecordActionAsync(handId, new(myId, action.Type, action.AmountTo), ct));
+        RunAsync(ct => GameplayApi.RecordActionAsync(
+            handId, new(action.ActingParticipantId, action.Type, action.AmountTo), ct));
 
     private async Task ShowPotsAsync(GameStateResponse game, GetHandStateResponse hand)
     {
