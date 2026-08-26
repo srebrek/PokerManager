@@ -47,6 +47,12 @@ internal static class HandErrors
             "Gameplay.Hand.NotFinishedStreetWinnersDeclaration",
             "Can not declare winners of a hand that is still in play.");
 
+    public static readonly Error NotInProgressHandUndo =
+        Error.Conflict("Gameplay.Hand.NotInProgressHandUndo", "Can not undo an action of a hand that is not in play.");
+
+    public static readonly Error NothingToUndo =
+        Error.Conflict("Gameplay.Hand.NothingToUndo", "Blinds can not be undone.");
+
     public static readonly Error NotInProgressHandAbort =
         Error.Conflict("Gameplay.Hand.NotInProgressHandAbort", "Can not abort hand that is not in play.");
 }

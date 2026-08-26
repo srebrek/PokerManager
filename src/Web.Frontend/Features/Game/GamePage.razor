@@ -70,6 +70,7 @@
                     OnWinnersDeclared="@(winners => DeclareWinnersAsync(loaded.Hand.HandId, winners))"
                     OnFinish="@(() => FinishHandAsync(loaded.Hand.HandId))"
                     OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
+                    OnUndo="@(() => UndoLastActionAsync(loaded.Hand.HandId))"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)" />
             }
             else
@@ -81,6 +82,7 @@
                     OnAction="@(action => RecordActionAsync(loaded.Hand.HandId, action))"
                     OnPotsRequested="@(() => ShowPotsAsync(loaded.Game, loaded.Hand))"
                     OnAbort="@(() => AbortHandAsync(loaded.Hand.HandId))"
+                    OnUndo="@(() => UndoLastActionAsync(loaded.Hand.HandId))"
                     MyParticipantId="@Session.ParticipantIdFor(GameId)" />
             }
 
@@ -162,6 +164,9 @@
 
     private Task AbortHandAsync(Guid handId) =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.AbortHandAsync(handId, new(myId), ct));
+
+    private Task UndoLastActionAsync(Guid handId) =>
+        RunAsParticipantAsync((myId, ct) => GameplayApi.UndoLastActionAsync(handId, new(myId), ct));
 
     private async Task RebuyAsync(GameStateResponse game, Guid participantId)
     {

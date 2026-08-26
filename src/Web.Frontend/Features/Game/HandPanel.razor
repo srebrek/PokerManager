@@ -3,9 +3,15 @@
 
 @* padding for the action bar: 8px + two 36px rows + 8px gutter + 8px, and the chip bar: 8px + 36px + 8px *@
 <MudStack data-testid="hand-panel" Style="padding-bottom: 148px">
-    <MudButton OnClick="OnAbort" data-testid="abort-hand">
-        Abort Hand
-    </MudButton>
+    <MudStack Row>
+        <MudButton OnClick="OnAbort" FullWidth data-testid="abort-hand">
+            Abort Hand
+        </MudButton>
+
+        <MudButton OnClick="OnUndo" FullWidth data-testid="undo-action">
+            Undo
+        </MudButton>
+    </MudStack>
 
     <MudStack StretchItems="StretchItems.All" Row>
         <MudPaper
@@ -192,6 +198,10 @@
     [Parameter]
     [EditorRequired]
     public EventCallback OnAbort { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnUndo { get; set; }
 
     [Parameter]
     public Guid? MyParticipantId { get; set; }

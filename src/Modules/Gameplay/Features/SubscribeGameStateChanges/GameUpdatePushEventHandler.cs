@@ -35,10 +35,14 @@ public sealed class GameUpdatePushEventHandler(IHubContext<GameHub> hubContext)
 // TODO: move to the separate files
 public sealed class HandUpdatePushEventHandler(IHubContext<GameHub> hubContext)
 {
-    public Task Handle(HandWinnersDeclaredDomainEvent e, CancellationToken ct) =>
+    public Task Handle(HandWinnersDeclaredDomainEvent e, CancellationToken ct) => PushAsync(e.HandId, ct);
+
+    public Task Handle(HandActionUndoneDomainEvent e, CancellationToken ct) => PushAsync(e.HandId, ct);
+
+    private Task PushAsync(Guid handId, CancellationToken ct) =>
         hubContext.Clients
-            .Group(GameHub.HandGroupName(e.HandId))
-            .SendAsync(GameplayRoutes.HubHandUpdatedMethod, e.HandId, ct);
+            .Group(GameHub.HandGroupName(handId))
+            .SendAsync(GameplayRoutes.HubHandUpdatedMethod, handId, ct);
 }
 
 public sealed class RecordActionEffectPushEventHandler(IHubContext<GameHub> hubContext)

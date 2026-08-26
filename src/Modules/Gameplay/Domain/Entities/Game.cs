@@ -330,7 +330,7 @@ internal sealed class Game : AggregateRoot<GameId>
         return Result.Success();
     }
 
-    public Result DetachHand(ParticipantId actingParticipantId, HandId handId)
+    public Result AuthorizeHandControl(ParticipantId actingParticipantId, HandId handId)
     {
         if (HostParticipantId != actingParticipantId)
         {
@@ -347,6 +347,16 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.InvalidHandId;
         }
 
+        return Result.Success();
+    }
+
+    public Result DetachHand(ParticipantId actingParticipantId, HandId handId)
+    {
+        if (AuthorizeHandControl(actingParticipantId, handId).TryGetError(out Error? error))
+        {
+            return error;
+        }
+
         CurrentHandId = null;
 
         Raise(new HandDetachedDomainEvent(Id.Value, handId.Value));
@@ -356,19 +366,9 @@ internal sealed class Game : AggregateRoot<GameId>
 
     public Result ApplyHandAwards(IReadOnlyList<HandAward> handAwards, ParticipantId actingParticipant, HandId handId)
     {
-        if (HostParticipantId != actingParticipant)
+        if (AuthorizeHandControl(actingParticipant, handId).TryGetError(out Error? error))
         {
-            return GameErrors.NotHost;
-        }
-
-        if (CurrentHandId is null)
-        {
-            return GameErrors.NoCurrentHand;
-        }
-
-        if (CurrentHandId != handId)
-        {
-            return GameErrors.InvalidHandId;
+            return error;
         }
 
         CurrentHandId = null;
@@ -376,7 +376,7 @@ internal sealed class Game : AggregateRoot<GameId>
         foreach (HandAward award in handAwards)
         {
             Participant participant = Participants.Single(p => p.Id == award.ParticipantId);
-            if (participant.AddChips(award.Net).TryGetError(out Error? error))
+            if (participant.AddChips(award.Net).TryGetError(out error))
             {
                 return error;
             }

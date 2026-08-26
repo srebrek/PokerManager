@@ -118,6 +118,26 @@ internal sealed class Hand : AggregateRoot<HandId>
         return Result.Success();
     }
 
+    public Result UndoLastAction()
+    {
+        if (Status is not HandStatus.InProgress)
+        {
+            return HandErrors.NotInProgressHandUndo;
+        }
+
+        if (_actions[^1].Type is HandActionType.PostSmallBlind or HandActionType.PostBigBlind)
+        {
+            return HandErrors.NothingToUndo;
+        }
+
+        _actions.RemoveAt(_actions.Count - 1);
+        _potWinners.Clear();
+
+        Raise(new HandActionUndoneDomainEvent(Id.Value));
+
+        return Result.Success();
+    }
+
     public Result DeclareWinners(IReadOnlyList<HandPotWinner> potWinners)
     {
         if (Status is not HandStatus.InProgress)

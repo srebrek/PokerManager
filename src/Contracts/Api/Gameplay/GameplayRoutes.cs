@@ -42,6 +42,8 @@ public static class GameplayRoutes
     public static Uri FinishHandFor(Guid handId) => new($"{Hands}/{handId}/finish", UriKind.Relative);
     public const string AbortHand = $"{Hand}/abort";
     public static Uri AbortHandFor(Guid handId) => new($"{Hands}/{handId}/abort", UriKind.Relative);
+    public const string UndoLastAction = $"{Hand}/undo";
+    public static Uri UndoLastActionFor(Guid handId) => new($"{Hands}/{handId}/undo", UriKind.Relative);
 
     public const string Hub = "gameplay/hub";
     public const string HubJoinGameMethod = "JoinGame";
