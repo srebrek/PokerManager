@@ -6,94 +6,84 @@ namespace Gameplay.UnitTests.GameTests;
 
 public sealed class PrepareNextHandTests
 {
-    private const int BigBlind = 20;
-
-    private static Game CreateStartableGame(out ParticipantId second, out ParticipantId third)
+    private static Game CreateGame(out ParticipantId second, out ParticipantId third, out ParticipantId fourth)
     {
-        Game game = Game.Create("TestHostName", (ChipsStack)10, (ChipsStack)BigBlind).Value;
-        second = game.AddParticipant("TestSecondName").Value;
-        third = game.AddParticipant("TestThirdName").Value;
-
-        foreach (ParticipantId participantId in game.SeatingOrder)
-        {
-            game.Rebuy(game.HostParticipantId, participantId, 1000);
-        }
+        Game game = Game.Create("TestHostName", (ChipsStack)10, (ChipsStack)20).Value;
+        second = AddParticipant(game, "TestSecondName", 800);
+        third = AddParticipant(game, "TestThirdName", 600);
+        fourth = AddParticipant(game, "TestFourthName", 400);
+        game.Rebuy(game.HostParticipantId, game.HostParticipantId, 1000);
 
         return game;
     }
 
-    private static ParticipantId AddFundedParticipant(Game game, string name)
+    private static ParticipantId AddParticipant(Game game, string name, int chips)
     {
         ParticipantId participantId = game.AddParticipant(name).Value;
-        game.Rebuy(game.HostParticipantId, participantId, 1000);
+        game.Rebuy(game.HostParticipantId, participantId, chips);
         return participantId;
     }
 
     [Fact]
-    public void PrepareNextHand_DealerButtonMoved_StartsTheSeatsAfterTheNewDealer()
+    public void PrepareNextHand_ParticipantSittingOut_SeatsTheRemainingParticipantsAfterTheDealer()
     {
         // Arrange
-        Game game = CreateStartableGame(out ParticipantId second, out ParticipantId third);
-        HandId handId = HandId.New();
-        game.AttachHand(handId);
-        game.ApplyHandAwards([], game.HostParticipantId, handId);
-
-        // Act
-        Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(game.HostParticipantId);
-
-        // Assert
-        game.DealerButtonParticipantId.ShouldBe(second);
-        result.IsSuccess.ShouldBeTrue();
-        result.Value.Select(s => s.ParticipantId).ShouldBe([third, game.HostParticipantId, second]);
-        result.Value.Select(s => s.Position).ShouldBe([0, 1, 2]);
-    }
-
-    [Fact]
-    public void PrepareNextHand_ParticipantSittingOut_ExcludesItFromTheSeatsAndKeepsTheOrder()
-    {
-        // Arrange
-        Game game = CreateStartableGame(out ParticipantId second, out ParticipantId third);
-        ParticipantId fourth = AddFundedParticipant(game, "TestFourthName");
-        game.SetParticipantSittingOut(game.HostParticipantId, second, true);
+        Game game = CreateGame(out ParticipantId second, out ParticipantId third, out ParticipantId fourth);
+        game.SetParticipantSittingOut(game.HostParticipantId, third, true);
 
         // Act
         Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(game.HostParticipantId);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        result.Value.Select(s => s.ParticipantId).ShouldBe([third, fourth, game.HostParticipantId]);
-        result.Value.Select(s => s.Position).ShouldBe([0, 1, 2]);
+        result.Value.ShouldBe([
+            new HandSeat(second, (ChipsStack)800, 0),
+            new HandSeat(fourth, (ChipsStack)400, 1),
+            new HandSeat(game.HostParticipantId, (ChipsStack)1000, 2),
+        ]);
     }
 
     [Fact]
-    public void PrepareNextHand_TooFewParticipantsLeftSeated_ReturnsNotEnoughParticipantsFailure()
+    public void PrepareNextHand_ActingParticipantIsNotHost_ReturnsNotHostFailure()
     {
         // Arrange
-        Game game = CreateStartableGame(out ParticipantId second, out _);
-        game.SetParticipantSittingOut(game.HostParticipantId, second, true);
+        Game game = CreateGame(out ParticipantId second, out _, out _);
+
+        // Act
+        Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(second);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(GameErrors.NotHost);
+    }
+
+    [Fact]
+    public void PrepareNextHand_GameFinished_ReturnsGameFinishedFailure()
+    {
+        // Arrange
+        Game game = CreateGame(out _, out _, out _);
+        game.Finish(game.HostParticipantId);
 
         // Act
         Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(game.HostParticipantId);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(GameErrors.NotEnoughParticipants);
+        result.Error.ShouldBe(GameErrors.GameFinished);
     }
 
     [Fact]
-    public void PrepareNextHand_ParticipantSittingOutBelowBigBlind_DoesNotBlockTheHand()
+    public void PrepareNextHand_HandIsRunning_ReturnsHandIsRunningFailure()
     {
         // Arrange
-        Game game = CreateStartableGame(out ParticipantId second, out _);
-        AddFundedParticipant(game, "TestFourthName");
-        game.Rebuy(game.HostParticipantId, second, -1000 + BigBlind - 1);
-        game.SetParticipantSittingOut(game.HostParticipantId, second, true);
+        Game game = CreateGame(out _, out _, out _);
+        game.AttachHand(HandId.New());
 
         // Act
         Result<IReadOnlyList<HandSeat>> result = game.PrepareNextHand(game.HostParticipantId);
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.Value.Select(s => s.ParticipantId).ShouldNotContain(second);
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(GameErrors.HandIsRunning);
     }
 }

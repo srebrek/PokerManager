@@ -1,12 +1,15 @@
 using Contracts.Api.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Wolverine.Tracking;
 
 namespace IntegrationTests;
 
 // TODO: add csrf tests
 public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
+    private static readonly TimeSpan s_trackingTimeout = TimeSpan.FromSeconds(30);
+
     protected ApiFactory Factory => factory;
     protected HttpClient Client { get; } = WithAntiCsrfHeader(factory.CreateClient());
     protected IServiceProvider Services { get; } = factory.Services;
@@ -22,6 +25,29 @@ public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<Ap
     public async ValueTask InitializeAsync()
     {
         await factory.ResetDatabaseAsync();
+    }
+
+    protected Task<ITrackedSession> TrackAsync(Func<Task> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return Factory.Host
+            .TrackActivity()
+            .Timeout(s_trackingTimeout)
+            .ExecuteAndWaitAsync(_ => action());
+    }
+
+    protected async Task<(ITrackedSession Session, TResult Result)> TrackAsync<TResult>(Func<Task<TResult>> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        TResult result = default!;
+        ITrackedSession session = await TrackAsync(async () =>
+        {
+            result = await action();
+        });
+
+        return (session, result);
     }
 
     protected async Task ExecuteWithContextAsync<TContext>(Func<TContext, Task> action)

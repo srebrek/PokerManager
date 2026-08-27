@@ -5,7 +5,12 @@ namespace Gameplay.Domain.Entities;
 internal static class HandErrors
 {
     public static readonly Error InsufficientParticipantCount =
-        Error.Problem("Gameplay.Hand.InsufficientParticipantCount", "Participants count can not be less than 2.");
+        Error.Conflict("Gameplay.Hand.InsufficientParticipantCount", "Participants count can not be less than 3.");
+
+    public static readonly Error InsufficientChipsForBigBlind =
+        Error.Conflict(
+            "Gameplay.Hand.InsufficientChipsForBigBlind",
+            "A seated participant has fewer chips than the big blind.");
 
     public static readonly Error DuplicatedParticipants =
         Error.Problem("Gameplay.Hand.DuplicatedParticipants", "Participants must be unique.");

@@ -1,3 +1,7 @@
 namespace Contracts.IntegrationEvents.Identity;
 
-public sealed record UserRegisteredIntegrationEvent(Guid UserId, string Email) : IIntegrationEvent;
+public sealed record UserRegisteredIntegrationEvent(
+    Guid EventId,
+    DateTimeOffset OccurredAt,
+    Guid UserId,
+    string Email) : IIntegrationEvent;

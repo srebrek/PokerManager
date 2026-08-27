@@ -7,6 +7,8 @@ namespace Gameplay.Domain.Entities;
 
 internal sealed class Hand : AggregateRoot<HandId>
 {
+    public const int MinimumSeatCount = 3;
+
     public GameId GameId { get; }
     public HandStatus Status { get; private set; }
 
@@ -64,7 +66,7 @@ internal sealed class Hand : AggregateRoot<HandId>
 
     private static Result ValidateStartInput(IReadOnlyList<HandSeat> seats, ChipsStack smallBlind, ChipsStack bigBlind)
     {
-        if (seats.Count < 2)
+        if (seats.Count < MinimumSeatCount)
         {
             return HandErrors.InsufficientParticipantCount;
         }
@@ -77,6 +79,11 @@ internal sealed class Hand : AggregateRoot<HandId>
         if (bigBlind.Value < smallBlind.Value)
         {
             return HandErrors.BigBlindLessThanSmallBlind;
+        }
+
+        if (seats.Any(s => s.StartingStack.Value < bigBlind.Value))
+        {
+            return HandErrors.InsufficientChipsForBigBlind;
         }
 
         return Result.Success();

@@ -8,7 +8,8 @@ namespace Identity.Features.Register;
 
 internal sealed class RegisterCommandHandler(
     IDbContextOutbox<IdentityDbContext> outbox,
-    IUserAccountService userAccountService)
+    IUserAccountService userAccountService,
+    TimeProvider timeProvider)
 {
     public async Task<Result> Handle(RegisterCommand command, CancellationToken ct)
     {
@@ -20,7 +21,11 @@ internal sealed class RegisterCommandHandler(
             return error;
         }
 
-        await outbox.PublishAsync(new UserRegisteredIntegrationEvent(userId, command.Email));
+        await outbox.PublishAsync(new UserRegisteredIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            userId,
+            command.Email));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
 

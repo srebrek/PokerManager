@@ -6,8 +6,6 @@ namespace Gameplay.Domain.Entities;
 
 internal sealed class Game : AggregateRoot<GameId>
 {
-    public const int MinimumParticipantsToStartAHand = 3;
-
     public JoinCode JoinCode { get; }
     public ParticipantId HostParticipantId { get; }
     public ParticipantId DealerButtonParticipantId { get; private set; }
@@ -284,21 +282,12 @@ internal sealed class Game : AggregateRoot<GameId>
             return GameErrors.HandIsRunning;
         }
 
-        if (_participants.Count(p => !p.IsSittingOut) < MinimumParticipantsToStartAHand)
-        {
-            return GameErrors.NotEnoughParticipants;
-        }
-
-        if (_participants.Any(p => !p.IsSittingOut && p.Chips.Value < BigBlind.Value))
-        {
-            return GameErrors.InsufficientChipsForBigBlind;
-        }
-
         return Result.Success();
     }
 
     private List<HandSeat> BuildSeats()
     {
+        // TODO: check if not overcomplicated. Cuz it does not have to return in order
         Dictionary<ParticipantId, Participant> participantsById = _participants.ToDictionary(p => p.Id);
         List<Participant> seated = [.. _seatingOrder
             .Select(id => participantsById[id])
@@ -318,6 +307,7 @@ internal sealed class Game : AggregateRoot<GameId>
 
     public Result AttachHand(HandId handId)
     {
+        // TODO: add tests
         if (CurrentHandId is not null)
         {
             return GameErrors.HandIsRunning;

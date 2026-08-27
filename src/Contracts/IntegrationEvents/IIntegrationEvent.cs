@@ -1,3 +1,7 @@
 namespace Contracts.IntegrationEvents;
 
-public interface IIntegrationEvent;
+public interface IIntegrationEvent
+{
+    Guid EventId { get; }
+    DateTimeOffset OccurredAt { get; }
+}

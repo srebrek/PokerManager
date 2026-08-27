@@ -3,6 +3,7 @@ using JasperFx.CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Respawn;
 using Respawn.Graph;
@@ -20,6 +21,14 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
     private readonly string _dbName = $"test_db_{Guid.NewGuid():N}";
     private string _connectionString = string.Empty;
     private Respawner _respawner = null!;
+
+    public IHost Host { get; private set; } = null!;
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        Host = base.CreateHost(builder);
+        return Host;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
