@@ -1,4 +1,5 @@
 using Contracts.Api.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using FluentValidation;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
@@ -52,8 +53,11 @@ internal sealed class AbortHandCommandValidator : AbstractValidator<AbortHandCom
     }
 }
 
-internal sealed class AbortHandCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
+internal sealed class AbortHandCommandHandler(
+    IDbContextOutbox<GameplayDbContext> outbox,
+    TimeProvider timeProvider)
 {
+    // TODO: add tests
     public async Task<Result> Handle(AbortHandCommand command, CancellationToken ct)
     {
         Hand? hand = await outbox.DbContext.Hands.SingleOrDefaultAsync(h => h.Id == HandId.From(command.HandId), ct);
@@ -77,6 +81,11 @@ internal sealed class AbortHandCommandHandler(IDbContextOutbox<GameplayDbContext
         {
             return error;
         }
+
+        await outbox.PublishAsync(new HandAbortedIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            hand.Id.Value));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
         return Result.Success();

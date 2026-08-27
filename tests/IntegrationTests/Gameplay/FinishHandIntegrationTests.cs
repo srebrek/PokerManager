@@ -1,4 +1,6 @@
 using Contracts.Api.Gameplay;
+// using Contracts.IntegrationEvents.Gameplay;
+using Wolverine.Tracking;
 
 namespace IntegrationTests.Gameplay;
 
@@ -15,9 +17,12 @@ public sealed class FinishHandIntegrationTests(ApiFactory factory) : GameplayInt
             [new PotWinner(0, hand.SmallBlindParticipantId), new PotWinner(1, hand.BigBlindParticipantId)]);
 
         // Act
-        using HttpResponseMessage response = await PostFinishHandAsync(hand.HandId, hand.HostParticipantId);
+        // TODO: _ -> Session
+        (ITrackedSession _, HttpResponseMessage Response) =
+            await TrackAsync(() => PostFinishHandAsync(hand.HandId, hand.HostParticipantId));
 
         // Assert
+        using HttpResponseMessage response = Response;
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         GameStateResponse game = await GetGameStateAsync(hand.GameId);
@@ -25,6 +30,18 @@ public sealed class FinishHandIntegrationTests(ApiFactory factory) : GameplayInt
         game.Participants.Single(p => p.Id == hand.SmallBlindParticipantId).Chips.ShouldBe(150);
         game.Participants.Single(p => p.Id == hand.BigBlindParticipantId).Chips.ShouldBe(1000);
         game.Participants.Single(p => p.Id == hand.HostParticipantId).Chips.ShouldBe(900);
+
+        // TODO: uncomment when a consumer appears
+        // HandFinishedIntegrationEvent published = Session.Sent.SingleMessage<HandFinishedIntegrationEvent>();
+        // published.HandId.ShouldBe(hand.HandId);
+        // published.Pots.ShouldBe([new HandFinishedPot(0, 150), new HandFinishedPot(1, 100)]);
+        // published.PotWinners.ShouldBe([
+        //     new HandFinishedPotWinner(0, hand.SmallBlindParticipantId),
+        //     new HandFinishedPotWinner(1, hand.BigBlindParticipantId),
+        // ]);
+        // published.Results.Count.ShouldBe(3);
+        // published.Results.Sum(result => result.Net).ShouldBe(0);
+        // published.Results.Single(result => result.ParticipantId == hand.SmallBlindParticipantId).Net.ShouldBe(100);
     }
 
     [Fact]

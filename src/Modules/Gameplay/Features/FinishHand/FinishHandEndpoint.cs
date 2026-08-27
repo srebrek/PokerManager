@@ -1,6 +1,8 @@
 using Contracts.Api.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using FluentValidation;
 using Gameplay.Domain.Entities;
+using Gameplay.Domain.Services;
 using Gameplay.Domain.ValueObjects;
 using Gameplay.Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
@@ -52,7 +54,9 @@ internal sealed class FinishHandCommandValidator : AbstractValidator<FinishHandC
     }
 }
 
-internal sealed class FinishHandCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
+internal sealed class FinishHandCommandHandler(
+    IDbContextOutbox<GameplayDbContext> outbox,
+    TimeProvider timeProvider)
 {
     public async Task<Result> Handle(FinishHandCommand command, CancellationToken ct)
     {
@@ -86,6 +90,28 @@ internal sealed class FinishHandCommandHandler(IDbContextOutbox<GameplayDbContex
         {
             return error;
         }
+
+        if (!HandStateCalculator.Calculate(hand.Seats, hand.Actions)
+                .TryGetValue(out HandState handState, out error))
+        {
+            return error;
+        }
+
+        Dictionary<ParticipantId, int> netByParticipantId = awards.ToDictionary(a => a.ParticipantId, a => a.Net);
+
+        await outbox.PublishAsync(new HandFinishedIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            hand.Id.Value,
+            [.. handState.Pots.Select(pot => new HandFinishedPot(pot.Index, pot.Amount.Value))],
+            [.. hand.PotWinners.Select(winner => new HandFinishedPotWinner(
+                winner.PotIndex,
+                winner.ParticipantId.Value))],
+            [.. game.Participants.Select(participant => new HandFinishedResult(
+                participant.Id.Value,
+                participant.Name,
+                netByParticipantId.GetValueOrDefault(participant.Id),
+                participant.Chips.Value))]));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
         return Result.Success();
