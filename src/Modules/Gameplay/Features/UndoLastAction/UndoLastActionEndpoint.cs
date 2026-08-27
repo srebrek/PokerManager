@@ -1,4 +1,5 @@
 using Contracts.Api.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using FluentValidation;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
@@ -52,7 +53,9 @@ internal sealed class UndoLastActionCommandValidator : AbstractValidator<UndoLas
     }
 }
 
-internal sealed class UndoLastActionCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
+internal sealed class UndoLastActionCommandHandler(
+    IDbContextOutbox<GameplayDbContext> outbox,
+    TimeProvider timeProvider)
 {
     public async Task<Result> Handle(UndoLastActionCommand command, CancellationToken ct)
     {
@@ -81,6 +84,13 @@ internal sealed class UndoLastActionCommandHandler(IDbContextOutbox<GameplayDbCo
         {
             return error;
         }
+
+        int undoneSequenceNumber = hand.Actions[^1].SequenceNumber;
+        await outbox.PublishAsync(new HandActionUndoneIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            hand.Id.Value,
+            undoneSequenceNumber));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
         return Result.Success();
