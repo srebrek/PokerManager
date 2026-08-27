@@ -1,4 +1,5 @@
 using Contracts.Api.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using FluentValidation;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
@@ -59,7 +60,9 @@ internal sealed class RebuyCommandValidator : AbstractValidator<RebuyCommand>
     }
 }
 
-internal sealed class RebuyCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
+internal sealed class RebuyCommandHandler(
+    IDbContextOutbox<GameplayDbContext> outbox,
+    TimeProvider timeProvider)
 {
     public async Task<Result> Handle(RebuyCommand command, CancellationToken ct)
     {
@@ -81,6 +84,13 @@ internal sealed class RebuyCommandHandler(IDbContextOutbox<GameplayDbContext> ou
         {
             return error;
         }
+
+        await outbox.PublishAsync(new RebuyRecordedIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            game.Id.Value,
+            command.TargetParticipantId,
+            command.Amount));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
         return Result.Success();

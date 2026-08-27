@@ -1,4 +1,6 @@
 using Contracts.Api.Gameplay;
+// using Contracts.IntegrationEvents.Gameplay;
+using Wolverine.Tracking;
 
 namespace IntegrationTests.Gameplay;
 
@@ -14,16 +16,24 @@ public sealed class RebuyIntegrationTests(ApiFactory factory) : GameplayIntegrat
         RebuyRequest request = new(game.ParticipantId, 500);
 
         // Act
-        using HttpResponseMessage response = await Client.PostAsJsonAsync(
+        // TODO: _ -> Session
+        (ITrackedSession _, HttpResponseMessage Response) = await TrackAsync(() => Client.PostAsJsonAsync(
             GameplayRoutes.RebuyFor(game.GameId, participant.ParticipantId),
             request,
-            CancellationToken);
+            CancellationToken));
 
         // Assert
+        using HttpResponseMessage response = Response;
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         GameStateResponse state = await GetGameStateAsync(game.GameId);
         state.Participants.Single(p => p.Id == participant.ParticipantId).Chips.ShouldBe(500);
+
+        // TODO: uncomment when a consumer appears
+        // RebuyRecordedIntegrationEvent published = Session.Sent.SingleMessage<RebuyRecordedIntegrationEvent>();
+        // published.GameId.ShouldBe(game.GameId);
+        // published.ParticipantId.ShouldBe(participant.ParticipantId);
+        // published.Amount.ShouldBe(500);
     }
 
     [Fact]
