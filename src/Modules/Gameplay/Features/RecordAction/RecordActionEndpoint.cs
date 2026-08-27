@@ -1,4 +1,5 @@
 using Contracts.Api.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using FluentValidation;
 using Gameplay.Domain.Entities;
 using Gameplay.Domain.ValueObjects;
@@ -71,7 +72,9 @@ internal sealed class RecordActionCommandValidator : AbstractValidator<RecordAct
     }
 }
 
-internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbContext> outbox)
+internal sealed class RecordActionCommandHandler(
+    IDbContextOutbox<GameplayDbContext> outbox,
+    TimeProvider timeProvider)
 {
     public async Task<Result> Handle(RecordActionCommand command, CancellationToken ct)
     {
@@ -94,6 +97,17 @@ internal sealed class RecordActionCommandHandler(IDbContextOutbox<GameplayDbCont
         {
             return error;
         }
+
+        HandAction recorded = hand.Actions[^1];
+
+        await outbox.PublishAsync(new HandActionRecordedIntegrationEvent(
+            Guid.NewGuid(),
+            timeProvider.GetUtcNow(),
+            hand.Id.Value,
+            recorded.SequenceNumber,
+            recorded.ParticipantId.Value,
+            recorded.Type.ToContract(),
+            recorded.AmountTo?.Value));
 
         await outbox.SaveChangesAndFlushMessagesAsync(ct);
 
