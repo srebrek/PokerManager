@@ -12,6 +12,7 @@ using Shared.Domain;
 using Shared.Infrastructure;
 using Shared.Presentation.Extensions;
 using Shared.Presentation.Infrastructure;
+using Statistics;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.ErrorHandling;
@@ -45,6 +46,7 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddGameplayModule(builder.Configuration);
+builder.Services.AddStatisticsModule(builder.Configuration);
 
 builder.Host.UseWolverine(opts =>
 {
@@ -64,6 +66,7 @@ builder.Host.UseWolverine(opts =>
         .RetryWithCooldown(50.Milliseconds(), 100.Milliseconds(), 250.Milliseconds());
     opts.Discovery.IncludeAssembly(typeof(IdentityModule).Assembly);
     opts.Discovery.IncludeAssembly(typeof(GameplayModule).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(StatisticsModule).Assembly);
 });
 
 WebApplication app = builder.Build();

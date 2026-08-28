@@ -3,6 +3,7 @@ using Gameplay;
 using Identity;
 using JasperFx.CommandLine;
 using JasperFx.Resources;
+using Statistics;
 
 namespace Api.Bootstrapper;
 
@@ -17,6 +18,7 @@ public sealed class MigrateCommand : JasperFxAsyncCommand<NetCoreInput>
 
         await host.Services.ApplyIdentityMigrationsAsync();
         await host.Services.ApplyGameplayMigrationsAsync();
+        await host.Services.ApplyStatisticsMigrationsAsync();
 
         await host.SetupResources(CancellationToken.None);
 

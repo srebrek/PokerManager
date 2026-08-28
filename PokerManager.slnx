@@ -23,6 +23,7 @@
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Identity/Identity.csproj" />
     <Project Path="src/Modules/Gameplay/Gameplay.csproj" />
+    <Project Path="src/Modules/Statistics/Statistics.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />

@@ -4,6 +4,7 @@
     <ProjectReference Include="..\aspire\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.csproj" />
     <ProjectReference Include="..\Modules\Gameplay\Gameplay.csproj" />
+    <ProjectReference Include="..\Modules\Statistics\Statistics.csproj" />
     <ProjectReference Include="..\Web.Frontend\Web.Frontend.csproj" />
   </ItemGroup>
 
