@@ -5,6 +5,8 @@ using Identity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Statistics;
+using Statistics.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 
 [assembly: AssemblyFixture(typeof(IntegrationTests.GlobalDbFixture))]
@@ -47,10 +49,15 @@ public class GlobalDbFixture : IAsyncLifetime
             .UseNpgsql(migrationConnectionString)
             .UseSnakeCaseNamingConvention());
 
+        services.AddDbContext<StatisticsDbContext>(options => options
+            .UseNpgsql(migrationConnectionString)
+            .UseSnakeCaseNamingConvention());
+
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         await serviceProvider.ApplyIdentityMigrationsAsync();
         await serviceProvider.ApplyGameplayMigrationsAsync();
+        await serviceProvider.ApplyStatisticsMigrationsAsync();
     }
 
     public string GetConnectionString(string dbName)

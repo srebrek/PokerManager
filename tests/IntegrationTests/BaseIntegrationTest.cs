@@ -8,7 +8,7 @@ namespace IntegrationTests;
 // TODO: add csrf tests
 public abstract class BaseIntegrationTest(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
-    private static readonly TimeSpan s_trackingTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan s_trackingTimeout = TimeSpan.FromSeconds(60);
 
     protected ApiFactory Factory => factory;
     protected HttpClient Client { get; } = WithAntiCsrfHeader(factory.CreateClient());

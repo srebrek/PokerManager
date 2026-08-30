@@ -1,7 +1,7 @@
 using Contracts.Api.Gameplay;
-// using Contracts.IntegrationEvents.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using Wolverine.Tracking;
-// using EventHandActionType = Contracts.IntegrationEvents.Gameplay.HandActionType;
+using EventHandActionType = Contracts.IntegrationEvents.Gameplay.HandActionType;
 
 namespace IntegrationTests.Gameplay;
 
@@ -14,8 +14,7 @@ public sealed class StartHandIntegrationTests(ApiFactory factory) : GameplayInte
         FundedGame game = await CreateFundedGameAsync();
 
         // Act
-        // TODO: _ -> Session
-        (ITrackedSession _, HttpResponseMessage Response) =
+        (ITrackedSession Session, HttpResponseMessage Response) =
             await TrackAsync(() => PostStartHandAsync(game.GameId, game.HostParticipantId));
 
         // Assert
@@ -44,21 +43,21 @@ public sealed class StartHandIntegrationTests(ApiFactory factory) : GameplayInte
         pot.EligibleParticipantIds.ShouldBe([
             game.SmallBlindParticipantId, game.BigBlindParticipantId, game.HostParticipantId,
         ]);
-        // TODO: uncomment when a consumer appears
-        // HandStartedIntegrationEvent published = Session.Sent.SingleMessage<HandStartedIntegrationEvent>();
-        // published.HandId.ShouldBe(body.HandId);
-        // published.GameId.ShouldBe(game.GameId);
 
-        // published.Seats.ShouldBe([
-        //     new HandStartedSeat(game.SmallBlindParticipantId, "TestSmallBlindName", 0, 800),
-        //     new HandStartedSeat(game.BigBlindParticipantId, "TestBigBlindName", 1, 600),
-        //     new HandStartedSeat(game.HostParticipantId, "TestHostName", 2, 1000),
-        // ]);
+        HandStartedIntegrationEvent published = Session.Sent.SingleMessage<HandStartedIntegrationEvent>();
+        published.HandId.ShouldBe(body.HandId);
+        published.GameId.ShouldBe(game.GameId);
 
-        // published.Blinds.ShouldBe([
-        //     new HandStartedBlind(0, game.SmallBlindParticipantId, EventHandActionType.PostSmallBlind, 5),
-        //     new HandStartedBlind(1, game.BigBlindParticipantId, EventHandActionType.PostBigBlind, 10),
-        // ]);
+        published.Seats.ShouldBe([
+            new HandStartedSeat(game.SmallBlindParticipantId, "TestSmallBlindName", 0, 800),
+            new HandStartedSeat(game.BigBlindParticipantId, "TestBigBlindName", 1, 600),
+            new HandStartedSeat(game.HostParticipantId, "TestHostName", 2, 1000),
+        ]);
+
+        published.Blinds.ShouldBe([
+            new HandStartedBlind(0, game.SmallBlindParticipantId, EventHandActionType.PostSmallBlind, 5),
+            new HandStartedBlind(1, game.BigBlindParticipantId, EventHandActionType.PostBigBlind, 10),
+        ]);
     }
 
     [Fact]
