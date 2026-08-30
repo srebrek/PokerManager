@@ -5,6 +5,7 @@ using Identity;
 using Identity.Abstractions;
 using JasperFx;
 using JasperFx.CodeGeneration;
+using JasperFx.CommandLine;
 using JasperFx.Core;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -96,6 +97,13 @@ else
 {
     app.MapStaticAssets();
     app.MapFallbackToFile("index.html");
+}
+
+if (JasperFxEnvironment.AutoStartHost)
+{
+    // test path
+    await app.RunAsync();
+    return 0;
 }
 
 // For codegen

@@ -22,6 +22,12 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
     private string _connectionString = string.Empty;
     private Respawner _respawner = null!;
 
+    private readonly string _masterConnectionString =
+        new NpgsqlConnectionStringBuilder(dbFixture.Container.GetConnectionString())
+        {
+            Pooling = false
+        }.ConnectionString;
+
     public IHost Host { get; private set; } = null!;
 
     protected override IHost CreateHost(IHostBuilder builder)
@@ -41,7 +47,7 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
     {
         _connectionString = dbFixture.GetConnectionString(_dbName);
 
-        await using NpgsqlConnection connection = new(dbFixture.Container.GetConnectionString());
+        await using NpgsqlConnection connection = new(_masterConnectionString);
         await connection.OpenAsync();
 
 #pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
@@ -98,7 +104,7 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
         {
             await base.DisposeAsync();
 
-            await using NpgsqlConnection connection = new(dbFixture.Container.GetConnectionString());
+            await using NpgsqlConnection connection = new(_masterConnectionString);
             await connection.OpenAsync();
 
 #pragma warning disable CA2100 // Review SQL queries for security vulnerabilities

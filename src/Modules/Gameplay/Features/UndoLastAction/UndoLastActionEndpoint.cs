@@ -80,12 +80,12 @@ internal sealed class UndoLastActionCommandHandler(
             return error;
         }
 
+        int undoneSequenceNumber = hand.Actions[^1].SequenceNumber;
         if (hand.UndoLastAction().TryGetError(out error))
         {
             return error;
         }
 
-        int undoneSequenceNumber = hand.Actions[^1].SequenceNumber;
         await outbox.PublishAsync(new HandActionUndoneIntegrationEvent(
             Guid.NewGuid(),
             timeProvider.GetUtcNow(),

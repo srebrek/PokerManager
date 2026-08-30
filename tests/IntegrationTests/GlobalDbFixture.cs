@@ -17,7 +17,9 @@ public class GlobalDbFixture : IAsyncLifetime
 {
     public const string TemplateDbName = "template_db";
 
-    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder("postgres:18").Build();
+    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder("postgres:18")
+        .WithCommand("-c", "max_connections=300")
+        .Build();
 
     public async ValueTask InitializeAsync()
     {
@@ -64,7 +66,8 @@ public class GlobalDbFixture : IAsyncLifetime
     {
         NpgsqlConnectionStringBuilder builder = new(Container.GetConnectionString())
         {
-            Database = dbName
+            Database = dbName,
+            MaxPoolSize = 8
         };
         return builder.ConnectionString;
     }
