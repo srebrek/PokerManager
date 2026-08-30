@@ -30,6 +30,7 @@
     <Project Path="tests/E2ETests/E2ETests.csproj" />
     <Project Path="tests/Gameplay.UnitTests/Gameplay.UnitTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
+    <Project Path="tests/Statistics.UnitTests/Statistics.UnitTests.csproj" />
     <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
     <Project Path="tests/Web.Frontend.ComponentTests/Web.Frontend.ComponentTests.csproj" />
   </Folder>
