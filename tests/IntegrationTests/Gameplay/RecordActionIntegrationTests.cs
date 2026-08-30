@@ -1,6 +1,7 @@
 using Contracts.Api.Gameplay;
-// using Contracts.IntegrationEvents.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using Wolverine.Tracking;
+using HandActionType = Contracts.Api.Gameplay.HandActionType;
 
 namespace IntegrationTests.Gameplay;
 
@@ -13,8 +14,7 @@ public sealed class RecordActionIntegrationTests(ApiFactory factory) : GameplayI
         StartedHand hand = await StartThreeSeatHandAsync(hostStack: 1000, smallBlindStack: 1000, bigBlindStack: 1000);
 
         // Act
-        // TODO: _ -> Session
-        (ITrackedSession _, HttpResponseMessage Response) = await TrackAsync(() =>
+        (ITrackedSession Session, HttpResponseMessage Response) = await TrackAsync(() =>
             PostActionAsync(hand.HandId, hand.HostParticipantId, HandActionType.Call));
 
         // Assert
@@ -22,13 +22,12 @@ public sealed class RecordActionIntegrationTests(ApiFactory factory) : GameplayI
         GetHandStateResponse state = await GetHandStateAsync(hand.HandId);
         state.LastActionNumber.ShouldBe(2); // BB, SB, Call
 
-        // TODO: uncomment when a consumer appears
-        // HandActionRecordedIntegrationEvent published = Session.Sent.SingleMessage<HandActionRecordedIntegrationEvent>();
-        // published.HandId.ShouldBe(hand.HandId);
-        // published.ParticipantId.ShouldBe(hand.HostParticipantId);
-        // published.SequenceNumber.ShouldBe(2);
-        // published.Type.ShouldBe(Contracts.IntegrationEvents.Gameplay.HandActionType.Call);
-        // published.AmountTo.ShouldBeNull();
+        HandActionRecordedIntegrationEvent published = Session.Sent.SingleMessage<HandActionRecordedIntegrationEvent>();
+        published.HandId.ShouldBe(hand.HandId);
+        published.ParticipantId.ShouldBe(hand.HostParticipantId);
+        published.SequenceNumber.ShouldBe(2);
+        published.Type.ShouldBe(Contracts.IntegrationEvents.Gameplay.HandActionType.Call);
+        published.AmountTo.ShouldBeNull();
     }
 
     [Fact]

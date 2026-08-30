@@ -1,6 +1,7 @@
 using Contracts.Api.Gameplay;
-// using Contracts.IntegrationEvents.Gameplay;
+using Contracts.IntegrationEvents.Gameplay;
 using Wolverine.Tracking;
+using HandActionType = Contracts.Api.Gameplay.HandActionType;
 
 namespace IntegrationTests.Gameplay;
 
@@ -16,8 +17,7 @@ public sealed class UndoLastActionIntegrationTests(ApiFactory factory) : Gamepla
         await ActAsync(hand.HandId, hand.SmallBlindParticipantId, HandActionType.Call);
 
         // Act
-        // TODO: _ -> Session
-        (ITrackedSession _, HttpResponseMessage Response) = await TrackAsync(() =>
+        (ITrackedSession Session, HttpResponseMessage Response) = await TrackAsync(() =>
             PostUndoLastActionAsync(hand.HandId, hand.HostParticipantId));
 
         // Assert
@@ -27,10 +27,9 @@ public sealed class UndoLastActionIntegrationTests(ApiFactory factory) : Gamepla
         GetHandStateResponse state = await GetHandStateAsync(hand.HandId);
         state.ShouldBeEquivalentTo(stateBeforeTheUndoneAction);
 
-        // TODO: uncomment when a consumer appears
-        // HandActionUndoneIntegrationEvent published = Session.Sent.SingleMessage<HandActionUndoneIntegrationEvent>();
-        // published.HandId.ShouldBe(hand.HandId);
-        // published.SequenceNumber.ShouldBe(3);
+        HandActionUndoneIntegrationEvent published = Session.Sent.SingleMessage<HandActionUndoneIntegrationEvent>();
+        published.HandId.ShouldBe(hand.HandId);
+        published.SequenceNumber.ShouldBe(3);
     }
 
     [Fact]
