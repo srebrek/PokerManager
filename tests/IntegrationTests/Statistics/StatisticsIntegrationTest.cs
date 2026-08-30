@@ -1,4 +1,4 @@
-using Contracts.Api.Statistics;
+// using Contracts.Api.Statistics;
 using Contracts.IntegrationEvents;
 using Contracts.IntegrationEvents.Gameplay;
 using Microsoft.Extensions.DependencyInjection;
@@ -124,31 +124,31 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
             amount);
     }
 
-    protected async Task<HttpStatusCode> GetHandSummaryStatusAsync(Guid handId)
-    {
-        using HttpResponseMessage response = await Client.GetAsync(
-            StatisticsRoutes.HandSummaryFor(handId),
-            CancellationToken);
-        return response.StatusCode;
-    }
+    // protected async Task<HttpStatusCode> GetHandSummaryStatusAsync(Guid handId)
+    // {
+    //     using HttpResponseMessage response = await Client.GetAsync(
+    //         StatisticsRoutes.HandSummaryFor(handId),
+    //         CancellationToken);
+    //     return response.StatusCode;
+    // }
 
-    protected async Task<HandSummaryResponse> GetHandSummaryAsync(Guid handId)
-    {
-        HandSummaryResponse? summary = await Client.GetFromJsonAsync<HandSummaryResponse>(
-            StatisticsRoutes.HandSummaryFor(handId),
-            CancellationToken);
-        summary.ShouldNotBeNull();
-        return summary;
-    }
+    // protected async Task<HandSummaryResponse> GetHandSummaryAsync(Guid handId)
+    // {
+    //     HandSummaryResponse? summary = await Client.GetFromJsonAsync<HandSummaryResponse>(
+    //         StatisticsRoutes.HandSummaryFor(handId),
+    //         CancellationToken);
+    //     summary.ShouldNotBeNull();
+    //     return summary;
+    // }
 
-    protected async Task<GameSummaryResponse> GetGameSummaryAsync(Guid gameId)
-    {
-        GameSummaryResponse? summary = await Client.GetFromJsonAsync<GameSummaryResponse>(
-            StatisticsRoutes.GameSummaryFor(gameId),
-            CancellationToken);
-        summary.ShouldNotBeNull();
-        return summary;
-    }
+    // protected async Task<GameSummaryResponse> GetGameSummaryAsync(Guid gameId)
+    // {
+    //     GameSummaryResponse? summary = await Client.GetFromJsonAsync<GameSummaryResponse>(
+    //         StatisticsRoutes.GameSummaryFor(gameId),
+    //         CancellationToken);
+    //     summary.ShouldNotBeNull();
+    //     return summary;
+    // }
 
     protected sealed record Table(Guid GameId, Guid HandId, Guid Host, Guid SmallBlind, Guid BigBlind)
     {
