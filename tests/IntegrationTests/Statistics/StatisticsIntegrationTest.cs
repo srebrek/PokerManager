@@ -17,8 +17,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
 
     protected async Task IngestAsync(params IIntegrationEvent[] integrationEvents)
     {
-        ArgumentNullException.ThrowIfNull(integrationEvents);
-
         using IServiceScope scope = Services.CreateScope();
         IMessageBus bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
 
@@ -33,9 +31,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
         DateTimeOffset occurredAt,
         params (Guid ParticipantId, string Name, int StartingChips)[] seats)
     {
-        ArgumentNullException.ThrowIfNull(table);
-        ArgumentNullException.ThrowIfNull(seats);
-
         return new HandStartedIntegrationEvent(
             Guid.NewGuid(),
             occurredAt,
@@ -57,8 +52,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
         HandActionType type,
         int? amountTo = null)
     {
-        ArgumentNullException.ThrowIfNull(table);
-
         return new HandActionRecordedIntegrationEvent(
             Guid.NewGuid(),
             occurredAt,
@@ -74,8 +67,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
         DateTimeOffset occurredAt,
         int sequenceNumber)
     {
-        ArgumentNullException.ThrowIfNull(table);
-
         return new HandActionUndoneIntegrationEvent(
             Guid.NewGuid(),
             occurredAt,
@@ -90,8 +81,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
         IReadOnlyList<HandFinishedPotWinner> potWinners,
         IReadOnlyList<HandFinishedResult> results)
     {
-        ArgumentNullException.ThrowIfNull(table);
-
         return new HandFinishedIntegrationEvent(
             Guid.NewGuid(),
             occurredAt,
@@ -103,8 +92,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
 
     protected static HandAbortedIntegrationEvent HandAborted(Table table, DateTimeOffset occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(table);
-
         return new HandAbortedIntegrationEvent(Guid.NewGuid(), occurredAt, table.HandId);
     }
 
@@ -114,8 +101,6 @@ public abstract class StatisticsIntegrationTest(ApiFactory factory) : BaseIntegr
         Guid participantId,
         int amount)
     {
-        ArgumentNullException.ThrowIfNull(table);
-
         return new RebuyRecordedIntegrationEvent(
             Guid.NewGuid(),
             occurredAt,
