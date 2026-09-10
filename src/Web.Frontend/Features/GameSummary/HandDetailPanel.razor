@@ -1,0 +1,79 @@
+@using Contracts.Api.Statistics
+
+@switch (State)
+{
+    case HandLoading:
+        <MudSkeleton />
+        break;
+    case HandLoaded(var hand):
+        <MudStack data-testid="hand-detail-panel">
+            <MudStack StretchItems="StretchItems.All" Row>
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Duration</MudText>
+                    <MudText Typo="Typo.h5">@FormatDuration(hand.Duration)</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Actions</MudText>
+                    <MudText Typo="Typo.h5">@hand.ActionCount</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Ended by</MudText>
+                    <MudText Typo="Typo.h5">@(hand.WentToShowdown ? "Showdown" : "Early finish")</MudText>
+                </MudPaper>
+            </MudStack>
+
+            <MudChart T="double" ChartType="ChartType.Pie" ChartSeries="BuildPotSeries(hand)" ChartLabels="BuildPotLabels(hand)" />
+
+            <MudTable Items="hand.Results" data-testid="hand-results-table">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Net</MudTh>
+                    <MudTh>Ending chips</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="result">
+                    <MudTd DataLabel="Name">@result.Name</MudTd>
+                    <MudTd DataLabel="Net">@result.Net</MudTd>
+                    <MudTd DataLabel="Ending chips">@result.EndingChips</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudStack>
+        break;
+    case HandFailed(var message):
+        <MudAlert Severity="Severity.Error">
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText>@message</MudText>
+                <MudButton OnClick="OnRetry" Variant="Variant.Text" Color="Color.Error">Retry</MudButton>
+            </MudStack>
+        </MudAlert>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required IHandDetailState State { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnRetry { get; set; }
+
+    private static string FormatDuration(TimeSpan duration) =>
+        duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}h {duration.Minutes}m"
+            : $"{duration.Minutes}m {duration.Seconds}s";
+
+    private static List<ChartSeries<double>> BuildPotSeries(HandSummaryResponse hand) =>
+        [new() { Name = "Pots", Data = hand.Pots.Select(p => (double)p.Amount).ToArray() }];
+
+    private static string[] BuildPotLabels(HandSummaryResponse hand) =>
+        [.. hand.Pots.Select(pot => string.Join(
+            ", ", pot.WinnerParticipantIds.Select(id => hand.Results.First(r => r.ParticipantId == id).Name)))];
+
+    public interface IHandDetailState;
+
+    public sealed record HandLoading : IHandDetailState;
+
+    public sealed record HandLoaded(HandSummaryResponse Hand) : IHandDetailState;
+
+    public sealed record HandFailed(string Message) : IHandDetailState;
+}

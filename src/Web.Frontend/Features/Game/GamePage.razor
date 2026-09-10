@@ -10,6 +10,7 @@
 @inject ISnackbar Snackbar
 @inject GameHubConnection HubConnection
 @inject IDialogService DialogService
+@inject NavigationManager Navigation
 
 <PageTitle>Game</PageTitle>
 
@@ -34,7 +35,7 @@
         </MudButton>
 
         <MudButton
-            OnClick="_loader.LoadAsync"
+            OnClick="RefreshAsync"
             Variant="Variant.Outlined"
             Color="Color.Primary"
             FullWidth>
@@ -45,6 +46,9 @@
     @switch (_loader.State)
     {
         case Loading:
+            <MudSkeleton />
+            break;
+        case Loaded { Game.IsFinished: true }:
             <MudSkeleton />
             break;
         case Loaded loaded:
@@ -113,29 +117,51 @@
         _gameSubscription = HubConnection.OnGameUpdated(_ => InvokeAsync(async () =>
         {
             await _loader.OnGameUpdatedAsync();
+            RedirectIfFinished();
             StateHasChanged();
         }));
 
         _handSubscription = HubConnection.OnHandActionEffectReceived(effect => InvokeAsync(async () =>
         {
             await _loader.OnHandActionEffectAsync(effect);
+            RedirectIfFinished();
             StateHasChanged();
         }));
 
         _handUpdatedSubscription = HubConnection.OnHandUpdated(_ => InvokeAsync(async () =>
         {
             await _loader.LoadAsync();
+            RedirectIfFinished();
             StateHasChanged();
         }));
 
         _reconnectedSubscription = HubConnection.OnReconnected(() => InvokeAsync(async () =>
         {
             await _loader.ResubscribeAsync();
+            RedirectIfFinished();
             StateHasChanged();
         }));
     }
 
-    protected override Task OnParametersSetAsync() => _loader.EnterGameAsync(GameId);
+    protected override async Task OnParametersSetAsync()
+    {
+        await _loader.EnterGameAsync(GameId);
+        RedirectIfFinished();
+    }
+
+    private async Task RefreshAsync()
+    {
+        await _loader.LoadAsync();
+        RedirectIfFinished();
+    }
+
+    private void RedirectIfFinished()
+    {
+        if (_loader.State is Loaded { Game.IsFinished: true })
+        {
+            Navigation.NavigateTo($"/games/{GameId}/summary");
+        }
+    }
 
     private Task StartHandAsync() =>
         RunAsParticipantAsync((myId, ct) => GameplayApi.StartHandAsync(GameId, new StartHandRequest(myId), ct));

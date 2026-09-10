@@ -23,6 +23,7 @@ builder.Services.AddHttpClient(
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("Backend"));
 
 builder.Services.AddScoped<IGameplayApi, GameplayApi>();
+builder.Services.AddScoped<IStatisticsApi, StatisticsApi>();
 builder.Services.AddScoped<ParticipantSession>();
 builder.Services.AddScoped<GameHubConnection>();
 

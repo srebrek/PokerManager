@@ -1,0 +1,219 @@
+@page "/games/{GameId:guid}/summary"
+
+@using Contracts.Api.Statistics
+@using static Web.Frontend.Features.GameSummary.HandDetailPanel
+
+@inject IStatisticsApi StatisticsApi
+
+<PageTitle>Game Summary</PageTitle>
+
+@switch (_state)
+{
+    case Loading:
+        <MudSkeleton />
+        break;
+    case Loaded(var summary):
+        <MudStack data-testid="game-summary-page">
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.h5">Game summary</MudText>
+                <MudButton OnClick="LoadAsync" Variant="Variant.Outlined" Color="Color.Primary">
+                    Refresh
+                </MudButton>
+            </MudStack>
+
+            <MudStack StretchItems="StretchItems.All" Row>
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Hands</MudText>
+                    <MudText Typo="Typo.h5" data-testid="hand-count">@summary.HandCount</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Duration</MudText>
+                    <MudText Typo="Typo.h5" data-testid="total-duration">@FormatDuration(TotalDuration(summary))</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Showdowns</MudText>
+                    <MudText Typo="Typo.h5" data-testid="showdown-rate">@summary.ShowdownRate.ToString("P0")</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 align-content-center">
+                    <MudText Typo="Typo.caption">Avg. hand</MudText>
+                    <MudText Typo="Typo.h5" data-testid="average-hand-duration">
+                        @FormatDuration(AverageHandDuration(summary))
+                    </MudText>
+                </MudPaper>
+            </MudStack>
+
+            <MudTabs>
+                <MudTabPanel Text="Overview">
+                    <MudChart T="double" ChartType="ChartType.Line" ChartSeries="_series" ChartLabels="_handLabels" />
+
+                    <MudText data-testid="showdown-summary">
+                        @summary.ShowdownRate.ToString("P0") (@summary.ShowdownCount/@summary.HandCount)
+                    </MudText>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Players">
+                    <MudTable T="RankedParticipant" Items="_rankedParticipants" data-testid="players-table">
+                        <HeaderContent>
+                            <MudTh>#</MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Net</MudTh>
+                            <MudTh>Rebuys</MudTh>
+                            <MudTh>Ending chips</MudTh>
+                            <MudTh>Seated</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="row">
+                            <MudTd DataLabel="#">@row.Rank</MudTd>
+                            <MudTd DataLabel="Name">@row.Participant.Name</MudTd>
+                            <MudTd DataLabel="Net">
+                                <MudChip T="string" Color="@(row.Participant.Net >= 0 ? Color.Success : Color.Error)">
+                                    @row.Participant.Net
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Rebuys">@row.Participant.TotalRebuys</MudTd>
+                            <MudTd DataLabel="Ending chips">@row.Participant.EndingChips</MudTd>
+                            <MudTd DataLabel="Seated">@SeatedPercentage(row.Participant, summary).ToString("P0")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Hands">
+                    <MudTable
+                        T="GameSummaryHand"
+                        Items="summary.Hands"
+                        OnRowClick="@(args => ToggleHandAsync(args.Item!))"
+                        data-testid="hands-table">
+                        <HeaderContent>
+                            <MudTh>#</MudTh>
+                            <MudTh>Duration</MudTh>
+                            <MudTh>Showdown</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="hand">
+                            <MudTd DataLabel="#">@hand.Number</MudTd>
+                            <MudTd DataLabel="Duration">@FormatDuration(hand.FinishedAt - hand.StartedAt)</MudTd>
+                            <MudTd DataLabel="Showdown">@(hand.WentToShowdown ? "Yes" : "No")</MudTd>
+                        </RowTemplate>
+                        <ChildRowContent Context="hand">
+                            @if (_expandedHandIds.Contains(hand.HandId))
+                            {
+                                <MudTr>
+                                    <MudTd colspan="3">
+                                        <HandDetailPanel
+                                            State="_handDetails[hand.HandId]"
+                                            OnRetry="@(() => LoadHandDetailAsync(hand.HandId))" />
+                                    </MudTd>
+                                </MudTr>
+                            }
+                        </ChildRowContent>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                </MudTabPanel>
+            </MudTabs>
+        </MudStack>
+        break;
+    case Failed(var message):
+        <MudAlert Severity="Severity.Error">@message</MudAlert>
+        break;
+}
+
+@code {
+    // TODO: add bunit tests
+    [Parameter]
+    public Guid GameId { get; set; }
+
+    private IGameSummaryState _state = new Loading();
+    private List<ChartSeries<double>> _series = [];
+    private string[] _handLabels = [];
+    private List<RankedParticipant> _rankedParticipants = [];
+
+    private readonly HashSet<Guid> _expandedHandIds = [];
+    private readonly Dictionary<Guid, IHandDetailState> _handDetails = [];
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        ApiResult<GameSummaryResponse> result = await StatisticsApi.GetGameSummaryAsync(GameId);
+
+        _state = result.IsSuccess ? BuildLoaded(result.Value) : new Failed(result.Error.Message);
+    }
+
+    private IGameSummaryState BuildLoaded(GameSummaryResponse summary)
+    {
+        _handLabels = [.. summary.Hands.Select(h => h.Number.ToString())];
+        _series = [.. summary.Participants.Select(p => new ChartSeries<double>
+        {
+            Name = p.Name,
+            Data = FillChipsTimeline(p.ChipsTimeline)
+        })];
+        _rankedParticipants = [.. summary.Participants.Select((p, i) => new RankedParticipant(i + 1, p))];
+
+        return new Loaded(summary);
+    }
+
+    private static double[] FillChipsTimeline(IReadOnlyList<int?> timeline)
+    {
+        int? firstKnown = timeline.FirstOrDefault(v => v is not null);
+        double[] data = new double[timeline.Count];
+        int? last = null;
+
+        for (int i = 0; i < timeline.Count; i++)
+        {
+            last = timeline[i] ?? last;
+            data[i] = last ?? firstKnown ?? 0;
+        }
+
+        return data;
+    }
+
+    private static TimeSpan TotalDuration(GameSummaryResponse summary) =>
+        summary.Hands.Count == 0
+            ? TimeSpan.Zero
+            : summary.Hands[^1].FinishedAt - summary.Hands[0].StartedAt;
+
+    private static TimeSpan AverageHandDuration(GameSummaryResponse summary) =>
+        summary.Hands.Count == 0
+            ? TimeSpan.Zero
+            : TimeSpan.FromTicks((long)summary.Hands.Average(h => (h.FinishedAt - h.StartedAt).Ticks));
+
+    private static double SeatedPercentage(GameSummaryParticipant participant, GameSummaryResponse summary) =>
+        summary.HandCount == 0 ? 0 : (double)participant.HandsSeated / summary.HandCount;
+
+    private static string FormatDuration(TimeSpan duration) =>
+        duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}h {duration.Minutes}m"
+            : $"{duration.Minutes}m {duration.Seconds}s";
+
+    private async Task ToggleHandAsync(GameSummaryHand hand)
+    {
+        if (!_expandedHandIds.Add(hand.HandId))
+        {
+            _expandedHandIds.Remove(hand.HandId);
+            return;
+        }
+
+        if (!_handDetails.ContainsKey(hand.HandId))
+        {
+            await LoadHandDetailAsync(hand.HandId);
+        }
+    }
+
+    private async Task LoadHandDetailAsync(Guid handId)
+    {
+        _handDetails[handId] = new HandLoading();
+        StateHasChanged();
+
+        ApiResult<HandSummaryResponse> result = await StatisticsApi.GetHandSummaryAsync(handId);
+
+        _handDetails[handId] = result.IsSuccess
+            ? new HandLoaded(result.Value)
+            : new HandFailed(result.Error.Message);
+        StateHasChanged();
+    }
+
+    private sealed record RankedParticipant(int Rank, GameSummaryParticipant Participant);
+}
