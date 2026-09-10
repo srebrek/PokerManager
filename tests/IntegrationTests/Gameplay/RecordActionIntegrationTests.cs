@@ -11,7 +11,8 @@ public sealed class RecordActionIntegrationTests(ApiFactory factory) : GameplayI
     public async Task RecordAction_AllInShortOfTheCurrentBet_FormsASidePot()
     {
         // Arrange
-        StartedHand hand = await StartThreeSeatHandAsync(hostStack: 1000, smallBlindStack: 1000, bigBlindStack: 1000);
+        (_, StartedHand hand) = await TrackAsync(() =>
+            StartThreeSeatHandAsync(hostStack: 1000, smallBlindStack: 1000, bigBlindStack: 1000));
 
         // Act
         (ITrackedSession Session, HttpResponseMessage Response) = await TrackAsync(() =>

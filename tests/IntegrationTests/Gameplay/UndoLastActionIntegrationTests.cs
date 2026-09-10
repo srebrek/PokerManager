@@ -11,10 +11,10 @@ public sealed class UndoLastActionIntegrationTests(ApiFactory factory) : Gamepla
     public async Task UndoLastAction_ActionWasRecorded_RestoresTheStateFromBeforeIt()
     {
         // Arrange
-        StartedHand hand = await StartThreeSeatHandAsync(1000, 1000, 1000);
-        await ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Raise, 100);
+        (_, StartedHand hand) = await TrackAsync(() => StartThreeSeatHandAsync(1000, 1000, 1000));
+        await TrackAsync(() => ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Raise, 100));
         GetHandStateResponse stateBeforeTheUndoneAction = await GetHandStateAsync(hand.HandId);
-        await ActAsync(hand.HandId, hand.SmallBlindParticipantId, HandActionType.Call);
+        await TrackAsync(() => ActAsync(hand.HandId, hand.SmallBlindParticipantId, HandActionType.Call));
 
         // Act
         (ITrackedSession Session, HttpResponseMessage Response) = await TrackAsync(() =>
