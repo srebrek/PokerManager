@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 const string SharedResourceGroupName = "rg-shared";
 const string SharedContainerRegistryName = "acrsrebrek";
 const string SharedContainerAppEnvironmentName = "ace-shared";
-const string SharedPostgresServerName = "pg-srebrek";
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
@@ -18,20 +17,25 @@ builder.AddAzureContainerAppEnvironment("aca-env")
     .PublishAsExisting(SharedContainerAppEnvironmentName, SharedResourceGroupName)
     .WithAzureContainerRegistry(containerRegistry);
 
-IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("db-username", "srebrek");
+IResourceBuilder<IResourceWithConnectionString> database;
 
-IResourceBuilder<ParameterResource> databasePassword = builder.ExecutionContext.IsRunMode
-    ? builder.AddParameter("db-password", "localdev")
-    : builder.AddParameter("db-password", secret: true);
+if (builder.ExecutionContext.IsRunMode)
+{
+    IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("db-username", "srebrek");
+    IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter("db-password", "localdev");
 
-IResourceBuilder<IResourceWithConnectionString> database = builder
-    .AddAzurePostgresFlexibleServer("db-server")
-    .WithPasswordAuthentication(databaseUsername, databasePassword)
-    .RunAsContainer(container => container
-        .WithImageTag("18")
-        .WithHostPort(5433))
-    .PublishAsExisting(SharedPostgresServerName, SharedResourceGroupName)
-    .AddDatabase("PokerManager-db", databaseName: "pokermanager");
+    database = builder
+        .AddAzurePostgresFlexibleServer("db-server")
+        .WithPasswordAuthentication(databaseUsername, databasePassword)
+        .RunAsContainer(container => container
+            .WithImageTag("18")
+            .WithHostPort(5433))
+        .AddDatabase("PokerManager-db", databaseName: "pokermanager");
+}
+else
+{
+    database = builder.AddConnectionString("PokerManager-db");
+}
 
 IResourceBuilder<IResource> migrations;
 

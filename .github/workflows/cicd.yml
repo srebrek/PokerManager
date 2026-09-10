@@ -51,7 +51,7 @@ jobs:
       Azure__SubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       Azure__Location: ${{ vars.AZURE_LOCATION }}
       Azure__ResourceGroup: ${{ vars.AZURE_RESOURCE_GROUP }}
-      Parameters__db_password: ${{ secrets.DB_PASSWORD }}
+      "ConnectionStrings__PokerManager-db": ${{ secrets.DB_CONNECTION_STRING }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
