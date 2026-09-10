@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-
-name: poker-manager
-services:  
-  app:
-    language: dotnet
-    project: ./src/aspire/Aspire.AppHost/Aspire.AppHost.csproj
-    host: containerapp

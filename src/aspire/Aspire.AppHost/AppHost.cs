@@ -1,6 +1,10 @@
 using Azure.Provisioning.AppContainers;
-using Azure.Provisioning.ContainerRegistry;
 using Microsoft.Extensions.Hosting;
+
+const string SharedResourceGroupName = "rg-shared";
+const string SharedContainerRegistryName = "acrsrebrek";
+const string SharedContainerAppEnvironmentName = "ace-shared";
+const string SharedPostgresServerName = "pg-srebrek";
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
@@ -8,40 +12,25 @@ bool production = !builder.Environment.IsDevelopment();
 
 IResourceBuilder<Aspire.Hosting.Azure.AzureContainerRegistryResource> containerRegistry = builder
     .AddAzureContainerRegistry("acr")
-    .ConfigureInfrastructure(infrastructure =>
-    {
-        ContainerRegistryService registry = infrastructure
-            .GetProvisionableResources()
-            .OfType<ContainerRegistryService>()
-            .Single();
-
-        registry.Sku = new ContainerRegistrySku { Name = ContainerRegistrySkuName.Standard };
-    });
+    .PublishAsExisting(SharedContainerRegistryName, SharedResourceGroupName);
 
 builder.AddAzureContainerAppEnvironment("aca-env")
+    .PublishAsExisting(SharedContainerAppEnvironmentName, SharedResourceGroupName)
     .WithAzureContainerRegistry(containerRegistry);
 
-IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("db-username", "pokeradmin");
+IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("db-username", "srebrek");
 
-IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter(
-    "db-password",
-    new GenerateParameterDefault
-    {
-        MinLength = 24,
-        Lower = true,
-        Upper = true,
-        Numeric = true,
-        Special = false,
-    },
-    secret: true,
-    persist: true);
+IResourceBuilder<ParameterResource> databasePassword = builder.ExecutionContext.IsRunMode
+    ? builder.AddParameter("db-password", "localdev")
+    : builder.AddParameter("db-password", secret: true);
 
 IResourceBuilder<IResourceWithConnectionString> database = builder
     .AddAzurePostgresFlexibleServer("db-server")
     .WithPasswordAuthentication(databaseUsername, databasePassword)
     .RunAsContainer(container => container
-        .WithImageTag("16")
+        .WithImageTag("18")
         .WithHostPort(5433))
+    .PublishAsExisting(SharedPostgresServerName, SharedResourceGroupName)
     .AddDatabase("PokerManager-db", databaseName: "pokermanager");
 
 IResourceBuilder<IResource> migrations;
