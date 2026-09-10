@@ -16,12 +16,20 @@ public abstract class AspireIntegrationTestBase : IAsyncLifetime
     {
         _fixture = fixture;
         _fixture.OutputAccessor.OutputHelper = output;
+        Output = output;
     }
+
+    // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+    protected ITestOutputHelper Output { get; }
 
     protected DistributedApplication App => _fixture.App
         ?? throw new InvalidOperationException("App is not initialized.");
 
     protected Uri FrontendBaseUri => _fixture.FrontendBaseUri;
+
+    // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+    protected Task<string> DescribeDatabaseStateAsync(CancellationToken ct) =>
+        _fixture.DescribeDatabaseStateAsync(ct);
 
     protected IPage Page { get; private set; } = null!;
 

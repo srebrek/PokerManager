@@ -1,4 +1,6 @@
+using System.Data.Common;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 using MartinCostello.Logging.XUnit;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,9 @@ public sealed class AspireFixture : IAsyncLifetime
     private IBrowser? _browser;
     private Respawner? _respawner;
     private string _connectionString = string.Empty;
+
+    // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+    private CancellationTokenSource? _resourceWatchCts;
 
     public async ValueTask InitializeAsync()
     {
@@ -74,10 +79,86 @@ public sealed class AspireFixture : IAsyncLifetime
         await App.ResourceNotifications.WaitForResourceHealthyAsync("apiservice", ct).WaitAsync(s_defaultTimeout, ct);
 
         await CreateRespawnerAsync(ct);
+
+        // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+        WatchResourceStates();
+    }
+
+    // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+    private void WatchResourceStates()
+    {
+        _resourceWatchCts = new CancellationTokenSource();
+        CancellationToken watchToken = _resourceWatchCts.Token;
+
+        _ = Task.Run(
+            async () =>
+            {
+                await foreach (ResourceEvent resourceEvent in App!.ResourceNotifications.WatchAsync(watchToken))
+                {
+                    Write($"[resource] {resourceEvent.Resource.Name} -> {resourceEvent.Snapshot.State?.Text}");
+                }
+            },
+            watchToken);
+
+        void Write(string line)
+        {
+            try
+            {
+                OutputAccessor.OutputHelper?.WriteLine($"{DateTimeOffset.UtcNow:HH:mm:ss.fff} {line}");
+            }
+            catch (InvalidOperationException)
+            {
+                // The test that owned the output helper has already finished.
+            }
+        }
+    }
+
+    // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+    internal async Task<string> DescribeDatabaseStateAsync(CancellationToken ct)
+    {
+        try
+        {
+            await using NpgsqlConnection connection = new(_connectionString);
+            await connection.OpenAsync(ct);
+
+            await using NpgsqlCommand command = new(
+                """
+                select (select string_agg(datname, ',' order by datname) from pg_database) as databases,
+                       (select count(*) from pg_stat_activity) as connections,
+                       (select setting from pg_settings where name = 'max_connections') as max_connections,
+                       pg_postmaster_start_time() as started_at
+                """,
+                connection);
+
+            await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+
+            return $"databases=[{reader.GetString(0)}] connections={reader.GetInt64(1)}"
+                + $" max={reader.GetString(2)} postgresStartedAt={reader.GetDateTime(3):HH:mm:ss}";
+        }
+        catch (DbException ex)
+        {
+            return $"probe failed: {ex.GetType().Name}: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"probe failed: {ex.GetType().Name}: {ex.Message}";
+        }
+        catch (TimeoutException ex)
+        {
+            return $"probe failed: {ex.GetType().Name}: {ex.Message}";
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
+        // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
+        if (_resourceWatchCts is not null)
+        {
+            await _resourceWatchCts.CancelAsync();
+            _resourceWatchCts.Dispose();
+        }
+
         if (App is not null)
         {
             await App.DisposeAsync();
