@@ -76,6 +76,41 @@ jobs:
       - name: Deploy
         run: aspire deploy --environment Production --non-interactive
 
+      - name: Run migrations
+        run: |
+          execution=$(az containerapp job start \
+            --name migrations \
+            --resource-group "$Azure__ResourceGroup" \
+            --query name \
+            --output tsv)
+
+          echo "Execution: $execution"
+
+          for _ in $(seq 1 60); do
+            status=$(az containerapp job execution show \
+              --name migrations \
+              --resource-group "$Azure__ResourceGroup" \
+              --job-execution-name "$execution" \
+              --query properties.status \
+              --output tsv)
+
+            case "$status" in
+              Succeeded)
+                echo "Migrations succeeded"
+                exit 0
+                ;;
+              Failed | Degraded | Stopped)
+                echo "Migrations $status"
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          echo "Migrations timed out, last status: $status"
+          exit 1
+
       - name: Smoke test
         run: |
           fqdn=$(az containerapp show \
