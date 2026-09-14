@@ -61,6 +61,9 @@ jobs:
         with:
           dotnet-version: '10.x'
 
+      - name: Generate Wolverine code
+        run: dotnet run scripts/build.cs -- --configuration Release
+
       - name: Install Aspire CLI
         run: |
           curl -fsSL https://aspire.dev/install.sh | bash -s -- --version 13.5.3
