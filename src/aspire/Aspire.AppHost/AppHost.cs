@@ -5,13 +5,8 @@ using Microsoft.Extensions.Hosting;
 const string SharedResourceGroupName = "rg-shared";
 const string SharedContainerRegistryName = "acrsrebrek";
 const string SharedContainerAppEnvironmentName = "ace-shared";
-const string SubscriptionId = "00000000-0000-0000-0000-000000000000";
 const string CustomDomainName = "poker.zlotekmikolaj.com";
 const string CustomDomainCertificateName = "poker.zlotekmikolaj.com-ace-shar-260910181637";
-const string CustomDomainCertificateId =
-    $"/subscriptions/{SubscriptionId}/resourceGroups/{SharedResourceGroupName}/providers"
-    + $"/Microsoft.App/managedEnvironments/{SharedContainerAppEnvironmentName}/managedCertificates"
-    + $"/{CustomDomainCertificateName}";
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
@@ -102,13 +97,19 @@ IResourceBuilder<ProjectResource> apiService = builder
         containerApp.Template.Containers[0].Value!.Resources.Cpu = 0.25;
         containerApp.Template.Containers[0].Value!.Resources.Memory = "0.5Gi";
 
+        string subscriptionId = builder.Configuration["Azure:SubscriptionId"]
+            ?? throw new InvalidOperationException("'Azure:SubscriptionId' is not configured.");
+
         containerApp.Configuration.Ingress.CustomDomains =
         [
             new ContainerAppCustomDomain
             {
                 Name = CustomDomainName,
                 BindingType = ContainerAppCustomDomainBindingType.SniEnabled,
-                CertificateId = new ResourceIdentifier(CustomDomainCertificateId),
+                CertificateId = new ResourceIdentifier(
+                    $"/subscriptions/{subscriptionId}/resourceGroups/{SharedResourceGroupName}/providers"
+                    + $"/Microsoft.App/managedEnvironments/{SharedContainerAppEnvironmentName}/managedCertificates"
+                    + $"/{CustomDomainCertificateName}"),
             },
         ];
     });
