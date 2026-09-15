@@ -23,14 +23,28 @@ if (Directory.Exists(results))
     Directory.Delete(results, true);
 }
 
-int testExitCode = Run("dotnet",
+int otherTestsExitCode = Run("dotnet",
 [
     "test",
+    "--filter-not-namespace", "E2ETests",
+    "--ignore-exit-code", "8",
     "--coverage",
     "--coverage-output-format", "cobertura",
     "--results-directory", results,
     .. args,
 ]);
+
+int e2eTestsExitCode = Run("dotnet",
+[
+    "test",
+    "--project", Path.Combine(root, "tests", "E2ETests", "E2ETests.csproj"),
+    "--coverage",
+    "--coverage-output-format", "cobertura",
+    "--results-directory", results,
+    .. args,
+]);
+
+int testExitCode = otherTestsExitCode is not 0 ? otherTestsExitCode : e2eTestsExitCode;
 
 if (!Directory.Exists(results) || !Directory.EnumerateFiles(results, "*.cobertura.xml").Any())
 {

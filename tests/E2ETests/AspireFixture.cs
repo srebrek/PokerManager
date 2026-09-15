@@ -176,6 +176,8 @@ public sealed class AspireFixture : IAsyncLifetime
     {
         _connectionString = await GetConnectionStringAsync(ct);
 
+        await WaitForStableDatabaseConnectionAsync(ct);
+
         await using NpgsqlConnection connection = new(_connectionString);
         await connection.OpenAsync(ct);
 
@@ -189,6 +191,35 @@ public sealed class AspireFixture : IAsyncLifetime
                 new Table("data_protection_keys"),
             ]
         });
+    }
+
+    private async Task WaitForStableDatabaseConnectionAsync(CancellationToken ct)
+    {
+        const int RequiredConsecutiveSuccesses = 3;
+        TimeSpan probeInterval = TimeSpan.FromSeconds(1);
+
+        using CancellationTokenSource timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(s_defaultTimeout);
+
+        int consecutiveSuccesses = 0;
+        while (consecutiveSuccesses < RequiredConsecutiveSuccesses)
+        {
+            try
+            {
+                await using NpgsqlConnection probe = new(_connectionString);
+                await probe.OpenAsync(timeoutCts.Token);
+                consecutiveSuccesses++;
+            }
+            catch (NpgsqlException)
+            {
+                consecutiveSuccesses = 0;
+            }
+
+            if (consecutiveSuccesses < RequiredConsecutiveSuccesses)
+            {
+                await Task.Delay(probeInterval, timeoutCts.Token);
+            }
+        }
     }
 
     private async Task<string> GetConnectionStringAsync(CancellationToken ct)
