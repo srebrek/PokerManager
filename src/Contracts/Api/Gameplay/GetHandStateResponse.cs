@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Contracts.Api.Gameplay;
 
 public sealed record GetHandStateResponse(
@@ -8,6 +10,7 @@ public sealed record GetHandStateResponse(
     IReadOnlyList<HandStateSeat> Seats,
     int LastActionNumber);
 
+[JsonConverter(typeof(JsonStringEnumConverter<HandStatus>))]
 public enum HandStatus
 {
     InProgress,
@@ -15,6 +18,7 @@ public enum HandStatus
     Aborted,
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<Street>))]
 public enum Street
 {
     PreFlop,
@@ -36,6 +40,7 @@ public sealed record HandStateSeat(
     int RemainingStack,
     SeatState State);
 
+[JsonConverter(typeof(JsonStringEnumConverter<SeatState>))]
 public enum SeatState
 {
     Active,

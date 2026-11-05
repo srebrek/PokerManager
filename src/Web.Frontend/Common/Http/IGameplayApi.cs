@@ -1,4 +1,3 @@
-using System.Net;
 using System.Net.Http.Json;
 using Contracts.Api.Gameplay;
 
@@ -33,7 +32,8 @@ internal interface IGameplayApi
       Guid gameId, ChangeGameRulesRequest request, CancellationToken ct = default);
 }
 
-internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger) : IGameplayApi
+internal sealed class GameplayApi(HttpClient httpClient, ILogger<GameplayApi> logger)
+    : ApiClient(logger), IGameplayApi
 {
     public Task<ApiResult<CreateGameResponse>> CreateGameAsync(
         CreateGameRequest request,
@@ -171,95 +171,4 @@ internal sealed partial class GameplayApi(HttpClient httpClient, ILogger<Gamepla
         ExecuteAsync(
             ct => httpClient.PostAsJsonAsync(GameplayRoutes.RulesFor(gameId), request, ct),
             ct);
-
-    private async Task<ApiResult> ExecuteAsync(
-        Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
-        CancellationToken ct,
-        string genericErrorMessage = "Server error. Try again.")
-    {
-        RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
-
-        return outcome.Error is { } error
-            ? ApiResult.Failure(error)
-            : ApiResult.Success();
-    }
-
-    private async Task<ApiResult<TValue>> ExecuteAsync<TValue>(
-        Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
-        CancellationToken ct,
-        string genericErrorMessage = "Server error. Try again.")
-    {
-        RequestOutcome outcome = await HandleHttpCallAsync(sendAsync, ct, genericErrorMessage);
-        if (outcome.Error is { } error)
-        {
-            return ApiResult.Failure<TValue>(error);
-        }
-
-        TValue? value = await outcome.Response!.Content.ReadFromJsonAsync<TValue>(ct);
-        return value is not null
-            ? ApiResult.Success(value)
-            : throw new InvalidOperationException(
-                $"Gameplay API returned success without expected body: {typeof(TValue).Name}.");
-    }
-
-    private readonly record struct RequestOutcome(HttpResponseMessage? Response, ApiError? Error);
-
-    private async Task<RequestOutcome> HandleHttpCallAsync(
-        Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
-        CancellationToken ct,
-        string genericErrorMessage = "Server error. Try again.")
-    {
-        try
-        {
-            HttpResponseMessage response = await sendAsync(ct);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return new RequestOutcome(response, null);
-            }
-
-            ApiErrorBody body = await ApiErrorReader.ReadAsync(response, ct);
-
-            if (body.Message is null)
-            {
-                LogUnparsableErrorBody(logger, (int)response.StatusCode);
-            }
-
-            ApiErrorKind kind = response.StatusCode switch
-            {
-                HttpStatusCode.BadRequest => ApiErrorKind.Validation,
-                HttpStatusCode.NotFound => ApiErrorKind.NotFound,
-                HttpStatusCode.Conflict => ApiErrorKind.Conflict,
-                _ => ApiErrorKind.Server
-            };
-
-            string message = body.Message ?? genericErrorMessage;
-            ApiError error = body.Code is { } code
-                ? new ApiError(code, message, kind)
-                : ApiError.Uncoded(message, kind);
-
-            return new RequestOutcome(response, error);
-        }
-        catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
-        {
-            LogRequestTimedOut(logger, ex);
-            return new RequestOutcome(null, ApiError.Connection("Connection error. Try again."));
-        }
-        catch (HttpRequestException ex)
-        {
-            LogRequestFailed(logger, ex);
-            return new RequestOutcome(null, ApiError.Connection("Connection error. Try again."));
-        }
-    }
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Gameplay API request failed.")]
-    private static partial void LogRequestFailed(ILogger logger, Exception exception);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Gameplay API request timed-out.")]
-    private static partial void LogRequestTimedOut(ILogger logger, Exception exception);
-
-    [LoggerMessage(
-        Level = LogLevel.Warning,
-        Message = "Gameplay API error response body could not be parsed: status {StatusCode}.")]
-    private static partial void LogUnparsableErrorBody(ILogger logger, int statusCode);
 }

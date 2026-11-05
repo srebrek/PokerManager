@@ -57,6 +57,7 @@ internal enum ApiErrorKind
 {
     None,
     Validation,
+    Unauthorized,
     NotFound,
     Conflict,
     Server,
