@@ -7,8 +7,8 @@ using static Microsoft.Playwright.Assertions;
 
 namespace E2ETests;
 
-public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper testOutput)
-    : AspireIntegrationTestBase(fixture, testOutput)
+public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper output)
+    : AspireIntegrationTestBase(fixture, output)
 {
     private const string HostName = "srebrekhost";
     private const string SmallBlindName = "srebreksb";
@@ -114,7 +114,7 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper t
         return page;
     }
 
-    private async Task RebuyAsync(IPage host, string participantName)
+    private static async Task RebuyAsync(IPage host, string participantName)
     {
         await host.GetByTestId("participant-row")
             .Filter(new LocatorFilterOptions { HasText = participantName })
@@ -127,24 +127,11 @@ public sealed class FullGameFlowTests(AspireFixture fixture, ITestOutputHelper t
         await ExpectChipsAsync(host, participantName, StartingStack);
     }
 
-    private async Task ClickAndWaitForResponseAsync(IPage page, string testId, string urlFragment)
+    private static async Task ClickAndWaitForResponseAsync(IPage page, string testId, string urlFragment)
     {
-        IResponse response;
-
-        try
-        {
-            response = await page.RunAndWaitForResponseAsync(
-                () => page.GetByTestId(testId).ClickAsync(),
-                r => r.Url.Contains(urlFragment, StringComparison.Ordinal));
-        }
-        catch (Exception ex)
-        {
-            // TEMP diagnostics for the intermittent E2E failure — remove once the cause is known.
-            Output.WriteLine($"[flake] {ex.GetType().Name} waiting for '{urlFragment}' after clicking '{testId}'");
-            Output.WriteLine($"[flake] page={page.Url}");
-            Output.WriteLine($"[flake] {await DescribeDatabaseStateAsync(TestContext.Current.CancellationToken)}");
-            throw;
-        }
+        IResponse response = await page.RunAndWaitForResponseAsync(
+            () => page.GetByTestId(testId).ClickAsync(),
+            r => r.Url.Contains(urlFragment, StringComparison.Ordinal));
 
         string body = response.Ok ? string.Empty : await response.TextAsync();
         response.Ok.ShouldBeTrue($"{response.Request.Method} {response.Url} returned {response.Status}. {body}");
