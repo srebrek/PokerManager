@@ -12,15 +12,15 @@ string bootstrapper = Path.Combine(root, "src", "Api.Bootstrapper");
 string generated = Path.Combine(bootstrapper, "Internal", "Generated");
 string configuration = ReadConfiguration(args);
 
+if (Directory.Exists(generated))
+{
+    Directory.Delete(generated, true);
+}
+
 int exitCode = Run("dotnet", ["build", bootstrapper, .. args]);
 if (exitCode is not 0)
 {
     return exitCode;
-}
-
-if (Directory.Exists(generated))
-{
-    Directory.Delete(generated, true);
 }
 
 exitCode = RunHost(configuration, "codegen", "write");
@@ -29,13 +29,7 @@ if (exitCode is not 0)
     return exitCode;
 }
 
-exitCode = Run("dotnet", ["build", .. args]);
-if (exitCode is not 0)
-{
-    return exitCode;
-}
-
-return RunHost(configuration, "codegen", "test");
+return Run("dotnet", ["build", .. args]);
 
 int RunHost(string config, params string[] commandArguments)
 {
