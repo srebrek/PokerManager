@@ -72,7 +72,7 @@ jobs:
 
       - name: Install Aspire CLI
         run: |
-          curl -fsSL https://aspire.dev/install.sh | bash -s -- --version 13.5.3
+          curl -fsSL https://aspire.dev/install.sh | bash -s -- --version 13.6.4
           echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
 
       - name: Azure login
