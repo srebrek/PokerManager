@@ -91,7 +91,9 @@ app.MapEndpoints(apiGroup);
 if (app.Environment.IsDevelopment())
 {
     // YARP so hotreload and dotnet watch work in dev
+#pragma warning disable S5332 // Aspire service-discovery name; plain http between local dev resources
     app.MapForwarder("/{**catch-all}", "http://webfrontend");
+#pragma warning restore S5332
 }
 else
 {

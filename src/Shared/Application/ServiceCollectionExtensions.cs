@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
         Assembly moduleAssembly)
     {
         services.AddValidatorsFromAssembly(moduleAssembly, includeInternalTypes: true);
-        services.AddCommandAndQueryHandlers(moduleAssembly);
+        _ = services.AddCommandAndQueryHandlers(moduleAssembly);
 
         return services;
     }

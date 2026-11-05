@@ -20,7 +20,7 @@ public static class GameplayModule
             ?? throw new InvalidOperationException(
                 $"Connection string '{DatabaseConstants.ConnectionStringName}' is not configured.");
 
-        services
+        _ = services
             .AddDatabase(connectionString)
             .AddApplication(typeof(GameplayModule).Assembly)
             .AddEndpoints(typeof(GameplayModule).Assembly)

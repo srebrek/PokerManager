@@ -64,7 +64,7 @@ public static class Extensions
                     .AddHttpClientInstrumentation();
             });
 
-        builder.AddOpenTelemetryExporters();
+        _ = builder.AddOpenTelemetryExporters();
 
         return builder;
     }

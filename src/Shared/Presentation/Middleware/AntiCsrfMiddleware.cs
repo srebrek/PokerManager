@@ -17,7 +17,7 @@ public sealed class AntiCsrfMiddleware(RequestDelegate next)
             && context.Request.Headers[HttpDefenseHeaders.AntiCsrf] != HttpDefenseHeaders.AntiCsrfValue)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsync("Missing anti-CSRF header.");
+            await context.Response.WriteAsync("Missing anti-CSRF header.", context.RequestAborted);
             return;
         }
 
