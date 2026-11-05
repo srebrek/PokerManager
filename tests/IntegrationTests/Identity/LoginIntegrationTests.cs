@@ -31,7 +31,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         response.Headers.TryGetValues("Set-Cookie", out IEnumerable<string>? cookies).ShouldBeTrue();
-        string authCookie = cookies!.Single(c =>
+        string authCookie = cookies.Single(c =>
             c.StartsWith($"{IdentityCookies.AuthCookieName}=", StringComparison.Ordinal));
         authCookie.ToUpperInvariant().ShouldContain("EXPIRES=");
     }
@@ -57,7 +57,7 @@ public sealed class LoginIntegrationTests(ApiFactory factory) : BaseIntegrationT
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         response.Headers.TryGetValues("Set-Cookie", out IEnumerable<string>? cookies).ShouldBeTrue();
-        string authCookie = cookies!.Single(c =>
+        string authCookie = cookies.Single(c =>
             c.StartsWith($"{IdentityCookies.AuthCookieName}=", StringComparison.Ordinal));
         authCookie.ToUpperInvariant().ShouldNotContain("EXPIRES=");
     }

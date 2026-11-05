@@ -34,7 +34,7 @@ public sealed class UnauthorizedBehaviorTests(ApiFactory factory) : BaseIntegrat
 
         using HttpResponseMessage response = await Client.PostAsync(
             new Uri("identity/logout", UriKind.Relative),
-            content: null,
+            null,
             CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
