@@ -7,6 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Respawn;
 using Respawn.Graph;
+using Wolverine.Logging;
+using Wolverine.Tracking;
 
 namespace IntegrationTests;
 
@@ -78,9 +80,22 @@ public class ApiFactory(GlobalDbFixture dbFixture) : WebApplicationFactory<Progr
 
     public async Task ResetDatabaseAsync()
     {
+        await WaitForInboxToDrainAsync();
+
         await using NpgsqlConnection connection = new(_connectionString);
         await connection.OpenAsync();
         await _respawner.ResetAsync(connection);
+    }
+
+    private async Task WaitForInboxToDrainAsync()
+    {
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(30));
+        PersistedCounts counts = await Host.GetRuntime().Storage.Admin.FetchCountsAsync();
+        while (counts.Incoming > 0)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(20), timeout.Token);
+            counts = await Host.GetRuntime().Storage.Admin.FetchCountsAsync();
+        }
     }
 
     public HttpClient CreateClientNoCookies()

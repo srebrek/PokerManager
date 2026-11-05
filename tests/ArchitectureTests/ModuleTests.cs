@@ -1,3 +1,4 @@
+using ArchUnitNET.Domain;
 using ArchUnitNET.xUnitV3;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -8,11 +9,10 @@ namespace ArchitectureTests;
 
 public sealed class ModuleTests : BaseArchitectureTest
 {
-    // Code-coverage instrumentation (e.g. "run tests with coverage" in VS Code) injects a
-    // Microsoft.CodeCoverage.Instrumentation.Static.Tracker.* type into every instrumented
-    // assembly. ArchUnitNET then sees that type name in both module assemblies and flags a
-    // false cross-module dependency. Excluded here since it's a test-run artifact, not code.
+    // Code-coverage instrumentation and the JasperFx source generator emit identically named types into every
+    // assembly, which ArchUnitNET merges across assemblies and reports as false cross-module dependencies.
     private const string CoverageInstrumentationNamespace = @"^Microsoft\.CodeCoverage\..*";
+    private const string JasperFxGeneratedNamespace = @"^JasperFx\.Generated\..*";
 
     [Fact]
     public void Module_DoesNotDependOnOtherModules()
@@ -21,16 +21,23 @@ public sealed class ModuleTests : BaseArchitectureTest
         {
             foreach (ReflectionAssembly other in ModuleAssemblies.Where(a => a != module))
             {
+                IObjectProvider<IType> otherModuleTypes = Types()
+                    .That()
+                    .ResideInAssembly(other)
+                    .And()
+                    .DoNotHaveFullNameMatching(CoverageInstrumentationNamespace)
+                    .And()
+                    .DoNotHaveFullNameMatching(JasperFxGeneratedNamespace);
+
                 Types()
                     .That()
                     .ResideInAssembly(module)
                     .And()
                     .DoNotHaveFullNameMatching(CoverageInstrumentationNamespace)
+                    .And()
+                    .DoNotHaveFullNameMatching(JasperFxGeneratedNamespace)
                     .Should()
-                    .NotDependOnAnyTypesThat()
-                    .ResideInAssembly(other)
-                    .AndShould()
-                    .NotHaveFullNameMatching(CoverageInstrumentationNamespace)
+                    .NotDependOnAny(otherModuleTypes)
                     .Check(Architecture);
             }
         }

@@ -65,6 +65,8 @@ builder.Host.UseWolverine(opts =>
     opts.CodeGeneration.AlwaysUseServiceLocationFor<IUserAccountService>();
     opts.OnException<DbUpdateConcurrencyException>()
         .RetryWithCooldown(50.Milliseconds(), 100.Milliseconds(), 250.Milliseconds());
+    opts.OnException<IngestParentMissingException>()
+        .RetryWithCooldown(100.Milliseconds(), 500.Milliseconds(), 2.Seconds(), 5.Seconds());
     opts.Discovery.IncludeAssembly(typeof(IdentityModule).Assembly);
     opts.Discovery.IncludeAssembly(typeof(GameplayModule).Assembly);
     opts.Discovery.IncludeAssembly(typeof(StatisticsModule).Assembly);

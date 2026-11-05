@@ -100,16 +100,21 @@ public abstract class GameplayIntegrationTest(ApiFactory factory) : BaseIntegrat
 
     protected async Task<StartedHand> StartHandWithSidePotAsync()
     {
-        StartedHand hand = await StartThreeSeatHandAsync(hostStack: 1000, smallBlindStack: 50, bigBlindStack: 1000);
-        await ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Raise, 100);
-        await ActAsync(hand.HandId, hand.SmallBlindParticipantId, HandActionType.AllIn);
-        await ActAsync(hand.HandId, hand.BigBlindParticipantId, HandActionType.Call);
+        (_, StartedHand hand) = await TrackAsync(() =>
+            StartThreeSeatHandAsync(hostStack: 1000, smallBlindStack: 50, bigBlindStack: 1000));
 
-        for (int street = 0; street < 3; street++)
+        await TrackAsync(async () =>
         {
-            await ActAsync(hand.HandId, hand.BigBlindParticipantId, HandActionType.Check);
-            await ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Check);
-        }
+            await ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Raise, 100);
+            await ActAsync(hand.HandId, hand.SmallBlindParticipantId, HandActionType.AllIn);
+            await ActAsync(hand.HandId, hand.BigBlindParticipantId, HandActionType.Call);
+
+            for (int street = 0; street < 3; street++)
+            {
+                await ActAsync(hand.HandId, hand.BigBlindParticipantId, HandActionType.Check);
+                await ActAsync(hand.HandId, hand.HostParticipantId, HandActionType.Check);
+            }
+        });
 
         return hand;
     }

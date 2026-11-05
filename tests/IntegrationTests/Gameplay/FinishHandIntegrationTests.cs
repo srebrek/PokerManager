@@ -10,7 +10,7 @@ public sealed class FinishHandIntegrationTests(ApiFactory factory) : GameplayInt
     public async Task FinishHand_SidePotHasItsOwnWinner_SettlesEveryStackAndClosesTheHand()
     {
         // Arrange
-        (_, StartedHand hand) = await TrackAsync(StartHandWithSidePotAsync);
+        StartedHand hand = await StartHandWithSidePotAsync();
         await DeclareWinnersAsync(
             hand.HandId,
             hand.HostParticipantId,
