@@ -119,7 +119,9 @@ IResourceBuilder<ProjectResource> apiService = builder
 if (!production)
 {
     IResourceBuilder<ProjectResource> webFrontend = builder
-        .AddProject<Projects.Web_Frontend>("webfrontend");
+        .AddProject<Projects.Web_Frontend>("webfrontend")
+        .WithEndpoint("https", e => e.IsProxied = false)
+        .WithEndpoint("http", e => e.IsProxied = false);
 
     apiService
         .WithReference(webFrontend)
