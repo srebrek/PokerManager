@@ -11,12 +11,6 @@ public static class MiddlewareExtensions
         return app;
     }
 
-    public static IApplicationBuilder UseRequestSourceLogging(this IApplicationBuilder app)
-    {
-        app.UseMiddleware<RequestSourceLoggingMiddleware>();
-        return app;
-    }
-
     public static IApplicationBuilder UseAntiCsrf(this IApplicationBuilder app)
     {
         app.UseMiddleware<AntiCsrfMiddleware>();

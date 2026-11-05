@@ -78,7 +78,6 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.UseRequestSourceLogging();
 app.UseAntiCsrf();
 app.UseRequestContext();
 app.UseExceptionHandler();
