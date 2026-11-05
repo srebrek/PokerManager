@@ -51,7 +51,7 @@ architecture test as a design signal, not an obstacle to suppress.
   `Result`/`Error` (result pattern — no exceptions for domain failures), `IEndpoint`, validation
   middleware, global exception handler, anti-CSRF/request-context middleware.
 - `src/Contracts` — request/response DTOs and integration events shared between frontend and backend.
-- `src/aspire/*` — Aspire AppHost + ServiceDefaults (OTel, health checks, service discovery).
+- `src/Aspire/*` — Aspire AppHost + ServiceDefaults (OTel, health checks, service discovery).
 - `src/Web.Frontend` — Blazor WASM. **No authentication yet**
 
 ### Conventions (arch-enforced)

@@ -1,7 +1,7 @@
 # Deployment
 
 Azure Container Apps. The pipeline is `.github/workflows/cicd.yml`, the infrastructure it declares is
-`src/aspire/Aspire.AppHost/AppHost.cs`. This file records only what was set up by hand.
+`src/Aspire/Aspire.AppHost/AppHost.cs`. This file records only what was set up by hand.
 
 ## `rg-shared`, Poland Central
 

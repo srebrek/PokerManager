@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\aspire\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Aspire\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.csproj" />
     <ProjectReference Include="..\Modules\Gameplay\Gameplay.csproj" />
     <ProjectReference Include="..\Modules\Statistics\Statistics.csproj" />

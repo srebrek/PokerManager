@@ -5,7 +5,7 @@
       "type": "aspire",
       "request": "launch",
       "name": "Aspire: AppHost",
-      "program": "${workspaceFolder}/src/aspire/Aspire.AppHost/Aspire.AppHost.csproj"
+      "program": "${workspaceFolder}/src/Aspire/Aspire.AppHost/Aspire.AppHost.csproj"
     },
     {
       "type": "blazorwasm",
