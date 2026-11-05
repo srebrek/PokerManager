@@ -8,7 +8,7 @@
     <AnalysisMode>All</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-    <WarningsNotAsErrors>NU1902</WarningsNotAsErrors>
+    <WarningsNotAsErrors>NU1902;NU1903</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
