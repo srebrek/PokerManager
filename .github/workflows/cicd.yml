@@ -31,6 +31,11 @@ jobs:
       - name: Build
         run: dotnet run scripts/build.cs -- --no-restore --configuration Release
 
+      - name: Build browser network shim
+        run: |
+          gcc -shared -fPIC -O2 -o "$RUNNER_TEMP/no_netlink.so" tests/E2ETests/NoNetlink/no_netlink.c -ldl
+          echo "E2E_BROWSER_LD_PRELOAD=$RUNNER_TEMP/no_netlink.so" >> "$GITHUB_ENV"
+
       - name: Test with coverage
         run: dotnet run scripts/coverage.cs -- --no-build --configuration Release
         env:

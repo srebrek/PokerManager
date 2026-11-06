@@ -1,3 +1,4 @@
+using System.Collections;
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using MartinCostello.Logging.XUnit;
@@ -41,7 +42,18 @@ public sealed class AspireFixture : IAsyncLifetime
         }
 
         _playwright = await Playwright.CreateAsync();
-        _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions());
+        BrowserTypeLaunchOptions launchOptions = new();
+        string? browserPreload = Environment.GetEnvironmentVariable("E2E_BROWSER_LD_PRELOAD");
+        if (!string.IsNullOrEmpty(browserPreload))
+        {
+            Dictionary<string, string> browserEnvironment = Environment.GetEnvironmentVariables()
+                .Cast<DictionaryEntry>()
+                .ToDictionary(e => (string)e.Key, e => e.Value as string ?? string.Empty);
+            browserEnvironment["LD_PRELOAD"] = browserPreload;
+            launchOptions.Env = browserEnvironment;
+        }
+
+        _browser = await _playwright.Chromium.LaunchAsync(launchOptions);
 
         Assertions.SetDefaultExpectTimeout(DefaultUiTimeoutMilliseconds);
 
